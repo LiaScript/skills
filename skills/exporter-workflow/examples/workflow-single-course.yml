@@ -16,6 +16,8 @@ permissions:
 jobs:
   export:
     runs-on: ubuntu-latest
+    env:
+      EXPORT_DIR: /tmp/lia-exports-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Checkout repository
@@ -31,6 +33,11 @@ jobs:
       - name: Install LiaScript Exporter
         run: npm install -g @liascript/exporter
 
+      - name: Prepare isolated output directory
+        run: |
+          rm -rf "$EXPORT_DIR"
+          mkdir -p "$EXPORT_DIR"
+
       - name: Install Chromium system dependencies (required for PDF)
         run: |
           sudo apt-get update
@@ -43,15 +50,22 @@ jobs:
       - name: Generate PDF
         env:
           PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
-        run: liaex -i project/README.md --format pdf --output Documentation --pdf-timeout 60000
+        run: liaex -i project/README.md --format pdf --output "$EXPORT_DIR/Documentation" --pdf-timeout 60000
 
       - name: Generate SCORM 2004
         # Use scorm1.2 + --scorm-embed for Moodle 4 / OPAL / Open edX
         # Use scorm2004 + --scorm-iframe for ILIAS / OpenOLAT / scorm.cloud
-        run: liaex -i project/README.md --format scorm2004 --output SCORM --scorm-masteryScore 80
+        run: liaex -i project/README.md --format scorm2004 --output "$EXPORT_DIR/SCORM" --scorm-masteryScore 80
 
       - name: Generate IMS package
-        run: liaex -i project/README.md --format ims --output IMS
+        run: liaex -i project/README.md --format ims --output "$EXPORT_DIR/IMS"
+
+      - name: Stage release assets
+        run: |
+          mkdir -p outputs
+          cp "$EXPORT_DIR/Documentation.pdf" outputs/Documentation.pdf
+          cp "$EXPORT_DIR/SCORM.zip" outputs/SCORM.zip
+          cp "$EXPORT_DIR/IMS.zip" outputs/IMS.zip
 
       - name: Create GitHub Release
         id: create_release
@@ -70,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Documentation.pdf
+          asset_path: outputs/Documentation.pdf
           asset_name: Documentation.pdf
           asset_content_type: application/pdf
 
@@ -80,7 +94,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: SCORM.zip
+          asset_path: outputs/SCORM.zip
           asset_name: SCORM.zip
           asset_content_type: application/zip
 
@@ -90,6 +104,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: IMS.zip
+          asset_path: outputs/IMS.zip
           asset_name: IMS.zip
           asset_content_type: application/zip

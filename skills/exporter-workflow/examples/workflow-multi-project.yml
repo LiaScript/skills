@@ -28,6 +28,9 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      EXPORT_DIR: /tmp/lia-exports-${{ github.run_id }}-${{ github.run_attempt }}
+      CACHE_DIR: /tmp/lia-cache-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Checkout repository
@@ -40,6 +43,11 @@ jobs:
 
       - name: Install LiaScript Exporter
         run: npm install -g @liascript/exporter
+
+      - name: Prepare isolated output directories
+        run: |
+          rm -rf "$EXPORT_DIR" "$CACHE_DIR"
+          mkdir -p "$EXPORT_DIR" "$CACHE_DIR"
 
       - name: Install Chromium system dependencies (required for PDF)
         run: |
@@ -57,17 +65,21 @@ jobs:
           PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
         run: |
           # Top-level index page — no PDF/SCORM needed here
-          liaex -f project -i index.yaml -o index
+          liaex -f project -i index.yaml -o "$EXPORT_DIR/index"
 
-          # Per-topic pages with PDF and SCORM generation + full-text search
-          liaex -f project -i topic-a.yaml -o topic-a \
-            --project-search --project-generate-pdf --project-generate-scorm12
+          # Per-topic pages with PDF and SCORM generation + full-text search.
+          # Use an isolated cache path so generated ZIP/PDF files are never inside project/.
+          liaex -f project -i topic-a.yaml -o "$EXPORT_DIR/topic-a" \
+            --project-search --project-generate-pdf --project-generate-scorm12 \
+            --project-generate-cache -p "$CACHE_DIR"
 
-          liaex -f project -i topic-b.yaml -o topic-b \
-            --project-search --project-generate-pdf --project-generate-scorm12
+          liaex -f project -i topic-b.yaml -o "$EXPORT_DIR/topic-b" \
+            --project-search --project-generate-pdf --project-generate-scorm12 \
+            --project-generate-cache -p "$CACHE_DIR"
 
-          liaex -f project -i topic-c.yaml -o topic-c \
-            --project-search --project-generate-pdf --project-generate-scorm12
+          liaex -f project -i topic-c.yaml -o "$EXPORT_DIR/topic-c" \
+            --project-search --project-generate-pdf --project-generate-scorm12 \
+            --project-generate-cache -p "$CACHE_DIR"
 
           # Add further topic YAML files by duplicating the block above.
           # Use --project-generate-scorm2004 instead of --project-generate-scorm12
@@ -77,19 +89,19 @@ jobs:
         run: |
           mkdir -p gh-pages-deploy
 
-          # All generated HTML files from project/
-          cp project/*.html gh-pages-deploy/
+          # All generated HTML files from isolated export output
+          cp "$EXPORT_DIR"/*.html gh-pages-deploy/
 
-          # Generated PDFs — preserve subdirectory structure relative to project/
-          find project -name "*.pdf" | while read f; do
-            rel="${f#project/}"
+          # Generated PDFs — preserve subdirectory structure from cache
+          find "$CACHE_DIR" -name "*.pdf" | while read f; do
+            rel="${f#$CACHE_DIR/}"
             mkdir -p "gh-pages-deploy/$(dirname "$rel")"
             cp "$f" "gh-pages-deploy/$rel"
           done
 
           # Generated SCORM packages (ZIP) — preserve subdirectory structure
-          find project -name "*.zip" | while read f; do
-            rel="${f#project/}"
+          find "$CACHE_DIR" -name "*.zip" | while read f; do
+            rel="${f#$CACHE_DIR/}"
             mkdir -p "gh-pages-deploy/$(dirname "$rel")"
             cp "$f" "gh-pages-deploy/$rel"
           done

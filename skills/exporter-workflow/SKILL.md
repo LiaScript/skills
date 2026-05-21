@@ -64,6 +64,9 @@ Use the templates in Sections 4–5 as starting points. Always:
 - Use `raw.githubusercontent.com` URLs in `project.yaml` (never HTML GitHub URLs)
 - Set `--pdf-timeout 50000` (or higher) for large courses
 - Add `--project-generate-cache -p ./cache` for large project websites
+- Isolate exporter outputs from source files: write to a temp directory outside the repo (e.g., `/tmp/lia-exports-${{ github.run_id }}` or `${{ runner.temp }}` when valid in step scope)
+- For Docker-based exports, mount source as read-only and mount a separate output directory (`-v "$GITHUB_WORKSPACE:/work:ro"` and `-v "$EXPORT_DIR:/out"`)
+- Stage release assets only after all exports finish (copy final files into `outputs/`), never export directly into `outputs/`
 
 ### Step 4: Explain Setup Steps
 
@@ -71,6 +74,20 @@ After generating the workflow:
 1. Tell the user where to place the file (e.g., `.github/workflows/deploy.yml`)
 2. If deploying to GitHub Pages: remind them to enable Pages on the `gh-pages` branch in repo Settings
 3. If PDF is generated: note Puppeteer dependencies may be needed on Ubuntu runners (Section 8)
+
+---
+
+## Output Isolation (Critical)
+
+When generating multiple export formats in one workflow run, do not write output files into the same tree that contains the LiaScript source input (for example the repository root or a checked out subfolder like `project/`).
+
+If outputs are written next to source content, later exports may include previous export artifacts recursively (ZIP inside ZIP behavior), causing package size growth on every run.
+
+Use this safe pattern:
+1. Export all formats into an isolated temporary directory outside source tree (`$EXPORT_DIR` in `/tmp` or runner temp).
+2. Run Docker Android export with separate source/output mounts and read-only source.
+3. Copy only final files to a clean `outputs/` staging folder.
+4. Upload assets from `outputs/`.
 
 ---
 
@@ -106,8 +123,11 @@ Download from [GitHub Releases](https://github.com/LiaScript/LiaScript-Exporter/
 **Alternative: Docker (Android exports)**
 ```bash
 docker pull liascript/exporter
-docker run --rm -v $(pwd):/work liascript/exporter \
-  liaex -f android -i /work/README.md --android-appId io.github.example.course --output /work/output
+docker run --rm \
+  -v "$(pwd):/work:ro" \
+  -v "/tmp/lia-exports:/out" \
+  liascript/exporter \
+  liaex -f android -i /work/README.md --android-appId io.github.example.course --output /out/android
 ```
 
 ---
@@ -1109,6 +1129,8 @@ collection:
 10. **`--project-search`** — Adds full-text fuzzy search (Ctrl+K / Cmd+K shortcut). Requires `navbar:` for the search icon, otherwise shows a floating button.
 
 11. **PDF on GitHub Actions needs two things:** (a) set env var `PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"` on the PDF step, AND (b) install Chromium system libraries. Use `libasound2t64` — not `libasound2` — on `ubuntu-latest` (Ubuntu 24). See Section 8.
+
+12. **Prevent recursive package growth (critical):** never export into the repository source tree when creating multiple formats in one run. Export into an isolated temp directory first, then copy the final artifacts into a clean staging folder for upload. For Docker exports, mount source read-only and outputs on a separate mount.
 
 ---
 

@@ -10,6 +10,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 |-------|-------------|
 | [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for GitHub-hosted OER |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
+| [exporter-workflow](skills/exporter-workflow/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
 
 ---
 
@@ -26,6 +27,14 @@ Generates a valid `metadata.yml` for publishing Open Educational Resources on [O
 Systematically verifies scientific literature references using web search. Outputs a structured three-tier report (✅ correct / ⚠️ warning / 🚨 critical error) with a mandatory summary table. Explicitly flags potentially hallucinated AI-generated citations. Output language matches the user's input language.
 
 **Activates when:** a user asks to check, verify, or validate bibliographic entries, citations, or references — including single entries.
+
+---
+
+## exporter-workflow
+
+Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` catalog files for LiaScript repositories. Covers all export formats (PDF, SCORM 1.2/2004, IMS, ePub, DOCX, xAPI, Android, web), automated deployment to GitHub Pages, multi-project site patterns, and quality check pipelines. Includes ready-made examples for common scenarios.
+
+**Activates when:** a user wants to export a LiaScript course to any format; create or update a GitHub Actions workflow; build a project website that aggregates multiple courses; set up automated deployment to GitHub Pages; or asks anything involving the `liaex` CLI, `@liascript/exporter`, or LiaScript CI/CD.
 
 ---
 

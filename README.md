@@ -11,6 +11,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for GitHub-hosted OER |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
 | [exporter-workflow](skills/exporter-workflow/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
+| [template-development](skills/template-development/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
 
 ---
 
@@ -38,6 +39,14 @@ Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` cat
 
 ---
 
+## template-development
+
+Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, and the established conventions from the LiaTemplates ecosystem.
+
+**Activates when:** a user wants to build, modify, or debug a LiaScript template; create reusable macros; or integrate a JavaScript library into a LiaScript course.
+
+---
+
 ## Installation
 
 ### Via `npx skills` (recommended)
@@ -54,6 +63,7 @@ npx skills add OWNER/REPO
 # Install a specific skill
 npx skills add OWNER/REPO --skill oersi-metadata
 npx skills add OWNER/REPO --skill reference-checker
+npx skills add OWNER/REPO --skill template-development
 
 # Install to all agents without prompts
 npx skills add OWNER/REPO --all

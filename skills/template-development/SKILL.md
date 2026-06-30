@@ -1,5 +1,11 @@
 ---
-description: Expert guidance for developing LiaScript templates — creating reusable macros, integrating JavaScript libraries (via CDN or as bundled npm projects), handling async execution, and following all established template patterns from the LiaTemplates ecosystem. Use when building, modifying, or debugging a LiaScript template.
+name: template-development
+description: >
+  Expert guidance for developing LiaScript templates — creating reusable macros, integrating
+  JavaScript libraries (via CDN or as bundled npm projects), handling async execution, and following
+  all established template patterns from the LiaTemplates ecosystem. Use when building, modifying, or
+  debugging a LiaScript template.
+license: CC0-1.0
 ---
 
 # LiaScript Template Development

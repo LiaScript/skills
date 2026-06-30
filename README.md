@@ -55,29 +55,27 @@ Expert guidance for building LiaScript templates — standard `README.md` course
 
 ```bash
 # Preview skills in this repo before installing
-npx skills add OWNER/REPO --list
+npx skills add LiaScript/skills --list
 
 # Install all skills (interactive — detects your agents)
-npx skills add OWNER/REPO
+npx skills add LiaScript/skills
 
 # Install a specific skill
-npx skills add OWNER/REPO --skill oersi-metadata
-npx skills add OWNER/REPO --skill reference-checker
-npx skills add OWNER/REPO --skill template-development
+npx skills add LiaScript/skills --skill oersi-metadata
+npx skills add LiaScript/skills --skill reference-checker
+npx skills add LiaScript/skills --skill template-development
 
 # Install to all agents without prompts
-npx skills add OWNER/REPO --all
+npx skills add LiaScript/skills --all
 
 # Install as personal skills (available across all projects)
-npx skills add OWNER/REPO --global
+npx skills add LiaScript/skills --global
 
 # Install for a specific agent
-npx skills add OWNER/REPO -a claude-code
-npx skills add OWNER/REPO -a github-copilot
-npx skills add OWNER/REPO -a cursor
+npx skills add LiaScript/skills -a claude-code
+npx skills add LiaScript/skills -a github-copilot
+npx skills add LiaScript/skills -a cursor
 ```
-
-> Replace `OWNER/REPO` with the actual GitHub repository path (e.g. `andre-dietrich/skills`).
 
 #### Other useful commands
 
@@ -95,12 +93,12 @@ Copy the skill directory into the skills folder for your agent:
 
 **Project scope** (skills available only in the current project):
 
-| Agent | Directory |
-|-------|-----------|
-| GitHub Copilot, Cursor, Gemini CLI, Codex | `.agents/skills/` |
-| Claude Code | `.claude/skills/` |
-| Roo Code | `.roo/skills/` |
-| Windsurf | `.windsurf/skills/` |
+| Agent                                     | Directory           |
+|-------------------------------------------|---------------------|
+| GitHub Copilot, Cursor, Gemini CLI, Codex | `.agents/skills/`   |
+| Claude Code                               | `.claude/skills/`   |
+| Roo Code                                  | `.roo/skills/`      |
+| Windsurf                                  | `.windsurf/skills/` |
 
 ```bash
 # Example: install for Claude Code (project scope)
@@ -114,11 +112,11 @@ cp -r skills/reference-checker .agents/skills/
 
 **Personal scope** (skills available across all projects):
 
-| Agent | Directory |
-|-------|-----------|
+| Agent          | Directory            |
+|----------------|----------------------|
 | GitHub Copilot | `~/.copilot/skills/` |
-| Claude Code | `~/.claude/skills/` |
-| Any agent | `~/.agents/skills/` |
+| Claude Code    | `~/.claude/skills/`  |
+| Any agent      | `~/.agents/skills/`  |
 
 ```bash
 # Example: personal install for GitHub Copilot

@@ -1,6 +1,13 @@
 ---
 name: reference-checker
-description: Verifies scientific literature references for accuracy and produces a structured report. Always use when the user wants to check, verify, or validate bibliographic entries, citations, or references — including individual ones. Always outputs a complete reference verification report with per-entry ratings (three-tier: ✅ correct / ⚠️ warning / 🚨 critical error) and a summary table. Also use for: 'check my references', 'verify citations', 'are my sources correct?', 'Stimmen die Angaben?', 'Sind die Quellen korrekt?', 'Bitte Referenzen checken', or similar verification requests. Output language always matches the user's input language.
+description: >
+  Verifies scientific literature references for accuracy and produces a structured report.
+  Always use when the user wants to check, verify, or validate bibliographic entries, citations,
+  or references — including individual ones. Always outputs a complete reference verification report
+  with per-entry ratings (three-tier: ✅ correct / ⚠️ warning / 🚨 critical error) and a summary table.
+  Also use for: 'check my references', 'verify citations', 'are my sources correct?',
+  'Stimmen die Angaben?', 'Sind die Quellen korrekt?', 'Bitte Referenzen checken',
+  or similar verification requests. Output language always matches the user's input language.
 license: CC0-1.0
 ---
 

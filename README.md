@@ -11,7 +11,9 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for GitHub-hosted OER |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
 | [exporter-workflow](skills/exporter-workflow/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
+| [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes, effects, charts, and best-practice patterns |
 | [template-development](skills/template-development/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
+| [creativity](skills/creativity/) | Develop creative works (stories, courses, lectures) through open-ended, multi-agent ideation instead of direct drafting |
 
 ---
 
@@ -39,11 +41,27 @@ Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` cat
 
 ---
 
+## liascript-syntax
+
+Complete LiaScript authoring reference: full markdown syntax (meta-header, document structuring, all 6 quiz types plus generic quizzes and surveys, effects/animation/TTS, interactive code blocks and the `send`/JS API, the presentation pattern for slide-deck-style courses, charts/ASCII-art/SVG visuals, tooling/publishing), the philosophy behind the language, and established best-usage patterns. Organized as a navigable set of `reference/*.md` files by topic rather than one long document.
+
+**Activates when:** a user is writing, editing, reviewing, or debugging any LiaScript course (a `README.md` meant to be rendered by the LiaScript interpreter).
+
+---
+
 ## template-development
 
 Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, and the established conventions from the LiaTemplates ecosystem.
 
 **Activates when:** a user wants to build, modify, or debug a LiaScript template; create reusable macros; or integrate a JavaScript library into a LiaScript course.
+
+---
+
+## creativity
+
+Implements the Emergent Creativity Protocol (ECP): a multi-agent, artifact-based process that first expands a rich "meaning space" of interconnected ideas (via Dreamer, Questioner, World Builder, Character Finder, and other role agents), then converges on a concrete text through an Explorer/Resonance/Distiller pipeline and a final Narrative Compiler step. Renders a live Cognitive-Field-Map artifact alongside the compiled work.
+
+**Activates when:** a user wants to develop a creative work — a story, novel, course, lecture, article, or presentation — through open-ended exploratory ideation instead of jumping straight to a draft.
 
 ---
 
@@ -63,7 +81,9 @@ npx skills add LiaScript/skills
 # Install a specific skill
 npx skills add LiaScript/skills --skill oersi-metadata
 npx skills add LiaScript/skills --skill reference-checker
+npx skills add LiaScript/skills --skill liascript-syntax
 npx skills add LiaScript/skills --skill template-development
+npx skills add LiaScript/skills --skill creativity
 
 # Install to all agents without prompts
 npx skills add LiaScript/skills --all

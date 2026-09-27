@@ -19,28 +19,28 @@ data-ylabel="% of GDP"
 | 1996 | 6.9     | 3.3 | 4.5     |
 ```
 
-Rendered and confirmed: `data-show` displays the chart immediately (no click needed to switch away from the table); `data-title`/`data-xlabel`/`data-ylabel` populate the chart's title and axis labels exactly as given; `data-xlim="1994,2000"` widens the x-axis beyond the data's own min/max (one side can be left blank, e.g. `data-xlim=",12"`, to auto-determine only that end) — all four confirmed together on one live chart, no console errors.
+`data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end.
 
 **Caution:** if you add an authoring note (an ignoreable `<!--- ... --->` comment) near a chart table, never place it directly above the attribute comment with no blank line between them — the Markdown parser merges adjacent raw HTML comments into a single block, which breaks LiaScript's attribute extraction and silently turns the whole comment+table run into literal unrendered text (confirmed live: no table, no chart). Always separate them with a blank line. See `reference/syntax-core.md`'s "Ignoreable comments" subsection for the full rule.
 
-**Type list** — what triggers each, confirmed by rendering a representative table for every entry except `Map`/`None` (noted separately below):
+**Type list** — what triggers each type automatically, and what it renders as:
 
-| Type | Triggered by (per docs) | Rendering confirmed |
+| Type | Triggered by | Renders as |
 |---|---|---|
 | `LinePlot` | First column all-numeric, no repeated value → treated as a function | Connected multi-series line chart with legend |
 | `ScatterPlot` | Like `LinePlot`, but the first column has repeated values (not a function) | Disconnected dots, no connecting line |
 | `BoxPlot` | Not auto-detected — force with `data-type="boxplot"` | Real box-and-whisker plot, one box per column |
-| `BarChart` | First column has at least one non-numeric entry, and column maxima are close enough in scale | Grouped vertical bars, one group per row |
-| `Radar` | Per docs: a `BarChart`-shaped table whose column maxima differ too much for a `BarChart` to stay readable | **Did not reproduce** — see hedge below; force with `data-type="radar"` instead |
-| `PieChart` | Exactly one data row, all-numeric | Real pie sectors with labels; a non-numeric first cell in that row becomes the title/subtitle |
+| `BarChart` | First column has at least one non-numeric entry (a category table), fewer than 50 cells, and column maxima within a factor of 10 | Grouped vertical bars, one group per row |
+| `Radar` | A category table (fewer than 50 cells) whose largest column maximum is more than 10× the smallest | Multi-axis polygon per row; needs 3+ numeric columns for a readable shape |
+| `PieChart` | Exactly one data row | Real pie sectors with labels; a non-numeric first cell in that row becomes the title/subtitle |
 | `Funnel` | Not auto-detected — force with `data-type="funnel"` (same table shape as `PieChart`) | Pyramid/funnel shape, one layer per column |
-| `Map` | Table structured like a `BarChart`, plus `data-src="<geojson-url>"` naming a GeoJSON file whose feature names match the first column | Needs external GeoJSON — **not independently re-verified here** (no network access at the time this reference was written); per docs only |
+| `Map` | `data-type="map"` plus `data-src="<geojson-url>"` naming a GeoJSON file whose feature names match the first column; only one data column is supported | Choropleth map; give it room with `style="height: 600px"` |
 | `HeatMap` | Header and first column both purely numeric (coordinates); force with `data-type="heatmap"` otherwise | Colored grid with a color-scale legend; `data-title` applies here too |
-| `Parallel` | Per docs: used automatically when a `BarChart` would need too many thin categories to stay readable | **Did not reproduce** — see hedge below; force with `data-type="parallel"` instead |
-| `Graph` | Table is a square matrix: header row and first column list the same node names | Real node/edge diagram; symmetric matrix → undirected graph, asymmetric → directed (edge weight = cell value) |
+| `Parallel` | A category table with 50 or more cells (rows × header columns) | Parallel coordinates: one vertical axis per column, one line per row |
+| `Graph` | Table is a square matrix: header row and first column list the same node names | Node/edge diagram; symmetric matrix → undirected graph, asymmetric → directed (edge weight = cell value, may be negative or fractional); no self-loops or multi-edges |
 | `None` | `data-type="none"` | Absence case — disables charting for that table entirely (also disables the first-column-fixed-while-scrolling behavior); nothing to render |
 
-**`Radar` and `Parallel` auto-detection did not reproduce at the time this reference was written.** The docs describe both as automatic fallbacks once a `BarChart` would be unreadable (too-different column maxima for `Radar`; too many categories for `Parallel`). Rendering the exact example tables from the docs (a 3-column, 3-row animal dataset for `Radar`; a 7-column, 5-row country dataset for `Parallel`) produced a plain `BarChart` and a `Radar` chart respectively — not the documented type — with no console errors either way, so this looks like a genuine behavior difference in the tested LiaScript version rather than a fixture mistake. **Do not rely on the automatic heuristic for either type** — force them explicitly:
+**How a category table is classified** (first column not purely numeric), in this order: 50 or more cells → `Parallel`; otherwise, if the largest column maximum exceeds 10× the smallest → `Radar`; otherwise `BarChart`. If the heuristic picks the wrong type for your data, force it explicitly:
 
 ```markdown
 <!-- data-show data-type="radar" -->
@@ -51,20 +51,33 @@ Rendered and confirmed: `data-show` displays the chart immediately (no click nee
 | Brown bat       |        0.020 |              30 |      10 |
 ```
 
-Both forced forms rendered correctly and were confirmed: `data-type="radar"` produced a proper multi-axis polygon per row (needs 3+ numeric columns for a readable shape — 2 columns degenerates to a straight line); `data-type="parallel"` produced a real parallel-coordinates plot, one vertical axis per column, one connecting line per row.
+**Animated charts** — effect fragments inside table cells change the chart per animation step; the chart updates as the user steps forward or back (in Textbook mode all fragments are shown at once, so use this only for presentation-style courses):
 
-**Other confirmed attributes:**
+```markdown
+       {{1}}
+| Music-Style {1-2}{1994} {2}{2014} | Classic           | Country           | Reggae |
+|:--------------------------------- | -----------------:| -----------------:| ------:|
+| Student rating                    | {1-2}{50} {2}{20} | {1-2}{50} {2}{30} |    100 |
+```
 
-- **`data-transpose`** — mirrors the table so rows and columns swap (e.g. grow a `PieChart`'s categories vertically instead of horizontally). Rendered and confirmed: a category-per-row table with `data-transpose` produced the identical pie chart (same title/subtitle from the two header cells, same sectors) as the equivalent category-per-column table without it.
-- **`data-orientation="horizontal"`** — flips a `BarChart` (default vertical bars, categories on the x-axis) to horizontal bars with categories on the y-axis. Rendered and confirmed on the animal weight/lifespan/mitogen table.
+**Other attributes:**
 
-**Attributes documented but not independently re-verified here** (per docs — apply cautiously, spot-check against your target LiaScript version): `data-src` (GeoJSON URL for `Map` — store it in your own project rather than an external host, to avoid CORS issues, per docs); `data-sortable` (toggles per-table or per-column sortability of the table view; `false`/`true`, settable globally in the table's main comment or overridden per header cell).
+- **`data-transpose`** (or `="true"`) — mirrors the table so rows and columns swap (e.g. a category-per-row table becomes the same pie chart as the category-per-column form).
+- **`data-orientation="horizontal"`** / `"vertical"` — horizontal bars with categories on the y-axis vs. the default vertical bars.
+- **`data-src`** — GeoJSON URL for `data-type="map"`; store the file in your own project rather than on an external host, to avoid CORS issues.
+- **`data-sortable`** — every column of the table view is sortable by default. Set `data-sortable="false"` on the table, and override it per column with a comment inside the header cell:
 
-`data-type` accepts (case-insensitive): `bar`/`barchart`, `boxplot`, `funnel`, `graph`, `heatmap`, `line`/`lineplot`, `map`, `none`, `parallel`, `pie`/`piechart`, `radar`, `sankey`, `scatter`/`scatterplot`. `sankey` (a directed-flow diagram, same adjacency-matrix table shape as `Graph`) is documented but not independently re-verified here — included for completeness of the attribute's accepted values.
+  ```markdown
+  <!-- data-sortable="false" -->
+  | Header 1 | <!-- data-sortable="true" --> Header 2 |
+  | -------- | -------------------------------------- |
+  ```
+
+`data-type` accepts (case-insensitive): `bar`/`barchart`, `boxplot`, `funnel`, `graph`, `heatmap`, `line`/`lineplot`, `map`, `none`, `parallel`, `pie`/`piechart`, `radar`, `sankey`, `scatter`/`scatterplot`. `sankey` draws a directed-flow diagram from the same adjacency-matrix table shape as `Graph` (leave cells without a flow empty).
 
 ### Custom Diagrams with ECharts
 
-For anything the table-driven mechanism can't express, drop to the underlying `lia-chart` web component directly and pass a full [Apache ECharts](https://echarts.apache.org) `option` object as a JSON-like string in the `option` attribute — not independently re-verified at the time this reference was written (no live-rendering check was run against this specific form), but it is the documented escape hatch when a table shape doesn't map to any of the built-in types:
+For anything the table-driven mechanism can't express, drop to the underlying `lia-chart` web component directly and pass a full [Apache ECharts](https://echarts.apache.org) `option` object in the `option` attribute. The value is parsed as JSON first and otherwise evaluated as a JavaScript object literal, so unquoted keys and even functions work. Optional `renderer="canvas"` switches from the default SVG renderer:
 
 ```html
 <lia-chart option="{
@@ -79,7 +92,7 @@ For anything the table-driven mechanism can't express, drop to the underlying `l
 
 ## ASCII-Art
 
-A fenced code block tagged `ascii` (or fenced with 10+ backticks) is parsed by an embedded SvgBob-derived renderer and turned into a real SVG diagram — not literal text, not a raw code display. **The fence must sit at the left margin, unindented** — a 4-space-indented ` ```ascii ` fence is treated as an ordinary Markdown indented code block instead (rendered and confirmed the difference directly: the same content indented by 4 spaces displayed as plain literal text; unindented, it rendered as boxes-and-arrows SVG).
+A fenced code block tagged `ascii` or `art` (case-insensitive; with 9+ backticks the tag is optional) is parsed by an embedded SvgBob-derived renderer and turned into a real SVG diagram. **At top level the fence must sit at the left margin** — an indented fence is not recognized and shows as plain text; inside a list item or blockquote, align it with the item's content like any other block.
 
 ````markdown
 ``` ascii
@@ -98,7 +111,7 @@ A fenced code block tagged `ascii` (or fenced with 10+ backticks) is parsed by a
 
 Rendered and confirmed: real boxes with rounded/square corners, filled arrowheads on every `-->`/`<--`/`^`/`V`, and a rounded speech-bubble-style box for the `.----.`/`'----'` shape — exactly matching the ASCII layout, as an actual SVG (inspectable, scales to full slide width), not a monospace text block.
 
-**Drawing vocabulary** (per docs, consistent with the rendered example above): borders `-`, `_`, `|` (straight) and `\`, `/` (diagonal); corners `+` (square), `.`/`,`/backtick/`'` (rounded — visually identical in the output, only the ASCII source differs), `(`/`)` (curvy, for rounded/organic shapes like `( 3 )`), and `*`/`#`/`o`/`O` (filled dot / filled square / empty dot, usable as corners or arrow endpoints); arrows use `<`/`>`/`v`/`V`/`^`/`A` for direction plus the same `*`/`#`/`o`/`O` endings (direction-independent). Unicode box-drawing characters (`─│┌┐└┘├┤┬┴┼` etc., plus double-line and shading block variants) can be mixed in freely, and full Unicode/emoji is supported directly in the drawing.
+**Drawing vocabulary** (per docs, consistent with the rendered example above): borders `-`, `_`, `|` (straight) and `\`, `/` (diagonal); corners `+` (square), `.`/`,`/backtick/`'`/`´` (rounded — visually identical in the output, only the ASCII source differs), `(`/`)` (curvy, for rounded/organic shapes like `( 3 )`), and `*`/`#`/`o`/`O` (filled dot / filled square / empty dot, usable as corners or arrow endpoints); arrows use `<`/`>`/`v`/`V`/`^`/`A` for direction plus the same `*`/`#`/`o`/`O` endings (direction-independent); doubled heads (`---->>`, `<<-->>`) work too. A line only attaches cleanly to a box edge through a `+`. Unicode box-drawing characters (`─│┌┐└┘├┤┬┴┼` etc., plus double-line and shading block variants) can be mixed in freely, and full Unicode/emoji is supported directly in the drawing.
 
 **Styling** — an HTML-comment attribute block directly above the fence works the same as any other custom-styling target (see `reference/syntax-core.md`): `style="..."` can center the image, cap its width, or override the SVG's own `fill`/`stroke`. Rendered and confirmed on a small test box with `style="display: block; margin-left: auto; margin-right: auto; max-width: 315px; fill: red; stroke: green;"` above the fence: the resulting SVG was horizontally centered within its container and its border color was overridden to green (`fill: red` had no visible effect on this particular drawing since it only used unfilled border/corner characters — no `*`/`#`-style filled shape was present to show the fill override).
 
@@ -113,7 +126,26 @@ main   *---*-+-*---*---*-------------*----
 ```
 ````
 
-**Embedding LiaScript content** — wrap a one-liner or a multi-line block in double quotes `"` inside the drawing to overlay real, interpreted LiaScript/Markdown (math, quizzes, code blocks, animations, images via a macro) as a `foreignObject` positioned over the generated SVG. A single `"..."` pair is a one-liner; several lines whose quotes all start at the same horizontal column form one multi-line block. This is documented in detail with worked examples (animations, TTS-synced narration, gap-text quizzes needing a leading space before `[[`, and macro-based images to keep long URLs out of the drawing's width) — not independently re-verified at the time this reference was written; treat the mechanism as directionally correct per docs, but expect to hand-adjust quote positions/widths against your actual content, as the docs themselves note the placement is not pixel-precise.
+**Embedding LiaScript content** — text in double quotes inside the drawing is rendered as real LiaScript (Markdown, math, quizzes, code, animations) in a `foreignObject` over the SVG:
+
+- `"_styled one-liner_"` — a single quoted segment on a line.
+- **Block:** consecutive lines whose opening quotes start at the same column form one block; the longest quoted line sets the block's width. Extra consecutive quotes are ignored, so `""...""` can contain a literal `"`.
+- **Animations:** inline `"{1}{_How are you?_}"`; for a block, make its first line the marker: `"      {{4}}      "`.
+- **TTS:** put hidden comments after the fence, e.g. `<!-- --{{2 UK English Female}}-- Need to do some math. -->`.
+- **Quizzes:** add a space before the brackets (`" [[ 24 ]] "`), otherwise a lone text quiz is mistaken for a gap text; `<!-- data-show-partial-solution -->` above the fence highlights each gap separately.
+- **Long content** (e.g. image URLs) that would stretch the drawing: define a macro in the header (`@image: ![](long-url)`) and use `"   @image   "` inside the drawing.
+- Placement is not pixel-precise; expect to adjust quote positions by hand.
+
+```` markdown
+``` ascii
+ 😀                                           😐
+  |             "{1}{_How are you?_}"         |
+  +------------------------------------------>|
+  | "                {{2}}                  " |
+  | "   Now some math: $x = \sqrt[3]{y}$    " |
+  +<------------------------------------------+
+```
+````
 
 ## SVG
 
@@ -144,7 +176,7 @@ $$C = 2 \pi r$$
 </svg>
 ```
 
-Per docs (not independently re-verified beyond the math case above): a `foreignObject` can hold anything LiaScript can render, including animations (`{{n}}` on a nested element), quizzes, and further nested SVGs. Because dark mode inverts LiaScript's default palette but not an SVG's hard-coded colors, explicitly set colors/background on the outer `<svg style="...">` rather than relying on defaults, per docs.
+A `foreignObject` can hold anything LiaScript can render, including animations (a `{{n}}` line at the start of its content), quizzes, `<script>`s (which can manipulate other SVG elements by `id`), and further nested SVGs. Because dark mode inverts LiaScript's default palette but not an SVG's hard-coded colors, set colors explicitly on the outer element, e.g. `<svg style="background-color: white; color: black;">`.
 
 ## Chart Fine-Tuning
 
@@ -163,13 +195,29 @@ A separate, lighter-weight plotting notation — distinct from the table-driven 
     +-------------------------------------------
 ```
 
-Rendered and confirmed: this produces a real ECharts line/scatter plot (not a monospace text block) with a legend built from the parenthesized `(char label)` comments — three distinct series ("stars", "imaginary course", "big triangles"), each in the color/shape/line-style implied by its character.
+This produces a real ECharts line/scatter plot with a legend built from the parenthesized `(char label)` entries — here three series ("stars", "imaginary course", "big triangles").
+
+**Axes, labels, title** — all optional: a title line above the plot; axis limits at the ends of the axes (y max at the top and y min at the `+` corner, x min and x max below the x-axis); the x label between the x limits; the y label written vertically, one letter per row, left of the `|`. Without limits, both axes default to the range 0 to 1:
+
+```markdown
+                                      diagram title
+    1.5 |           *                     (* stars)
+        |
+      y |        *      *
+      - |      *          *
+      a |     *             *       *
+      x |    *                 *
+      i |   *
+      s |  *
+        | *                              *        *
+      0 +------------------------------------------
+         2.0              x-axis                100
+```
 
 **How the character encodes appearance** — the same letter used for two-or-more points at a shared x-position becomes a dot cluster (a density/dot-plot) rather than a connected line, and case matters:
 
-- **Color** — the character itself picks the color: `x`/`+`/`*`/`#` → black; single letters `a`–`z` map to a fixed palette (`r` red, `b` blue, `g` green, `y` yellow, `o` orange, `p` pink, `v` violet, `s` silver/gray, `e` ebony/brown, and others — full `a`–`z` table in the upstream docs, not reproduced verbatim here since it's a static lookup, not something worth re-verifying char-by-char).
-- **Shape** — case and letter together pick a marker shape (e.g. `A`/`T`-family for triangles); `+`/`*`/`#` are plotted as their literal glyph.
-- **Size** — uppercase renders larger than the lowercase form of the same letter. Rendered and confirmed with a controlled same-letter test (`r` on one row, `R` on another, nothing else): inspecting the two markers' SVG transforms directly (each point is an ECharts symbol positioned via a `matrix(scale,0,0,scale,x,y)` transform) showed `R` at scale `5` versus `r` at scale `2.5` — exactly double the radius, confirming the case-based size difference is real and not just a rendering-density illusion.
-- **Line style** — per docs, dashed/dotted/smoothed line variants are also driven by the character choice; not independently re-verified beyond the dashed lines visible in the rendered example above (the default `*` series and the `A` series both rendered dashed, the `r` series solid).
+- **Color** — the letter picks the color: `x`/`+`/`*`/`#` black, `a` amber, `b` blue, `c` cyan, `d` dark red, `e` ebony (gray-green), `f` forest green, `g` green, `h` heliotrope, `i` indigo, `j` jade, `k` khaki, `l` lime, `m` mint, `n` brown, `o` orange, `p` pink, `q` queen blue, `r` red, `s` silver, `t` teal, `u` ultramarine, `v` violet, `w` white, `y` yellow, `z` zomp.
+- **Size** — uppercase renders larger than the lowercase form of the same letter (`R` has twice the radius of `r`).
+- **Shape and line style** — also depend on the letter and its case: e.g. `r` gives small round dots with a smoothly interpolated line, `A` large triangles with sharp line segments. There is no compact rule; the docs' Shapes and Line types sections show the full grid of characters.
 
 Custom styling applies the same way as for `ascii` blocks — an HTML comment (`<!-- style="..." -->`) directly above the plot, e.g. to increase its height for a dense multi-character legend.

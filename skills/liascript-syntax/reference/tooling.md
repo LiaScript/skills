@@ -4,15 +4,9 @@ The CLI/editor/hosting ecosystem around LiaScript: a local dev server for live-r
 
 ## Running a Course Locally
 
-`@liascript/devserver` (npm package; CLI binary `liascript-devserver`) serves a local folder as a live-reloading LiaScript course. Confirmed installed and run directly in this environment:
+`@liascript/devserver` (npm package; CLI binary `liascript-devserver`, install with `npm install -g @liascript/devserver`) serves a local folder as a live-reloading LiaScript course. `liascript-devserver --version` prints both the devserver version and the bundled LiaScript interpreter version — check it when a feature (e.g. the 2.0 multi-block quiz options) doesn't render: an older bundled interpreter may not support it yet.
 
-```
-$ liascript-devserver --version
-DevServer: 1.2.10
-LiaScript: 1.1.0
-```
-
-Flags, confirmed via `liascript-devserver --help`:
+Flags (from `liascript-devserver --help`):
 
 ```
 liascript-devserver [-i input] [-n hostname] [-p port] [-l] [-o] [-t] [-r responsiveVoice-key]
@@ -34,12 +28,7 @@ Typical usage: run `liascript-devserver -l -o` from a course's project root (the
 
 ## Exporting
 
-`@liascript/exporter` (npm package; CLI binaries `liaex` and `liascript-exporter`, same tool) packages a LiaScript course into a target format — SCORM for LMS import, PDF/EPUB/DOCX for static documents, a self-contained web bundle, etc. Confirmed installed in this environment (`/usr/local/bin/liaex`, `/usr/local/bin/liascript-exporter`) and live-verified via `liaex --help` and `liaex -f presets`:
-
-```
-$ liaex --version
-version: 3.3.6--1.0.10
-```
+`@liascript/exporter` (npm package; CLI binaries `liaex` and `liascript-exporter`, same tool; install with `npm install -g @liascript/exporter`) packages a LiaScript course into a target format — SCORM for LMS import, PDF/EPUB/DOCX for static documents, a self-contained web bundle, etc. `liaex --version` prints `<exporter version>--<bundled LiaScript version>`; the bundled interpreter can lag behind the current LiaScript release, so newer syntax may not be supported in exports yet.
 
 Core usage:
 
@@ -103,7 +92,7 @@ Per the LiaScript docs' Tools page (fetched fresh, not independently re-verified
 - **LiveEditor** — `https://liascript.github.io/LiveEditor` — fully browser-based, no installation, supports uploading images/videos and collaborative editing.
 - **VS Code** — two official extensions: `liascript-preview` (toggle with `Alt+L`, updates the rendered course on save) and `liascript-snippets` (fuzzy-search snippet helper, triggered by typing `lia`). Install guide: `https://liascript.github.io/blog/install-visual-studio-code-with-liascript/`.
 - **VS Code Web** (github.dev) — the `liascript-preview-web` marketplace extension.
-- **Atom** — same pair of extensions and the same `Alt+L` toggle as VS Code. Install guide: `https://liascript.github.io/blog/install-atom-with-liascript/`.
+- **Atom** — same pair of extensions and the same `Alt+L` toggle as VS Code, but Atom itself was discontinued in 2022; prefer VS Code.
 - **CodiLIA** — a fork of the collaborative editor CodiMD/HedgeDoc with built-in LiaScript preview, for real-time multi-author editing: `https://github.com/liascript/codilia`.
 
 ## Publishing
@@ -118,9 +107,13 @@ LiaScript courses are plain Markdown/HTML files interpreted entirely client-side
 
   Slides can be deep-linked with a trailing `#<n>`, e.g. `https://liascript.github.io/course/?https://raw.githubusercontent.com/liaScript/docs/master/README.md#5`.
 
+- **Other sources** — besides plain `https://` raw URLs, the viewer loads:
+  - GitLab (including sub-groups and `gitlab.opencode.de`) and Codeberg directly, without a proxy; self-hosted GitLab via `gitlab://host/...` instead of `https://`.
+  - Self-hosted Nextcloud shares via `nextcloud://...`.
+  - Nostr sources (`npub...`/`nsec...` URIs) and IPFS.
+  - **ZIP archives**: a course (README plus images, scripts, ...) can be hosted as a `.zip` and is extracted on the fly; download links from GitHub, OneDrive, and Dropbox are translated automatically. Courses can also be uploaded as single files or ZIPs on the viewer's start page.
 - **GitHub workflow**: create a (free) GitHub account, commit the course Markdown, and link to it via the raw-URL viewer pattern above. Tagging the repo `liascript`, `liascript-course`, or `liascript-template` makes it discoverable via GitHub's topic pages (`github.com/topics/liascript`, `.../liascript-course`, `.../liascript-template`).
 - **No backend required**: "No further hosting is required, no further compilation step, the JavaScript interpreter of LiaScript does everything else directly within the browser at client-side" — and per the docs, no course or user-progress data is stored server-side.
 - **Offline / PWA**: the interpreter doubles as a reader and installs as a Progressive Web App, storing documents and reading progress locally in the browser for offline use.
+- **Preview cards on other websites** — load `https://liascript.github.io/course/preview-lia.js` and use `<preview-lia src="<raw-course-url>"></preview-lia>`; the card (title, logo, comment from the course header) updates itself client-side. Inside a course, `[preview-lia](<raw-course-url>)` does the same.
 - **LMS embedding**: for importing into an LMS (Moodle, ILIAS, OPAL, etc.), the docs recommend embedding the hosted course via an external-website link or `iframe` — this is the lightweight alternative to a full SCORM/IMS package built with the exporter (see `## Exporting` above).
-
-None of the publishing/PWA/offline claims in this section were independently re-verified by actually deploying a course at the time this reference was written (no network access) — they're taken directly from the freshly-fetched docs page and hedged accordingly, unlike the devserver/exporter CLI flags above, which were confirmed against live `--help`/`--version` output and, for presets, a live command run.

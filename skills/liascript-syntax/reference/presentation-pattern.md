@@ -22,7 +22,7 @@ Spoken explanation of the first point.
 Spoken explanation of the second point.
 ```
 
-Keep the pairing 1:1 — a `{{n}}` bullet with no matching `--{{n}}--` is fine (a silent reveal), but a `--{{n}}--` with no matching `{{n}}` is a documented failure mode (see `interactivity.md`'s "`--{{n}}--` is the narration half of the `{{n}}`/`--{{n}}--` pair" warning): the narration never gets a visual anchor, and produces no visual reveal in the slide body outside Textbook mode.
+Keep the pairing 1:1 for content that should appear on screen — a `{{n}}` bullet with no matching `--{{n}}--` is fine (a silent reveal). A `--{{n}}--` with no matching `{{n}}` is valid too, but it is a *narration-only* step: it adds a step that is spoken, not a visual reveal (see `interactivity.md`'s "`--{{n}}--` is the narration half of the `{{n}}`/`--{{n}}--` pair" note). Use it deliberately — e.g. to add a spoken remark between two reveals — never as a substitute for `{{n}}` when something should appear.
 
 ## Step 0: framing content outside the click sequence
 
@@ -46,6 +46,6 @@ Rendered and confirmed, this is how `--{{n}}--` narration visibility actually be
 
 - [ ] One heading per slide — don't cram multiple unrelated topics under one `#`/`##`.
 - [ ] Every `{{n}}` bullet that needs spoken narration gets its own `--{{n}}--` at the same `n`, directly below it.
-- [ ] Never write a bare `--{{n}}--` without a matching `{{n}}` bullet (except `--{{0}}--` — see Step 0 above) — it silently produces no visual reveal in the slide body outside Textbook mode.
+- [ ] Use a bare `--{{n}}--` (without a matching `{{n}}` bullet) only for deliberate narration-only steps, like `--{{0}}--` in Step 0 above — it never produces a visual reveal in the slide body outside Textbook mode.
 - [ ] Use `--{{0}}--` (or ungated plain text) for framing remarks that shouldn't wait for a click.
 - [ ] Preview the course in all three modes before publishing — `Presentation`/`Slides` for the live-narrated flow, `Textbook` for the self-paced reading flow — per the docs' own instruction to "balance these features properly."

@@ -1,6 +1,6 @@
 # Interactivity
 
-LiaScript content becomes interactive through five layers that combine freely: **effects** (animation/narration/playback timing), **executable code blocks** (editable code with an Execute button and a terminal), the **`send`/JS API** every script gets, **macros** (text-substitution shortcuts, usually imported from a template course), and **JS-Components** (raw `<script>` tags embedded directly in the Markdown body). This file covers all five for *using* them in a course. For *building* a reusable macro/template package for the LiaTemplates ecosystem, see the separate `lia-template` skill — it documents the 12 implementation patterns and the full `send` object from the author's side; this file only covers calling what already exists.
+LiaScript content becomes interactive through five layers that combine freely: **effects** (animation/narration/playback timing), **executable code blocks** (editable code with an Execute button and a terminal), the **`send`/JS API** every script gets, **macros** (text-substitution shortcuts, usually imported from a template course), and **JS-Components** (raw `<script>` tags embedded directly in the Markdown body). This file covers all five for *using* them in a course. For *building* a reusable macro/template package for the LiaTemplates ecosystem, see the separate `template-development` skill — it documents the 12 implementation patterns and the full `send` object from the author's side; this file only covers calling what already exists.
 
 ## Effects
 
@@ -14,6 +14,8 @@ This appears at step 1 and stays.
 
      {{2-3}}
 This appears at step 2 and disappears at step 3.
+
+{{4}} Same-line form: also valid, but harder to spot in other viewers.
 ```
 
 **Inline animation** — wrap the animation definition and the affected text in two adjacent brace pairs, usable mid-sentence:
@@ -37,6 +39,14 @@ This is an example...
 | multiple | blocks.  |
 
 ************************************
+```
+
+**Styling and nesting** — a multi-block animation may contain further block and inline animations. An attribute comment above the animation marker styles the revealed block; the bundled [animate.css](https://animate.style) classes give entrance effects:
+
+```markdown
+<!-- class="animate__animated animate__backInUp" -->
+     {{1}}
+This block flies in at step 1, with an {2}{inline part}<!-- class="animate__animated animate__flash" --> at step 2.
 ```
 
 **TTS-sync comments** — a paragraph marked with `--{{n}}--` is read aloud by the document's text-to-speech engine when animation step `n` is reached, in `Presentation`/`Slides` mode. It is designed to be used *together with* a `{{n}}`-marked visual block at the same step number, not as an alternative to it: think of `{{n}}` as a presentation bullet point (the visual content revealed at that step) and `--{{n}}--` as the speaker notes for that same bullet (the spoken explanation of it). In `Textbook` mode the `--{{n}}--` paragraph is simply displayed as plain visible text in place — it is not hidden there (confirmed by rendering: the plain-text form is visible in Textbook mode with the surrounding document). `Presentation` and `Slides` do **not** behave identically here, despite both being non-`Textbook` modes: rendered and confirmed, `Presentation` mode truly hides the comment — wrapped in a visually-hidden CSS container (collapsed to a 1px sliver, present in the DOM/accessible text but not legible on screen) — while `Slides` mode shows it, but not in place: it renders in a separate, genuinely visible speaker-notes side panel docked at the edge of the viewport, not inline with the slide body (that panel's container carries a `hide-lg-down` responsive class, so this was only confirmed at a wide viewport — narrow-viewport/mobile behavior wasn't independently tested). For the full slide-construction pattern that combines `{{n}}` blocks and `--{{n}}--` comments into a presentation that also works as a textbook, see `reference/presentation-pattern.md`.
@@ -64,19 +74,67 @@ above, don't use it alone expecting a visual reveal.
 
 Wrap the comment in an HTML comment (`<!-- --{{n}}-- ... -->`) to keep it out of Textbook mode too — a "hidden" comment, spoken but never shown. Rendered and confirmed: a plain `--{{n}}--` comment's text is visible in Textbook mode, while the exact same comment wrapped in `<!-- -->` produces no visible text anywhere, in any mode, even though it occupies a real animation step (a later step still advances past it correctly).
 
-Per the official docs, `--{{n voice}}--` overrides the narrator voice for just that one comment, and multiple comments sharing the same step number are concatenated and read aloud in document order (using only the first one's voice). The *syntax* for both is confirmed safe to use — several `--{{1}}--`/`--{{1 voice}}--` comments at the same step number, mixing default and named voices, parse without error and all coexist under that one step — but the actual **spoken** behavior (which voice is heard, in which order) could not be independently verified here: the headless Chrome environment used to write this reference had no browser TTS voices, so LiaScript's speech engine (EasySpeech) never finishes initializing and throws `EasySpeech: not initialized` on any attempt to actually speak, before ever reaching the browser's `speechSynthesis.speak()` call (confirmed by patching `speechSynthesis.speak` to capture calls — zero calls arrived, and the console showed the same init error). Treat the voice-override and speech-order claims as per-docs, not independently re-verified for audio output.
+Several comments with the same step number are read in document order and combined; only the first one's voice is used.
 
-**Multimedia comments** — append (or prepend) a standard audio/video embed to the end of a TTS-sync comment paragraph to play it alongside that step:
+**Voices** — the voice can be set on three levels:
+
+1. **Course:** `narrator:` in the main header (default if missing: `US English Male`).
+2. **Slide:** a `narrator:` in an HTML comment directly below the slide heading overrides it for that slide.
+3. **Comment:** `--{{n voice}}--` overrides it for one comment, e.g. `--{{3 Deutsch Female}}--`.
+
+Custom voice aliases are defined as macros and used with `@`:
 
 ```markdown
-    --{{0}}--
-To play an audio file during your animation step,
-simply attach the multimedia link at the end of
-your comment.
-?[⏯](recording/audio_1.mp3)
+## Slide Title
+<!--
+narrator: UK English Female
+@Tanja:   Russian Female
+-->
+
+    --{{1}}--
+Spoken with the slide's UK English Female voice.
+
+    --{{2 Deutsch Female}}--
+Dieser Kommentar wird mit einer deutschen Stimme gesprochen.
+
+    --{{3 @Tanja}}--
+«Для торжества зла достаточно бездействия хороших людей».
 ```
 
-This is genuinely different behavior from a normal media embed, and easy to get wrong: **a media link inside a `--{{n}}--` comment is never rendered as a visible player.** Verified by testing both forms side by side — `?[audio](file.mp3)` on its own, outside any comment, renders a normal visible `<audio>` control; the exact same link appended to a `--{{0}}--` comment produces *no* visible element and *no* network request at all until the comment's animation step is actually triggered in `Presentation`/`Slides` mode, at which point the file is fetched and played automatically as a narration cue, with the comment's own text still not shown on screen (only spoken/played). If you want a visible player instead, use the media syntax outside of a comment.
+Voice names follow the ResponsiveVoice naming scheme (`<Language> Female`/`<Language> Male`, e.g. `UK English Female`, `Deutsch Male`, `French Female`, `Arabic Male`); the full list is in the docs' `narrator` section. LiaScript uses the browser/OS speech engine first and picks the best-matching installed voice (with fallbacks to related languages); ResponsiveVoice is the backup engine. Pick a voice whose language matches the course's `language` field.
+
+**Speech rate and pitch** — an attribute comment above a comment or playback element changes how it is spoken: `data-pitch` from `0` to `2`, `data-rate` from `0.1` to `5`:
+
+```markdown
+<!-- data-rate="1.5" data-pitch="1.2" -->
+    --{{1}}--
+This is read faster and slightly higher.
+```
+
+**Translation** — users can translate a course with Google Translate from the settings. Code blocks and comments with a non-default voice (foreign-language text) are never translated; LiaScript then looks for a voice matching the new language. To exclude any other block or inline element, attach both attributes (Google uses the class, other tools the attribute):
+
+```markdown
+<!-- class="notranslate" translate="no" -->
+    --{{2}}--
+I will not be translated!
+```
+
+**Recorded audio or video instead of TTS (optional)** — a comment that starts or ends with an audio or video link plays that recording instead of speaking the text when the step is reached:
+
+```markdown
+    --{{1}}--
+?[⏯](recording/audio_1.mp3)
+The recording replaces the TTS output for this step.
+
+    --{{2}}--
+!?[⏯](recording/video_2.webm#t=4,12)
+The video is shown as an overlay the viewer can move and resize.
+```
+
+- The link is not rendered as a normal inline player. Audio is only fetched and played when the step is reached; a video appears as a movable overlay.
+- `#t=start,end` (in seconds) plays only that part of the file.
+- `data-rate` also applies to recordings; `data-pitch` does not.
+- If the user translates the course with Google Translate, translated comments are spoken with TTS in the target language instead of playing the recording.
 
 **Playback** — `{{|>}}` (block) or `{|>}{...}` (inline) attaches a visible Play/Pause button that reads the paragraph aloud on click, independent of the animation step machinery and visible in every presentation mode (unlike TTS-sync comments, which never appear inline outside Textbook mode — see above):
 
@@ -91,7 +149,36 @@ This entire paragraph will be spoken out __LOUD__.
   - Markdown elements
 ```
 
-`{{!> voice}}`/`{!> voice}{...}` picks a specific voice for that one playback button — per the official docs; which voice actually gets used could not be independently re-verified here for the same headless-TTS reason as TTS-sync comments above (no browser voices available, `EasySpeech` never initializes). Playback and animation numbering combine (`{{1 |>}}`) so a play button only appears once its step is reached — this part **is** confirmed by rendering: a `{{1 |>}}`-marked paragraph's Play button is completely absent from the DOM at step 0 and appears (with the paragraph itself, tagged with its step badge) only after advancing to step 1.
+`{{!> voice}}`/`{!> voice}{...}` picks a specific voice for that one playback button. `|>` and `!>` are interchangeable — use `!>` inside tables, where `|` would break the table syntax.
+
+**Playback blocks** — put `{{|>}}` above a `***` fence (or a `<section>`/`<div>`) to read several blocks with one button.
+
+**Inline playback** — `{|>}{text}` or `{!> voice}{text}` adds a play button to a word or phrase; ideal for vocabulary tables in language courses:
+
+```markdown
+| English      | German                        |
+| ------------ | ----------------------------- |
+| {!>}{I go}   | {!> Deutsch Male}{ich gehe}   |
+| {!>}{you go} | {!> Deutsch Male}{du gehst}   |
+```
+
+**Playback combined with animation** — add the step range: `{{1 |>}}` for a block, `{|> 1-2}{...}` inline. The button appears at that step, and what is read depends on which inline parts are currently visible (in Textbook mode everything is shown and read):
+
+```markdown
+    {{1 |>}}
+This is an example where {|> 1-2}{I go} _{|> 2}{I am going}_ to work.
+```
+
+**Play buttons without visible text** — TTS and translation need the text in the DOM, so `display: none` does not work. Shift the text off-screen instead, best via a macro in the slide's header comment:
+
+```markdown
+<!--
+@play: {!> @0}{<span style="display: inline-block; text-indent: -10000px">@1</span>}
+@de: @play(Deutsch Male,@0)
+-->
+
+| I | @de(ich gehe) |
+```
 
 ## Interactive Code Blocks
 
@@ -105,6 +192,8 @@ result
 ```
 <script>@input</script>
 ````
+
+Each run of edited code is saved as a new version; the user can step back and forth between versions (editing an older version appends a new one).
 
 **Multi-file projects** — several fenced code blocks placed back-to-back with *no blank line between them* become one project with one shared `<script>` tag at the end. Give each block a filename after the language (prefix `-` to start hidden/minimized, `+` — the default — to start visible), and reference an individual block from the script with `@input(n)` (0-indexed; `@input` alone is equivalent to `@input(0)`):
 
@@ -145,7 +234,7 @@ This is useful for a course a student may be running offline (no external interp
 
 **Loading external resources** — a library referenced from inside a `<script>` tag must be loaded via the `script:` meta-header field first (`<script>` tags themselves cannot fetch external JS); once loaded it is available globally to every code block on the page:
 
-```markdown
+````markdown
 <!--
 script: https://cdn.example.com/library.min.js
 -->
@@ -154,9 +243,9 @@ script: https://cdn.example.com/library.min.js
 f = sin(t)^4 - 2*cos(t/2)^3*sin(t)
 ```
 <script> Algebrite.run(`@input`) </script>
-```
+````
 
-**Styling** — attributes go in an HTML comment directly above the fence. Rendered and confirmed working: `data-showGutter="false"` removes the line-number gutter (checked directly against the Ace editor instance); `data-theme="chaos"` (any Ace theme name) switches the editor's color theme; `data-marker="y1 x1 y2 x2 color type;"` (repeatable, `;`-separated) highlights a row/column range with a color keyword (`error`/`log`/`warn`/`debug`/`info`, or a spaceless `rgba(...)`) and an optional marker type (`text`, `fullLine` default, `screenLine`) — confirmed via the actual marker DOM nodes and their color classes. `data-tabSize`, `data-fontSize`, and `data-firstLineNumber` are documented but were not independently re-verified here. **`data-readOnly="true"` did not take effect in testing** — tried on a standalone scripted block, as a bare `data-readOnly` attribute, and inside a two-file project (the exact form shown in the official docs); in all three cases the Ace editor's `getReadOnly()` still reported `false` and typing into the editor was accepted. Treat `data-readOnly` as unverified/possibly version-dependent rather than a reliable way to lock a block from editing.
+**Styling** — attributes go in an HTML comment directly above the fence. Rendered and confirmed working: `data-showGutter="false"` removes the line-number gutter (checked directly against the Ace editor instance); `data-theme="chaos"` (any Ace theme name) switches the editor's color theme; `data-marker="y1 x1 y2 x2 color type;"` (repeatable, `;`-separated) highlights a row/column range with a color keyword (`error`/`log`/`warn`/`debug`/`info`, or a spaceless `rgba(...)`) and an optional marker type (`text`, `fullLine` default, `screenLine`) — confirmed via the actual marker DOM nodes and their color classes. Further attributes and their defaults: `data-tabSize="2"`, `data-fontSize="12pt"` (must be given in `pt`), `data-firstLineNumber="0"`. By default, non-executable code blocks show no line numbers (useful for pseudo-code), executable ones do. **`data-readOnly="true"` did not take effect in testing** — tried on a standalone scripted block, as a bare `data-readOnly` attribute, and inside a two-file project (the exact form shown in the official docs); in all three cases the Ace editor's `getReadOnly()` still reported `false` and typing into the editor was accepted. Treat `data-readOnly` as unverified/possibly version-dependent rather than a reliable way to lock a block from editing.
 
 ## The send/JS API
 
@@ -185,6 +274,12 @@ console.error(...)   // red error line
 console.html(str)    // inject raw HTML into the terminal
 console.stream(str)  // append without a trailing newline
 console.clear()      // shorthand for send.lia("LIA: clear")
+console.table(data)  // also: console.assert, console.count/countReset,
+                     //       console.time/timeLog/timeEnd (performance measurement)
+
+send.log("warn", "", ["This is a warning", 12, [1,2,3]])
+                     // generic form: send.log(type, separator, contentList),
+                     // type = "debug" | "info" | "warn" | "error" | "html" | "stream"
 
 // Terminal I/O, once "LIA: terminal" is active
 send.handle("input", input => { /* runs on each line the user submits */ })
@@ -200,13 +295,28 @@ Verified behavior worth calling out:
 - **Async pattern** — end the run with `"LIA: wait"`, and call `send.lia(...)` (with `"LIA: stop"` at the end, or as a separate call) once the async work finishes. Rendered and confirmed: the Execute button hides while waiting, `console.warn`/`send.lia` output from inside a `setTimeout` callback appears once it fires, and the Execute button reappears once `"LIA: stop"` is sent.
 - **`"LIA: terminal"` + `send.handle`** — rendered and confirmed: after Execute, a small input editor plus a "Send to terminal" button appear; typing `2+2` and sending it runs the registered `input` handler (`eval(input)` in the test) and prints `4`.
 - **`send.register`/`send.dispatch`** — confirmed working for two code blocks that both live **on the same slide**: block A's terminal input dispatched an event that block B's registered listener received and logged, and vice versa. Cross-*slide* delivery (the official docs' claim that this also works "even if both code blocks are defined on different slides") did **not** reproduce in testing here: after executing a listener on slide B, navigating away, then executing and dispatching from slide A, no callback fired on B — LiaScript unmounts a slide's scripts (and, apparently, their registered listeners) when you navigate away from it, unless something keeps that slide's DOM alive (e.g. the `persistent: true` meta-header/slide-header field). If you rely on cross-slide messaging, keep the receiving slide `persistent` or verify your specific case rather than assuming it works out of the box.
+- **Multi-line terminal input** — in `"LIA: terminal"` mode, <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a new line; Enter (or the send button) submits.
+- **Error annotations in the editor** — pass line-specific details as the second argument of `send.lia` (one inner list per code block of the project), or throw a `LiaError`:
+
+  ```js
+  send.lia("ups, something went wrong",
+    [[{ row: 1, column: 1, text: "insert your error info here", type: "error" },
+      { row: 2, column: 1, text: "a warning about this line",   type: "warning" }]],
+    false)
+  "LIA: stop"
+
+  // or, equivalently:
+  var error = new LiaError("ups something went wrong", 1)   // 1 = number of code blocks
+  error.add_detail(0, "insert your error info here", "error", 1, 1)  // block, text, type, row, column
+  throw error
+  ```
 - **`send.output`** is for standalone JS-Component `<script>` tags (see below), not for `<script>@input</script>` code-block scripts — see the JS-Components section for the verified distinction.
 
 ## Using Macros
 
 A macro is `@Name` or `@Name(args)` anywhere in the document body (or `@Name`/`@Name: ...` in a meta-header block), expanded at parse time from a definition — either written locally in this course's header, or pulled in from another course entirely with `import:`:
 
-```markdown
+````markdown
 <!--
 import: https://raw.githubusercontent.com/liaTemplates/ABCjs/main/README.md
 -->
@@ -219,9 +329,31 @@ L: 1/8
 K: F
 "F"[A3F3][AF] ([AF][GE][AF])[BG] |
 ```
-```
+````
 
 `import:` (repeatable, one URL per line) loads only the *main header* of the referenced course — its macros, `script:`/`link:` entries, `attribute:` lines, and `@onload` block — not its body content. Rendered and confirmed both halves of this claim with a small local two-course fixture: importing the [LiaTemplates ABCjs](https://github.com/liaTemplates/ABCjs) template and calling `@ABCJS.render` on a fenced `abc` code block produces a fully interactive sheet-music rendering with working playback controls, no console errors (confirms the macro/header *is* loaded); separately, importing a second local course whose header defined one macro and whose body had two of its own slide headings, the importing course's table of contents listed only its own sections — the imported course's slide titles never appeared, confirming the body is *not* pulled in. Prefer pinning a specific tag/commit in the `import:` URL over `master`/`main` for a course that needs to keep working unmodified.
+
+**Defining macros** — in the main header or in a slide's header comment (a slide-level definition overrides a main-header macro of the same name, e.g. to change `narrator` or `author` for one section). Macro names are case-sensitive (`@author` ≠ `@Author`); the leading `@` in a definition is optional but recommended.
+
+```markdown
+<!--
+@smile: ;-)
+@Single.line: a single-line macro may continue
+  on further lines, as long as they are indented.
+
+@block
+Block macros keep whitespace and newlines and may contain
+Markdown, HTML, CSS, or JavaScript — and call other macros: @smile
+@end
+
+@@commented: a single-line macro commented out with @@
+@@@commented-block
+a block macro commented out with @@@
+@end
+-->
+```
+
+Two special block macros in the main header: `@onload ... @end` holds JavaScript that runs once before the course is shown (global helper functions, setup), and `@style ... @end` holds CSS that is applied directly while parsing (faster than an external `link:`, and not passed on when the course is imported). To write a literal `@` that must not be expanded, escape it: `\@`.
 
 **Calling a macro with parameters** — parentheses, comma-separated, positional (`@0`, `@1`, ... inside the definition). Rendered and confirmed with a two-parameter macro (`@highlight: <b style="color: @0">@1</b>`, called as `@highlight(red, simple text)` → a real, interpreted `<b style="color: red">simple text</b>`, not escaped text):
 
@@ -229,15 +361,29 @@ K: F
 @highlight(red, simple text)
 ```
 
-The official docs say a parameter containing a comma must be wrapped in backticks (e.g. `` @highlight(green, `simply, simply, green`) ``). **This did not reproduce cleanly in testing**: both a direct backtick-wrapped parameter and one forwarded through a second, wrapping macro rendered as literal escaped text cut off at the first internal comma, instead of the fully-substituted HTML. Verify backtick-comma escaping empirically against your target LiaScript version before relying on it — when in doubt, avoid commas inside a single parameter (split into more positional parameters, or restructure the macro) rather than trying to protect them. **Note this disagrees with the `lia-template` skill**, whose `### Parameters` section states flatly "Commas inside a param: wrap in backticks" as if it works reliably — if both skills are loaded, trust this file's live-tested finding (it doesn't reproduce as described) over `lia-template`'s unqualified claim, and re-verify against your target LiaScript version either way.
+A parameter that itself contains commas must be wrapped in backticks, otherwise it is split at the first comma:
 
-The **last** parameter can instead be supplied as a fenced code block placed directly above the call (its content, including any language tag, becomes that final argument), which is confirmed working — a block-macro call with one named argument plus a fenced-block last argument rendered exactly as defined, with the block's Markdown content parsed normally inside it. For a link-shaped call — `@[MacroName(other, args)](relative/or/absolute/url "optional title")`, where a relative URL is auto-resolved to an absolute one so the call still works as a normal Markdown link on GitHub/other viewers — see the `@load`/link-parameter pattern in the official docs; not independently re-verified here.
+```markdown
+@highlight(green, `simply, simply, green`)
+```
 
-**Escaping for use inside a JS string** — prefix with `'`: `@'input`, `@'input(1)`, `@'0`, or `@'MacroName(...)` backslash-escape the substituted value so it's safe to embed inside a JS template literal, per the official docs. Apply it once only; chaining escaped macros can double-escape special characters. Not independently re-verified at the time this reference was written.
+A multi-line parameter can be passed inline by wrapping it in a triple-backtick block inside the parentheses (``@highlight(green, ```...```)``) — this works but reads badly in other Markdown viewers, so prefer a code-block parameter:
+
+**Code-block parameter** — put the macro call in the fence's info string, after the language tag; the block's *content* becomes the macro's **last** parameter (the language tag only drives syntax highlighting in other viewers):
+
+````markdown
+``` json @panorama("0",https://pannellum.org/images/cerro-toco-0.jpg)
+{ "pitch": 14.1, "yaw": 1.5, "type": "info", "text": "Baltimore Museum of Art" }
+```
+````
+
+**Link parameter** — `@[MacroName(other, args)](relative/or/absolute/url "optional title")`: the URL is passed as the last parameter, and a relative URL is resolved to an absolute one first. Because the call is shaped like a normal Markdown link, it still renders as a clickable link on GitHub and in other viewers.
+
+**Escaping for use inside a JS string** — prefix with `'`: `@'input`, `@'input(1)`, `@'0`, or `@'MacroName(...)` backslash-escape the substituted value so it's safe to embed inside a JS template literal, per the official docs. Apply it once only; chaining escaped macros can double-escape special characters.
 
 **Debugging a call** without running it — prefix with an extra `@` (`@@MyMacro(args)`) to dump its fully expanded output into a gray, read-only block instead of executing it. Rendered and confirmed: `@@highlight(red, dump this call)` produced a gray `<pre><code>` block showing the (HTML-escaped) expansion instead of a live bold-red span.
 
-For *authoring* your own macros/templates — the block/single-line macro syntax, `@uid`, the 12 established implementation patterns for wrapping a JS library, `LiaError` for editor annotations, and the full template file layout — see the `lia-template` skill; that content is not duplicated here.
+For *authoring* your own macros/templates — the block/single-line macro syntax, `@uid`, the 12 established implementation patterns for wrapping a JS library, `LiaError` for editor annotations, and the full template file layout — see the `template-development` skill; that content is not duplicated here.
 
 ## JS-Components
 
@@ -254,7 +400,33 @@ Every script — code-block or standalone — runs in its own local scope; two `
 <script> window.a / 2 </script>
 ```
 
-Scripts combine with animation numbers the same way any block does (`{{1}} <script>...</script>`) to delay execution until that step is reached; in `Textbook` mode all of a slide's scripts run once the slide loads.
+If a script throws, the error message is displayed as its result.
+
+Scripts combine with animation numbers the same way any block does (`{{1}} <script>...</script>`) to delay execution until that step is reached; in `Textbook` mode all of a slide's scripts run once the slide loads. A script without an animation number runs whenever the slide is opened — again on every visit (use `run-once` to prevent that, see Script attributes below).
+
+**Returning HTML or LiaScript** — a plain string result is shown as text. Prefix it with `HTML:` to render it as HTML, or with `LIASCRIPT:` to have it parsed as LiaScript (tables, formulas, even quizzes). Scripts render inline by default; `style="display: block"` gives them the full line. Quizzes/code generated this way are not persisted — only elements written directly in the Markdown keep their state.
+
+```markdown
+<script run-once>"LIASCRIPT: $$\\frac{1}{x} = 0$$"</script>
+
+<script style="display: block" modify="false">
+"HTML: <marquee>This text scrolls</marquee>"
+</script>
+```
+
+**Script attributes:**
+
+| Attribute | Effect |
+|---|---|
+| `run-once` | Execute only once; the result is kept and shown on every later appearance. |
+| `modify="false"` | Disables editing the script by double-click and removes the gray background. |
+| `modify="// pattern\n"` | Only the code between two `// pattern` lines is shown/editable on double-click; the rest stays hidden. Combine with `type` (e.g. `type="text/python"`) for highlighting when executing other languages from a string. |
+| `worker="true"` | Run in a web worker (for heavy computation) — no DOM access. |
+| `update-on-change` / `="false"` | Re-run on every change vs. only on Enter/blur, overriding the input type's default. |
+| `input-active` | The input widget is visible on first appearance (normally it appears only after clicking the script), and closes again on blur. |
+| `input-always-active` | The input widget stays visible permanently. |
+| `style="display: block"` | Render the script result as a block instead of inline. |
+
 
 **Asynchronous execution & `send.output`** — this is where the standalone form and the code-block form genuinely diverge, confirmed by testing both: `send.output(...)` only produces visible, live-updating output from a **standalone** `<script>` tag (no fence, no `@input`); the same `send.output` call inside a `<script>@input</script>` code-block script does not surface anything in the terminal panel. For a long-running/self-updating standalone script, return `"LIA: wait"` (or call `send.wait()`) so LiaScript knows the process is still active, then call `send.output(...)` on every update — this does not reset the run the way `send.lia(...)` would:
 
@@ -272,7 +444,7 @@ var i = 0
 
 Rendered and confirmed: the inline text updates live ("counting 1", "counting 2", ...) without any Execute button. Also specifically confirmed by navigating away to a different slide and back: the counter kept incrementing the whole time it was off-screen (it read a much higher count on return than when last seen) and a `window`-level run-counter variable stayed at its original value — i.e. revisiting the slide did **not** re-run the script's setup code or reset the interval, it just re-attached the display to the still-running background process. This holds until `send.stop()`/`send.lia("LIA: stop")` is called. Shortcuts: `send.wait()` = `"LIA: wait"`, `send.stop()` = `"LIA: stop"`, `send.clear()` = `"LIA: clear"`.
 
-**Input types** — add `input="<type>"` (plus `value="..."` for the initial value) to a `<script>` tag to turn it into a small interactive widget wired to `@input`; most HTML5 input types are supported, and `text`/`number`/`range`/`radio`/`checkbox` re-run the script on every change while the rest (`search`, `password`, date/time types, ...) re-run once the field loses focus or on submit. Rendered and confirmed for the most commonly used types:
+**Input types** — add `input="<type>"` (plus `value="..."` for the initial value) to a `<script>` tag to turn it into a small interactive widget wired to `@input`; most HTML5 input types are supported: `text` (the default for a bare `input` attribute), `number`, `range`, `checkbox`, `radio`, `select`, `button`, `submit`, `search`, `password`, `email`, `url`, `tel`, `color`, `date`, `datetime-local`, `time`, `month`, `week`, `hidden`, and `textarea` (`file` and `image` are not supported). `text`/`number`/`range`/`radio`/`checkbox` re-run the script on every change, most others once the field loses focus or Enter is pressed — `update-on-change` overrides this. A `checkbox` with `options="Ben|Jerry"` becomes a multi-select returning a JSON list. Rendered and confirmed for the most commonly used types:
 
 ```markdown
 <script input="text" value="reverse">
@@ -332,7 +504,19 @@ Rendered and confirmed: toggling either checkbox live-updates the combining scri
 
 **Internationalization API** — `format="..."` (`number`, `datetime`, `list`, `relativetime`, `pluralrules`) applies a `locale`-aware `Intl.*` formatter to the script's output for display only (the underlying `@input` value used by connected scripts is unaffected). Confirmed: `format="number" locale="de-DE"` renders `1234.5` as `1.234,5` (German grouping/decimal separator), and `format="datetime" locale="de"` renders a `date`-type input in the German date format. The docs additionally describe a `localeStyle` parameter (used instead of `style`, since `style` is reserved for inline CSS) for `Intl.NumberFormat`'s `style` option (e.g. `localeStyle="currency" currency="EUR"`) — this did not visibly change the rendered output in testing here (both `localeStyle="currency"` and a plain `style="currency"` attempt produced the same locale-formatted number with no currency symbol), so treat currency-style formatting as unverified and check it against your target LiaScript version before relying on it.
 
-**`LIA` global object** — the official docs mark this section as still incomplete ("Todo") beyond one documented sub-API: `LIA.classroom` is a publish/subscribe interface for the live-presentation "Classroom" feature (peer-to-peer, active only while a classroom session is connected):
+**`LIA` global object** — `window.LIA` exposes a few helpers to scripts:
+
+```js
+LIA.fetch(url, options)   // like fetch(), but resolves URLs relative to the course
+LIA.goto(5)               // jump to the slide with this index
+LIA.gotoNext(); LIA.gotoPrevious()
+LIA.settings              // read/change the user settings from JavaScript
+LIA.debug = true          // log every script error to the browser console
+LIA.focusOnMain = false   // don't move the focus to the main content on slide change
+LIA.scrollUpOnMain = false// don't scroll to the top on slide change
+```
+
+`LIA.classroom` is a publish/subscribe interface for the live-presentation "Classroom" feature (peer-to-peer, active only while a classroom session is connected):
 
 ```js
 LIA.classroom.connected                 // bool: is a classroom session active

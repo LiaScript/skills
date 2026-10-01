@@ -1,0 +1,57 @@
+{
+  "name": "Codex — illuminierte Handschrift",
+  "source": "text: 'Mittelalter — wie eine alte Bibelhandschrift'",
+  "mood": "sacred, calm, precious; aged parchment, red rubrics, blackletter titles, an illuminated initial in lapis and gold; dark = leather binding with gold lettering",
+  "fonts": {
+    "body": "EB Garamond",
+    "heading": "UnifrakturCook",
+    "subheading": "EB Garamond",
+    "quote": "Almendra",
+    "mono": "Courier Prime",
+    "google": [
+      "UnifrakturCook:wght@700",
+      "EB Garamond:ital,wght@0,400;0,600;1,400",
+      "Almendra:ital,wght@0,400;1,400",
+      "Courier Prime"
+    ],
+    "heading_weight": 700,
+    "heading_letter_spacing": "0.02em",
+    "size": "1.75rem",
+    "line_height": 1.6
+  },
+  "light": {
+    "background": "#f1e4c6",
+    "text": "#2b1d0e",
+    "accent": "#8b1a1a",
+    "accent_text": "#7a1414",
+    "border": "#b89b6a",
+    "surface": "#e9d9b4",
+    "surface_strong": "#dfcb9f"
+  },
+  "dark": {
+    "background": "#2a1d12",
+    "text": "#ecdcb8",
+    "accent": "#8b1a1a",
+    "accent_text": "#d9b25f",
+    "border": "#5a4326",
+    "surface": "#33251a",
+    "surface_strong": "#3e2e1f"
+  },
+  "heading_color": {
+    "light": "#8b1a1a",
+    "dark": "#d9b25f"
+  },
+  "layout": {
+    "heading_align": "center",
+    "content_width": "72ch"
+  },
+  "density": "airy",
+  "shape": {
+    "radius": "0",
+    "radius_small": "0",
+    "radius_large": "0",
+    "shadow": "none",
+    "border_width": "2px"
+  },
+  "extra_css": "/* parchment / leather with a soft vignette (fixed) */\n:root.lia-variant-light .lia-canvas { background-image: url('embed:assets/parchment.svg'), radial-gradient(ellipse at center, transparent 55%, rgba(90, 60, 20, 0.22) 100%); background-attachment: fixed; }\n:root.lia-variant-dark .lia-canvas { background-image: url('embed:assets/leather.svg'), radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.45) 100%); background-attachment: fixed; }\n.lia-header, .lia-toc, .lia-header .lia-support-menu--closed, .lia-header .lia-support-menu__nav, .lia-toc__search input { background-color: transparent; }\n.lia-header { border-bottom: 3px double #c9a227; }\n/* double ruled frame with an inner gold line, like a ruled manuscript page */\n.lia-slide__content { border: 3px double rgba(139, 26, 26, 0.6); outline: 1px solid rgba(201, 162, 39, 0.7); outline-offset: -0.8rem; padding: 3.2rem 4rem; }\n:root.lia-variant-dark .lia-slide__content { border-color: rgba(217, 178, 95, 0.55); }\n/* rubricated titles with gold fleurons */\n.lia-slide__content .h1 { text-shadow: 0.05em 0.05em 0 rgba(201, 162, 39, 0.55); }\n.lia-slide__content .h1::before, .lia-slide__content .h1::after { content: '\\2767'; color: #c9a227; font-family: serif; font-size: 0.6em; vertical-align: middle; margin: 0 0.6em; text-shadow: none; }\n/* illuminated initial: lapis letter in a gold-ruled box */\n.lia-slide__content > header + .lia-paragraph::first-letter { float: left; font-family: 'UnifrakturCook', serif; font-size: 4.4em; line-height: 0.82; color: #1e3f78; padding: 0.08em 0.14em 0; margin: 0.06em 0.18em 0 0; border: 2px solid #c9a227; background: rgba(201, 162, 39, 0.14); text-shadow: 0.04em 0.04em 0 rgba(201, 162, 39, 0.8); }\n:root.lia-variant-dark .lia-slide__content > header + .lia-paragraph::first-letter { color: #d9b25f; background: rgba(217, 178, 95, 0.1); text-shadow: 0.04em 0.04em 0 rgba(139, 26, 26, 0.8); }\n/* ornamental rule */\n.lia-slide__content :is(hr, .lia-divider) { border: 0; height: auto; background: none; text-align: center; overflow: visible; }\n.lia-slide__content :is(hr, .lia-divider)::after { content: '\\2014 \\2766 \\2014'; color: #c9a227; font-size: 2rem; letter-spacing: 0.3em; }\n/* marginalia-style quotes */\n.lia-quote:not([class*='alert']) { background: transparent; border-left: 6px double #c9a227; padding-inline: 3rem; }\n.lia-quote__text { font-size: 2.3rem; font-style: italic; }\n/* gold underlines, gold-rimmed buttons and step markers */\n.lia-link { text-decoration-color: #c9a227; text-decoration-thickness: 0.15rem; text-underline-offset: 0.2rem; }\n.lia-btn:not(.lia-btn--transparent) { box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.85); }\n.lia-effect__circle { background-color: #c9a227; color: #2b1d0e; }\n.lia-table__header { border-bottom: 3px double #c9a227; }"
+}

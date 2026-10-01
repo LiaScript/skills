@@ -1,0 +1,67 @@
+/* ==== LiaScript theme adapter (liascript-theming) — keep verbatim ====
+   Maps the --theme-* tokens onto LiaScript's CSS. Everything a theme
+   changes lives in the token block above this one. */
+
+/* -- fonts: body/mono via the global variables, headings & co. are
+      compiled literals in LiaScript and need explicit selectors -- */
+:root {
+  --global-font-family: var(--theme-font-body);
+  --global-font-mono: var(--theme-font-mono);
+  --global-font-headline: var(--theme-font-heading);
+}
+body { line-height: var(--theme-line-height, 1.47); }
+h1, h2, h3, .h1, .h2, .h3 {
+  font-family: var(--theme-font-heading);
+  font-weight: var(--theme-heading-weight, 600);
+  letter-spacing: var(--theme-heading-letter-spacing, normal);
+  text-transform: var(--theme-heading-transform, none);
+  color: var(--theme-heading-color, inherit);
+}
+h4, h5, h6, .h4, .h5, summary, .lia-accordion__headline {
+  font-family: var(--theme-font-subheading, var(--theme-font-body));
+}
+.lia-quote__text { font-family: var(--theme-font-quote, var(--theme-font-heading)); }
+.lia-code, .lia-code--inline, code, kbd, samp, pre { font-family: var(--theme-font-mono); }
+.lia-code .ace_editor { font-family: var(--theme-font-mono) !important; }
+
+/* -- shape: radius for controls & surfaces (radio buttons, tags, circles stay) -- */
+:is(button, .lia-btn, input, .lia-input, select, .lia-select, textarea, .lia-textarea, .lia-dropdown):not(.lia-radio, .lia-btn--tag, .lia-btn--small-tag),
+.lia-code-terminal__input, .lia-pagination__content, .lia-script, .lia-support-menu__submenu {
+  border-radius: var(--theme-radius);
+}
+.lia-checkbox[type='checkbox'], kbd, .lia-tooltip .lia-tooltiptext, .lia-code--inline {
+  border-radius: var(--theme-radius-small);
+}
+details, .lia-quote, .lia-code__input, .lia-table-responsive, .lia-card {
+  border-radius: var(--theme-radius-large);
+  box-shadow: var(--theme-shadow);
+}
+.lia-quote, .lia-code__input { overflow: hidden; }
+.lia-code__input .ace_editor { border-radius: inherit; }
+.lia-support-menu__submenu { box-shadow: var(--theme-shadow-popup, 0 0 1rem rgba(128, 128, 128, 0.2)); }
+
+/* -- dark mode: LiaScript brightens the accent for text via
+      rgb(from … calc(r*2.5)), which turns a hand-picked accent into
+      pastel/yellow. For the course theme, text-like accent uses take
+      --color-highlight-dark (= "accent as text") instead. Scoped to
+      default/custom so the built-in color themes keep their behavior. -- */
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-link, .lia-btn--outline, .lia-code--inline) {
+  color: rgb(var(--color-highlight-dark));
+  border-color: rgb(var(--color-highlight-dark));
+}
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(summary, summary:after, .lia-label, .lia-skip-nav, .lia-support-menu__item, .lia-quote__text),
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-list--unordered, .lia-list--ordered) > li::marker {
+  color: rgb(var(--color-highlight-dark));
+}
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-btn--transparent, .lia-input) {
+  filter: none;
+}
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-input, .lia-checkbox[type='checkbox'], .lia-radio[type='radio']):not(:checked, .is-disabled, [disabled]) {
+  border-color: rgb(var(--color-highlight-dark));
+}
+/* alternating table rows: LiaScript uses a neutral grey in dark mode */
+:root.lia-variant-dark .lia-table.is-alternating .lia-table__row:nth-child(2n) td,
+:root.lia-variant-dark .lia-table-responsive.has-thead-sticky.has-first-col-sticky .is-alternating .lia-table__row:nth-child(2n) td:first-child:before,
+:root.lia-variant-dark .lia-table-responsive.has-thead-sticky.has-last-col-sticky .is-alternating .lia-table__row:nth-child(2n) td:last-child:before {
+  background-color: rgb(var(--lia-grey-dark));
+}

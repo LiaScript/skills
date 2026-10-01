@@ -1,0 +1,37 @@
+{
+  "name": "Sunset Lake",
+  "source": "image: flat vector landscape, deep indigo → violet → pink sunset, deer silhouette",
+  "mood": "dreamy, calm, soft layered gradients, rounded friendly shapes",
+  "fonts": {
+    "body": "Nunito",
+    "heading": "Quicksand",
+    "mono": "Fira Code",
+    "google": ["Quicksand:wght@600;700", "Nunito:wght@400;600;700", "Fira Code:wght@400;600"],
+    "heading_weight": 700
+  },
+  "light": {
+    "background": "#fbf5fa",
+    "text": "#2d2364",
+    "accent": "#a8407f",
+    "border": "#eadcec",
+    "surface": "#f5ecf5",
+    "surface_strong": "#ecdff0"
+  },
+  "dark": {
+    "background": "#1d1740",
+    "text": "#f6e7ee",
+    "accent": "#a8407f",
+    "accent_text": "#f6959d",
+    "border": "#3b2f6b",
+    "surface": "#261e52",
+    "surface_strong": "#312766"
+  },
+  "heading_color": { "light": "#2d2364", "dark": "#ffdfde" },
+  "shape": {
+    "radius": "1.2rem",
+    "radius_small": "0.6rem",
+    "radius_large": "1.6rem",
+    "shadow": "0 0.4rem 1.6rem rgba(45, 35, 100, 0.12)"
+  },
+  "extra_css": ".lia-slide__content .h1::after { content: ''; display: block; width: 6rem; height: 0.4rem; margin-top: 0.8rem; border-radius: 1rem; background: linear-gradient(90deg, #2d2364, #a8407f, #e25e94, #f6959d); }"
+}

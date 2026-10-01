@@ -1,0 +1,28 @@
+{
+  "name": "Beehive",
+  "source": "pptx: LibreOffice 'Beehive' template — cream slides, honey-yellow hexagon outlines (2.8pt lines), Arial",
+  "mood": "warm, clean, honey on cream, square shapes with thick yellow strokes",
+  "fonts": {
+    "body": "Arimo",
+    "heading": "Arimo",
+    "mono": "Cousine",
+    "google": [
+      "Arimo:wght@400;700",
+      "Cousine"
+    ],
+    "heading_weight": 700
+  },
+  "light": {
+    "background": "#fff5ce",
+    "text": "#1f1a0e",
+    "accent": "#ffde59"
+  },
+  "dark": "auto",
+  "shape": {
+    "radius": "0",
+    "radius_small": "0",
+    "radius_large": "0",
+    "shadow": "none"
+  },
+  "extra_css": ".lia-slide__content .h1::after { content: ''; display: block; width: 8rem; height: 0.4rem; margin-top: 0.6rem; background: #ffde59; }\n.lia-quote { border-left: 0.4rem solid #ffde59; }\n.lia-header { border-bottom: 0.3rem solid #ffde59; }\n/* honeycomb gallery: hexagon-cut images, tiles without the black backdrop */\n.lia-gallery .lia-figure__media { background: transparent; }\n.lia-gallery img { clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%); }\n/* retro offset shadow on section titles */\n.lia-slide__content :is(h1, .h1) { text-shadow: 0.25rem 0.25rem 0 #ffde59; }\n:root.lia-variant-dark .lia-slide__content :is(h1, .h1) { text-shadow: 0.25rem 0.25rem 0 rgba(255, 222, 89, 0.45); }"
+}

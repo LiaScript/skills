@@ -13,6 +13,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [exporter-workflow](skills/exporter-workflow/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
 | [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes, effects, charts, and best-practice patterns |
 | [template-development](skills/template-development/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
+| [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
 | [creativity](skills/creativity/) | Develop creative works (stories, courses, lectures) through open-ended, multi-agent ideation instead of direct drafting |
 
 ---
@@ -57,6 +58,14 @@ Expert guidance for building LiaScript templates — standard `README.md` course
 
 ---
 
+## liascript-theming
+
+Turns any design source into one tested header block (`link:` + `@style` + `@custom`) that restyles a whole LiaScript course: colors, fonts, font sizes, corner radius, borders, shadows, surfaces, light and dark mode — while LiaScript's built-in color themes stay selectable. The agent extracts design tokens into a small `theme.json` (from a textual mood description, a PowerPoint/.potx, an image or photo, a PDF brand guide or a website); bundled scripts build the CSS, derive a dark palette, check WCAG contrast and inject the block idempotently. Includes `pptx_theme.py` (theme + actually used colors, fonts, sizes, shapes from a deck, stdlib only), `image_palette.sh` (dominant colors via ImageMagick), a showcase course for previews, seven ready-made designs that can be applied by name (incl. artistic ones: chalkboard, watercolor, medieval manuscript), tested recipes for layout, motion, textures and artistic effects, and a reference of LiaScript's CSS variables, classes, specificity traps and known theming gaps.
+
+**Activates when:** a user wants to change, customize, brand or theme the look of a LiaScript course, match a corporate design, recreate the style of slides or a picture, add a dark mode, or asks about LiaScript's CSS variables, the `custom:` macro or `@style` — also in German ("Design des Kurses ändern", "Stil aus dem Bild übernehmen"), or names one of the bundled designs (`paper-ink`, `sunset-lake`, `candy-pptx`, `beehive-pptx`, `chalkboard` / Tafel & Heft, `watercolor` / Aquarell, `manuscript` / Codex) to apply it in one step.
+
+---
+
 ## creativity
 
 Implements the Emergent Creativity Protocol (ECP): a multi-agent, artifact-based process that first expands a rich "meaning space" of interconnected ideas (via Dreamer, Questioner, World Builder, Character Finder, and other role agents), then converges on a concrete text through an Explorer/Resonance/Distiller pipeline and a final Narrative Compiler step. Renders a live Cognitive-Field-Map artifact alongside the compiled work.
@@ -83,6 +92,7 @@ npx skills add LiaScript/skills --skill oersi-metadata
 npx skills add LiaScript/skills --skill reference-checker
 npx skills add LiaScript/skills --skill liascript-syntax
 npx skills add LiaScript/skills --skill template-development
+npx skills add LiaScript/skills --skill liascript-theming
 npx skills add LiaScript/skills --skill creativity
 
 # Install to all agents without prompts

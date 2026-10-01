@@ -1,0 +1,38 @@
+{
+  "name": "Tafel & Heft",
+  "source": "text: 'Schule — dunkel wie eine Kreidetafel, hell wie ein Karoheft, handgezeichnet'",
+  "mood": "handmade, school, warm; chalk on a green board (dark) / blue ink on squared paper (light)",
+  "fonts": {
+    "body": "Kalam",
+    "heading": "Cabin Sketch",
+    "mono": "Courier Prime",
+    "google": ["Cabin Sketch:wght@400;700", "Kalam:wght@400;700", "Courier Prime:wght@400;700"],
+    "heading_weight": 700,
+    "size": "1.65rem",
+    "line_height": 1.6
+  },
+  "light": {
+    "background": "#fdfdf8",
+    "text": "#1d2a4a",
+    "accent": "#2f55a4",
+    "border": "#c9d6ea",
+    "surface": "#f3f5f9",
+    "surface_strong": "#e4e9f3"
+  },
+  "dark": {
+    "background": "#2b3b33",
+    "text": "#eef0ea",
+    "accent": "#a4492e",
+    "accent_text": "#f3d36b",
+    "border": "#4d6156",
+    "surface": "#33463c",
+    "surface_strong": "#3d5247"
+  },
+  "shape": {
+    "radius": "255px 15px 225px 15px / 15px 225px 15px 255px",
+    "radius_small": "0.3rem",
+    "radius_large": "255px 25px 225px 25px / 25px 225px 25px 255px",
+    "shadow": "none"
+  },
+  "extra_css": "/* dark: blackboard with chalk dust */\n:root.lia-variant-dark .lia-canvas { background-image: url('embed:assets/chalk-noise.svg'); }\n:root.lia-variant-dark .lia-slide__content :is(h1, h2, h3, .h1, .h2, .h3) { text-shadow: 0 0 1px rgba(255, 255, 255, 0.55), 0 0 0.8rem rgba(255, 255, 255, 0.18); }\n:root.lia-variant-dark .lia-slide__content :is(p, li, td, th) { text-shadow: 0 0 1px rgba(255, 255, 255, 0.28); }\n/* wooden frame around the board in presentation / slides mode */\n:root.lia-variant-dark .lia-canvas:is(.lia-mode--presentation, .lia-mode--slides) .lia-slide__container { border: 1.2rem solid #6b4a2e; border-radius: 0.6rem; box-shadow: inset 0 0 2.4rem rgba(0, 0, 0, 0.45), 0 0.4rem 1.2rem rgba(0, 0, 0, 0.4); }\n/* light: squared school paper with a red margin line */\n:root.lia-variant-light .lia-canvas { background-image: linear-gradient(rgba(47, 85, 164, 0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(47, 85, 164, 0.09) 1px, transparent 1px); background-size: 2rem 2rem; }\n:root.lia-variant-light .lia-slide__content { border-left: 2px solid rgba(214, 69, 69, 0.55); padding-left: 3rem; }\n/* hand-drawn underline under every section title (.h1 = section title at any level) */\n.lia-slide__content .h1::after { content: ''; display: block; width: 24rem; max-width: 70%; height: 1.8rem; margin-top: 0.2rem; background: url('embed:assets/chalk-underline.svg') left center / 100% 100% no-repeat; }\n:root.lia-variant-light .lia-slide__content .h1::after { background-image: url('embed:assets/ink-underline.svg'); }\n/* chalk lines instead of solid rules and tinted boxes */\nhr, .lia-divider { height: 0; border: 0; border-top: 2px dashed rgba(var(--color-text), 0.45); }\n.lia-quote:not([class*='alert']) { background: transparent; border: 2px dashed rgba(var(--color-text), 0.4); }\n.lia-code__input { border-width: 2px; }"
+}

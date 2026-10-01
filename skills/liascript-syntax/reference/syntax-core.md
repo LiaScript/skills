@@ -290,6 +290,8 @@ Horizontal rule: a line of 3+ dashes (`---`) preceded by a blank line — direct
 
 ## Custom Styling
 
+To restyle the *whole* course (colors, fonts, corner radius, dark mode, a corporate design, the look of a PowerPoint or picture) use the separate **liascript-theming** skill — it covers LiaScript's CSS variables, the `custom:` macro, `@style` and their pitfalls. This section is about styling individual elements.
+
 Attach an HTML comment containing HTML attributes (`style`, `class`, `id`, ...) directly before a block, or immediately after an inline element, to style it. LiaScript strips these comments from plain-Markdown rendering, so the source still reads cleanly elsewhere.
 
 Block-level (comment goes *before* the block):

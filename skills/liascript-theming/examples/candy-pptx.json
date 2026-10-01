@@ -1,0 +1,27 @@
+{
+  "name": "Candy",
+  "source": "pptx: LibreOffice 'Candy' template (Candy.pptx) — pptx_theme.py draft, curated against the rendered slides",
+  "mood": "playful, bright, four candy colors on white, circles and pill shapes, thin lines with dots",
+  "fonts": {
+    "body": "Noto Sans",
+    "heading": "Noto Sans",
+    "mono": "Noto Sans Mono",
+    "google": ["Noto Sans:wght@400;600;700;800", "Noto Sans Mono:wght@400;600"],
+    "heading_weight": 800
+  },
+  "light": {
+    "background": "#ffffff",
+    "text": "#2b2233",
+    "accent": "#7f59ae",
+    "accent_text": "#6a4596"
+  },
+  "dark": "auto",
+  "heading_color": { "light": "#7f59ae", "dark": "#c7b0e6" },
+  "shape": {
+    "radius": "2rem",
+    "radius_small": "0.4rem",
+    "radius_large": "1.4rem",
+    "shadow": "none"
+  },
+  "extra_css": ".lia-slide__content .h1::after { content: ''; display: block; width: 12rem; height: 0.5rem; margin-top: 0.8rem; border-radius: 1rem; background: linear-gradient(90deg, #7f59ae 0 25%, #60c4e4 25% 50%, #e54b89 50% 75%, #f8b622 75%); }\nhr, .lia-divider { height: 0.3rem; border: 0; border-radius: 1rem; background: linear-gradient(90deg, #7f59ae, #60c4e4, #e54b89, #f8b622, #fe7130); }\n.lia-quote { border-left: 0.6rem solid #60c4e4; }"
+}

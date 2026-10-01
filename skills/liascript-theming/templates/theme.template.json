@@ -1,0 +1,25 @@
+{
+  "name": "My Theme",
+  "source": "where the design comes from",
+  "mood": "three to five adjectives",
+  "fonts": {
+    "body": "Inter",
+    "heading": "Source Serif 4",
+    "mono": "JetBrains Mono",
+    "google": ["Inter:wght@400;600;700", "Source Serif 4:wght@600;700", "JetBrains Mono:wght@400;600"],
+    "heading_weight": 700
+  },
+  "light": {
+    "background": "#ffffff",
+    "text": "#222222",
+    "accent": "#147375"
+  },
+  "dark": "auto",
+  "shape": {
+    "radius": "0.8rem",
+    "radius_small": "0.4rem",
+    "radius_large": "0",
+    "shadow": "none"
+  },
+  "extra_css": ""
+}

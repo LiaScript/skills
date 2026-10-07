@@ -11,7 +11,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for GitHub-hosted OER |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
 | [exporter-workflow](skills/exporter-workflow/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
-| [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes, effects, charts, and best-practice patterns |
+| [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes & surveys, narrated presentations, charts, agent links, and a tested example course |
 | [template-development](skills/template-development/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
 | [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
 | [creativity](skills/creativity/) | Develop creative works (stories, courses, lectures) through open-ended, multi-agent ideation instead of direct drafting |
@@ -44,9 +44,9 @@ Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` cat
 
 ## liascript-syntax
 
-Complete LiaScript authoring reference: full markdown syntax (meta-header, document structuring, all 6 quiz types plus generic quizzes and surveys, effects/animation/TTS, interactive code blocks and the `send`/JS API, the presentation pattern for slide-deck-style courses, charts/ASCII-art/SVG visuals, tooling/publishing), the philosophy behind the language, and established best-usage patterns. Organized as a navigable set of `reference/*.md` files by topic rather than one long document.
+Complete LiaScript authoring reference: full markdown syntax (meta-header, document structuring, all quiz types incl. drag & drop word banks, quiz settings such as custom feedback texts and the solution button, surveys and their settings, effects/animation/TTS, interactive code blocks and the `send`/JS API, charts/ASCII-art/SVG visuals, tooling/publishing incl. DevServer agent links), the philosophy behind the language, and established best-usage patterns. Its presentation pattern shows how to pair `{{n}}` blocks with `--{{n}}--` narration so one course works as a narrated presentation and reads as a text in Textbook mode. `SKILL.md` adds a list of silent pitfalls and a "Can LiaScript do this?" table; `examples/course-template.md` is a complete, tested example course. Organized as a navigable set of `reference/*.md` files by topic rather than one long document.
 
-**Activates when:** a user is writing, editing, reviewing, or debugging any LiaScript course (a `README.md` meant to be rendered by the LiaScript interpreter).
+**Activates when:** a user is writing, editing, reviewing, or debugging any LiaScript course (a `README.md` meant to be rendered by the LiaScript interpreter), or asks whether LiaScript can do something — also in German ("LiaScript-Kurs schreiben", "Rückmeldung beim Quiz ändern", "Antworten vorlesen lassen").
 
 ---
 

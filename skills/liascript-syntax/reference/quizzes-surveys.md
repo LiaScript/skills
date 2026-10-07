@@ -67,7 +67,7 @@ Separate the option line and its block with a blank line; blank lines between op
         ```
 ````
 
-Pitfalls (confirmed by the interpreter's parser tests):
+Pitfalls:
 
 - **Too little indentation ends the quiz.** After a blank line, text indented less than the marker width is *not* part of the option — it ends the option list and becomes an ordinary paragraph (swallowing any following options into it). This is stricter than before 2.0, so older courses with sloppy indentation may need fixing.
 - **Every option needs a label on the marker line.** Put at least a short label after the marker and attach the block below it. A bare `[[X]]` alone on its line is not a multiple-choice option — it is parsed as a Text-Quiz whose solution is the literal string `X`.
@@ -97,7 +97,7 @@ This renders exactly the same as a uniform `[[checkbox col] [radio col] [another
 
 ### Text-Quiz
 
-A free-text input compared against a solution string. Does not support a starting dash; indentation is optional.
+A free-text input compared against a solution string. Does not support a starting dash; indentation is optional. Pressing Enter in the field checks the answer (since 2.1.1).
 
 ```markdown
 What did the fish say when he swam into the wall?
@@ -133,11 +133,38 @@ __I [[ (have been learning) | ('ve been learning) ]] English for seven years now
 
 ### Drag & Drop
 
-Same as a Selection-Quiz, but written `[->[ ... ]]`: instead of a dropdown, the options are dragged into the blank. The correct option is wrapped in parentheses. Works as a standalone line and inline inside a gap text.
+Same as a Selection-Quiz, but written `[->[ ... ]]`: instead of a dropdown, the options are dragged into the blank. Correct options are wrapped in parentheses, and several may be correct (`[->[ (Paris) | (paris) | Rome ]]`). `[->[` is the only arrow form. Since LiaScript 0.17.4.
+
+**Standalone** — a line holding only the blank becomes one large drop zone with the option cards below it. In a script `@input` is the 0-based index of the dropped option in source order, `-1` while empty:
 
 ```markdown
-The capital of France is [->[ Berlin | (Paris) | Madrid ]].
+The capital of France is:
+
+[->[ Berlin | (Paris) | Madrid ]]
 ```
+
+**Inline, as a word bank** — when a paragraph contains several drag blanks, the options of *all* blanks are pooled into one shared bank below the block, and the whole block is one quiz. A blank with a single option and no parentheses (`[->[Katze]]`) is automatically correct, so a word-bank exercise needs no parentheses at all. Extra options without parentheses are distractors:
+
+```markdown
+<!-- data-randomize -->
+Die [->[Katze]] jagt die [->[Maus]], der [->[(Hund)|Kuh]] bellt.
+```
+
+- **Always add `data-randomize` to a word bank.** Without it the bank lists the words in source order, blank by blank, which gives the answer away.
+- An option only counts as correct in the blank that defines it. Identical words in two blanks are therefore not interchangeable.
+- Drag blanks work in any block that hosts gap texts: paragraphs, list items, blockquotes and **tables**. A table with one drag blank per row is a quick matching exercise:
+
+  ```markdown
+  <!-- data-randomize -->
+  | Tier  | Laut         |
+  |-------|--------------|
+  | Hund  | [->[bellt]]  |
+  | Katze | [->[miaut]]  |
+  ```
+
+- Options can contain inline Markdown and math like Select options.
+- Without a mouse, select a blank first (click, or Enter/Space), then the card. On touch screens dragging starts with press-and-hold (since 2.1.0).
+- `data-show-partial-solution` colors each blank green or red after a check.
 
 ### Escaping inside `[[...]]`
 
@@ -231,9 +258,66 @@ data-randomize
 | `data-max-trials="3"` | The quiz is resolved automatically after that many wrong trials. |
 | `data-solution-button="off"` | Show/hide the "show solution" button: `on`/`off`, `true`/`false`, `enable`/`disable`. An integer shows it only after that many wrong trials (`0` = immediately, `1` = after the first wrong trial). Default: `on`. |
 | `data-hint-button="2"` | Same values as `data-solution-button`, for the hint button — e.g. reveal hints only after two wrong trials. |
-| `data-show-partial-solution` | For gap texts and matrix quizzes: highlights which gaps (or which matrix rows) are correct and which are wrong, instead of only "all right / wrong". |
-| `data-score="2.5"` | Weight of this quiz in a SCORM export (integer or float, default `1`). Not visible in the course. |
-| `data-text-solved="..."`, `data-text-failed="..."`, `data-text-resolved="..."` | Custom feedback texts (inline Markdown allowed) for solved, wrong, and resolved (after max trials / show solution). |
+| `data-show-partial-solution` (short: `data-show-partials`) | For gap texts and matrix quizzes: highlights which gaps (or which matrix rows) are correct and which are wrong, instead of only "all right / wrong". |
+| `data-score="2.5"` | Weight of this quiz in a SCORM export (integer or float, default `1`). Learners don't see it; since 2.0 the classroom's quiz table shows it in a "Score" column. |
+| `data-text-solved="..."`, `data-text-failed="..."`, `data-text-resolved="..."` | Replace the default feedback line for solved, wrong, and resolved (after max trials / show solution). Inline Markdown allowed, so a single emoji works (`data-text-solved="⭐"`); an empty value (`data-text-solved=""`) shows no feedback line at all. Since LiaScript 2.0. |
+
+### Feedback texts and buttons
+
+The default feedback lines ("Herzlichen Glückwunsch, das war die richtige Antwort", "Die richtige Antwort wurde noch nicht gegeben", ...) come from the course's `language:` localization, so they are fixed per language. Changing `language` or using the translation feature does not change them. Override them per quiz with the `data-text-*` attributes above (verified in LiaScript 2.1).
+
+**Course-wide feedback texts:** define the texts once as header macros and use the macros as attribute values. Macros are expanded inside attribute comments, so changing the header changes every quiz:
+
+```markdown
+<!--
+language: de
+@ok:    ⭐ Super!
+@retry: 🔁 Probier es noch einmal!
+-->
+
+# Farben
+
+Welche Farbe hat der Himmel?
+
+<!-- data-text-solved="@ok" data-text-failed="@retry" -->
+- [( )] grün
+- [(X)] blau
+```
+
+**Different feedback per wrong answer:** a quiz script can return an error message instead of `false`. Use `throw new Error("…")`, or `send.lia("…", [], false)` followed by `"LIA: wait"`. The message replaces the feedback line:
+
+```markdown
+- [( )] grün
+- [(X)] blau
+- [( )] rot
+<script>
+if (@input == 1) { true }
+else if (@input == 0) { throw new Error("Grün ist das Gras. Schau nach oben! ☁️") }
+else if (@input == 2) { throw new Error("Rot ist die Abendsonne. Und am Tag?") }
+else { false }
+</script>
+```
+
+(`@input` is the index of the selected option, `-1` while nothing is selected. See Associated script under Tweaks for the other quiz types.)
+
+Such a rejection is **not counted as a trial**: the check button's counter does not go up, and `data-max-trials` and the trial-based `data-solution-button="n"`/`data-hint-button="n"` do not advance. Return plain `false` when the attempt should count. A bare `throw "text"` (a string, not an `Error`) shows `undefined`.
+
+**Locking the solution away:** `data-solution-button="off"` removes the "show solution" button. A `***` solution block (see Tweaks), e.g. a reward picture, then only appears once the quiz is solved. Do not combine this with `data-max-trials`: after the last trial the quiz is resolved automatically and the solution block is shown anyway.
+
+**Feedback for surveys:** surveys have no `data-text-*` attributes. Their submit/"thank you" texts are fixed per language. Only CSS can change them (see the `liascript-theming` skill).
+
+### Reading quizzes aloud
+
+For young readers or language learners, put an **inline playback button into the question and into every option**. Learners can then listen to each option on its own, as often as they need. Clicking such a button only reads its own text and does not select the option:
+
+```markdown
+{|>}{Welche Farbe hat der Himmel?}
+
+- [( )] {|>}{grün}
+- [(X)] {|>}{blau}
+```
+
+Use `{!> Deutsch Female}{…}` to pick a voice. The `@play` macro in `reference/interactivity.md` (Play buttons without visible text) is useful for options shown as pictures.
 
 A generic or scripted quiz can also return an **array of booleans** instead of a single `true`/`false`; together with `data-show-partial-solution` this marks the individual parts of a compound quiz:
 
@@ -407,7 +491,7 @@ Matrix surveys also work with list markers, and the empty row brackets don't hav
 
 ### Select and Drag & Drop Surveys
 
-A Selection- or Drag-&-Drop-Quiz *without* any option in parentheses has no solution and therefore becomes a survey:
+A standalone Selection- or Drag-&-Drop-Quiz *without* any option in parentheses has no solution and therefore becomes a survey. It needs at least two options, because a single drag option counts as correct (see Drag & Drop). In a script `@input` is the index of the chosen option:
 
 ```markdown
 Which color do you prefer?
@@ -419,9 +503,19 @@ Which language do you use most?
 [->[ Python | JavaScript | Java ]]
 ```
 
+### Survey Settings (`data-*` attributes)
+
+Same mechanism as Quiz Settings: an attribute comment directly above the survey. All of these exist since LiaScript 2.1.0, so they need a current interpreter.
+
+| Attribute | Effect |
+|---|---|
+| `data-randomize` | Shuffles vector options, matrix rows, and select/drag-&-drop options. Same behavior as for quizzes. |
+| `data-updates-allowed` (also `data-updates`, `data-update`) | After submitting, the button turns into an "update" button and the answer can be changed and submitted again. Without it a submitted survey is locked. |
+| `data-incompleteness-allowed` (also `data-incompleteness`, `data-incomplete`) | Allows submitting an incomplete answer. Without it, submit only works with a non-empty text, a chosen select/drag option, at least one checked vector option, or an answer in **every** matrix row; otherwise an error message is shown. With it, even an empty survey can be submitted. |
+
 ### Shuffling Survey Options
 
-`<!-- data-randomize -->` above a survey shuffles vector options, matrix rows, and select/drag-&-drop options — the same attribute and behavior as for quizzes (see Quiz Settings). Added after LiaScript 2.0.1, so it needs a current interpreter.
+`<!-- data-randomize -->` above a survey shuffles the options (see Survey Settings above):
 
 ```markdown
 Which topic should we cover next?
@@ -435,6 +529,15 @@ Which topic should we cover next?
 ### Surveys and Scripting
 
 As with quizzes, attach a `<script>` after a survey to react to the submitted input or send it elsewhere. By default, an empty or whitespace-only input is treated as an error. The script's last statement controls the outcome: return `true` to accept, `send.lia("message", [], false)` to reject with a custom message, or plain `false` to reject silently. Use `alert(...)` to inspect `@input`'s shape while developing — `console.log` does not work here.
+
+What `@input` contains, by survey type (read from the interpreter source):
+
+| Survey type | `@input` | Quote it? |
+|---|---|---|
+| Text input / textarea | the raw text | yes, `` `@input` `` |
+| Select, Drag & Drop | index of the chosen option | no |
+| Single-/Multi-Choice Vector | object of identifiers, e.g. `{"red": 1, "green": 0}` | no |
+| Single-/Multi-Choice Matrix | array with one such object per row | no |
 
 ```markdown
 Please enter some spaces at first:

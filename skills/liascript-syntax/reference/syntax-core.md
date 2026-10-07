@@ -42,10 +42,10 @@ link:     https://cdn.example.com/lib.css
 | `edit` | A URL to an editable source, or `true` to auto-link the current doc to the LiveEditor. |
 | `mode` | Default view: `Presentation`, `Slides`, or `Textbook`. User can still switch via the UI. |
 | `persistent` | `true` keeps a slide's DOM alive when navigating away (needed for scripts/widgets that must survive slide switches). Can also be set as a per-slide header. |
-| `script` | External JS URL(s) to load before the course renders; repeatable or multi-line. |
+| `script` | External JS URL(s) to load before the course renders; repeatable or multi-line. Write the key in uppercase, `SCRIPT:`, to load the URL as an ES module (`<script type="module">`). |
 | `link` | External CSS URL(s); repeatable or multi-line. |
 
-Other fields that exist but are less commonly needed: `date`, `translation` (link to translated versions), `font` (paired with `link` to a webfont), `dark` (force dark/light), `classroom`, `sharing`, `translateWithGoogle`, `import` (pull in another course's macros/header — see `reference/interactivity.md`'s Using Macros, and the `template-development` skill for authoring), `onload`/`style` (raw JS/CSS blocks in the header — see `reference/interactivity.md`), `formula` (KaTeX macros — see Comments, Footnotes, Math below).
+Other fields that exist but are less commonly needed: `base` (base URL against which relative paths of images, scripts etc. are resolved), `date`, `translation` (link to translated versions), `font` (paired with `link` to a webfont), `dark` (force dark/light), `classroom`, `sharing`, `translateWithGoogle`, `import` (pull in another course's macros/header — see `reference/interactivity.md`'s Using Macros, and the `template-development` skill for authoring), `onload`/`style` (raw JS/CSS blocks in the header — see `reference/interactivity.md`), `formula` (KaTeX macros — see Comments, Footnotes, Math below).
 
 ## Structuring
 
@@ -121,6 +121,7 @@ Links, media, and references (a mix of standard Markdown and LiaScript extension
 [preview-lia](https://raw.githubusercontent.com/org/repo/master/README.md)   <!-- rich course-preview card -->
 [qr-code](https://example.com)                    <!-- renders a QR code -->
 [Write me](mailto:you@example.com)   [Call me](tel:+491234567890)   <!-- also sms:, geo:, ... -->
+[Explain this simpler](agent:tutor/explain?level=easy)   <!-- AI-agent command, only in the DevServer; see reference/tooling.md -->
 
 ![alt text](img/photo.jpg "optional sub-title")   <!-- image -->
 ?[a horse](audio.mp3 "hear a horse")               <!-- audio -->
@@ -146,7 +147,7 @@ This text has no blank line before it, so it stays in the same
 paragraph as the image above and wraps beside it.
 ```
 
-**A blank line between the image and the text breaks this** — rendered and confirmed: with a blank line, the image becomes its own separate block (no float applied) and the text becomes a separate paragraph below it, stacked vertically instead of side-by-side. This is easy to get wrong, since a blank line after an image often looks more "correct" by ordinary Markdown-formatting habits:
+**A blank line between the image and the text breaks this**: the image becomes its own block without float, and the text a separate paragraph below it. This is easy to get wrong, since a blank line after an image looks more "correct" by ordinary Markdown habits:
 
 ```markdown
 ![Placeholder](img/photo.jpg "caption")
@@ -297,7 +298,7 @@ Attach an HTML comment containing HTML attributes (`style`, `class`, `id`, ...) 
 Block-level (comment goes *before* the block):
 
 ```markdown
-<!-- style="color: purple; font-size: 1.2em" class="animated rollIn" -->
+<!-- style="color: purple; font-size: 1.2em" class="my-highlight" -->
 This whole paragraph is styled.
 ```
 
@@ -315,10 +316,10 @@ Inline (comment goes *after* the span/word/link/image it applies to):
 ```markdown
 This **is important**<!-- style="color: red" --> text.
 
-![a lion](lion.svg)<!-- style="width: 300px;" class="animated bounce" -->
+![a lion](lion.svg)<!-- style="width: 300px;" class="my-image" -->
 ```
 
-Reference: any CSS property works in `style="..."`; any HTML attribute works standalone (e.g. `id="..."`, `usemap="..."`). Attributes in the comment override the element's own attributes of the same name, all others are kept. This allows content that is hidden in other viewers but shown in LiaScript:
+Classes must be defined somewhere: in an `@style` block of the header or a CSS file loaded with `link:` (animation classes from animate.css need that too, see `reference/interactivity.md`'s Effects). Any CSS property works in `style="..."`; any HTML attribute works standalone (e.g. `id="..."`, `usemap="..."`). Attributes in the comment override the element's own attributes of the same name, all others are kept. This allows content that is hidden in other viewers but shown in LiaScript:
 
 ```markdown
 <!-- style="display: block" -->
@@ -329,7 +330,7 @@ Only visible in LiaScript.
 
 ## Comments, Footnotes, Math
 
-**Ignoreable comments** — a comment opened with 3+ dashes (`<!---`, closed with `--->`) is dropped entirely by the parser (unlike a plain `<!-- ... -->`, which LiaScript tries to read as attributes). Use it for authoring notes or to comment out a block wholesale:
+**Ignoreable comments** — a comment opened with 3+ dashes (`<!---`, closed with `--->`) is a real comment: LiaScript drops it entirely. A plain `<!-- ... -->` is not ignored, LiaScript reads it as attributes for the next block, as a hidden narration (`<!-- --{{n}}-- -->`), or as the course header. Use `<!--- --->` for authoring notes, to-dos, or to switch off a block:
 
 ```markdown
 <!---
@@ -338,7 +339,9 @@ style="color: red"
 --->
 ```
 
-**Caution:** always put a blank line between an ignoreable comment and any functional HTML comment next to it (a plain `<!-- ... -->` attribute comment, or another ignoreable comment). Two raw HTML comments stacked back-to-back with no blank line — e.g. an ignoreable authoring note placed directly above a `<!-- data-type="LinePlot" -->` attribute comment — get merged by the underlying Markdown parser into a single HTML block. LiaScript's attribute-comment extractor can no longer find the attribute comment inside that merged block, and the whole comment+content run is swallowed and re-emitted as literal escaped text instead of being parsed (confirmed live: an attribute comment stacked directly under an ignoreable comment broke a table→chart into unrendered text — see `reference/visuals.md`'s Table → Chart Syntax section). Separate every HTML comment from its neighbors with a blank line.
+**Caution:** an ignoreable comment ends at the first `-->`, not at `--->` (the closing `--->` works because it ends in `-->`). So never write `-->` inside an authoring note, not even when the note explains comments: the comment ends there and the rest of the note shows up as text.
+
+**Caution:** always put a blank line between an ignoreable comment and any functional HTML comment next to it (a plain `<!-- ... -->` attribute comment, or another ignoreable comment). Two raw HTML comments stacked back-to-back with no blank line — e.g. an ignoreable authoring note placed directly above a `<!-- data-type="LinePlot" -->` attribute comment — get merged by the underlying Markdown parser into a single HTML block. LiaScript's attribute-comment extractor can no longer find the attribute comment inside that merged block, and the whole comment+content run is swallowed and re-emitted as literal escaped text instead of being parsed (e.g. a chart table then shows up as raw text). Separate every HTML comment from its neighbors with a blank line.
 
 **Footnotes** — a marker `[^id]` in the body (id can be a number, word, or emoji), defined at the end of the same section (LiaScript parses one section/slide at a time, so footnotes cannot span across slides). Definitions are indented by at least 2 spaces and may contain multiple paragraphs/blocks:
 

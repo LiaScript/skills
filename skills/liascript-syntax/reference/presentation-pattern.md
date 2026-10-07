@@ -1,51 +1,120 @@
 # Presentation Pattern
 
-A LiaScript course can be built once and rendered as either a click-through, narrated presentation or a straight-through reading document, from the *same* Markdown source, via the `mode:` meta-header field (`Presentation`/`Slides` vs `Textbook` — see `philosophy-patterns.md`'s "Mode selection" pattern for when to pick which). The official docs state the goal for this directly: "You need to balance these features properly so that your course can be read in Textbook mode and used for presentations and more." This file documents the concrete construction pattern that achieves that balance — illustrated by a fuller worked example at `docs/examples/powerpoint-style/README.md` if present in your checkout — and what verified rendering confirms about how it behaves in each mode.
+One LiaScript source should work as a narrated presentation *and* read as a well-structured text. The official docs: "You need to balance these features properly so that your course can be read in Textbook mode and used for presentations and more." The idea: like a slide deck, every new point that appears is also explained by the narrator — and in Textbook mode, where everything is shown at once, the same source reads as a text in which explanation, picture, explanation, list follow each other naturally.
 
-## The core construction: one heading, paired bullets and narration
+A complete, tested example course in this style: `examples/course-template.md`.
 
-Structure each `#`/`##`/`###` slide as: the heading, then a sequence of `{{n}}`-tagged blocks (see `interactivity.md`'s Effects section for the underlying block-animation mechanics), each one immediately followed by a `--{{n}}--` comment carrying the spoken explanation of that same block — same step number, same order, one narration paragraph per bullet:
+## What each mode shows
+
+| Mode | `{{n}}` blocks | `--{{n}}--` narration |
+|---|---|---|
+| Textbook | all visible at once, each with a step-number badge | shown in place as ordinary paragraphs |
+| Presentation | revealed click by click | spoken, not shown |
+| Slides | revealed click by click | spoken and shown as speaker notes: a side panel on wide screens, below the slide on narrower ones |
+
+`mode:` in the header only sets the default; learners can switch. So every slide must work in all three.
+
+## The core rule: narration *before* its block
+
+Write each step as a pair: first the `--{{n}}--` paragraph that explains, then the `{{n}}` block it explains.
 
 ```markdown
-## Slide Title
+## The Dog
 
-     {{1}}
-* First point, revealed on the first click
+                    --{{0}}--
+This is a dog. Many dogs live with people.
 
-          --{{1}}--
-Spoken explanation of the first point.
+![A dog](img/dog.jpg)
 
-     {{2}}
-* Second point, revealed on the second click
+                    --{{1}}--
+When a dog is happy, it barks. We write it like this: Woof woof!
 
-          --{{2}}--
-Spoken explanation of the second point.
+                      {{1}}
+> **The dog barks:** Woof woof!
+
+                    --{{2}}--
+Dogs make even more sounds.
+
+                      {{2}}
+* A dog **growls** when it feels threatened.
+* A dog **howls** when it is alone.
 ```
 
-Keep the pairing 1:1 for content that should appear on screen — a `{{n}}` bullet with no matching `--{{n}}--` is fine (a silent reveal). A `--{{n}}--` with no matching `{{n}}` is valid too, but it is a *narration-only* step: it adds a step that is spoken, not a visual reveal (see `interactivity.md`'s "`--{{n}}--` is the narration half of the `{{n}}`/`--{{n}}--` pair" note). Use it deliberately — e.g. to add a spoken remark between two reveals — never as a substitute for `{{n}}` when something should appear.
+- **Presentation/Slides:** a click reveals the block and the narrator explains it at the same moment.
+- **Textbook:** each explanation stands directly before its picture, quote or list, like an introducing sentence. The result is a normal text (explanation → image → explanation → quote → explanation → list), not a page with all explanations piled up at the top or bottom.
 
-## Step 0: framing content outside the click sequence
+Never collect the narration of a slide in one place (all `--{{n}}--` at the end, or all at the start). In Presentation mode nobody notices, but in Textbook mode the page falls apart into a list of visuals followed by a wall of text.
 
-Plain content with no `{{n}}` tag at all is never gated behind a click — it's part of the slide's static frame, visible immediately in every mode. `--{{0}}--` (narration with no matching visual bullet) is the deliberate exception to the 1:1 pairing rule above: it's the natural place for a slide's opening remark, spoken before the first click, without needing a throwaway `{{0}}` bullet to anchor it to. That worked example (where present in your checkout) uses this at both ends of the deck — a `--{{0}}--` welcome note on the title slide, and a `--{{0}}--` closing "thank you" on the last one.
+## Step 0: the static frame
 
-## Mode visibility, and the balance/step-0 patterns confirmed
+Content without any `{{n}}` marker is visible immediately in every mode. Start a slide with `--{{0}}--` followed by ungated content (heading text, a picture): the narrator introduces the slide as soon as it opens, and in Textbook mode this is the opening paragraph.
 
-Rendered and confirmed, this is how `--{{n}}--` narration visibility actually behaves per mode:
+## Several blocks under one step
 
-| Mode | Narration comment (`--{{n}}--`) visible in place? |
-|---|---|
-| Textbook | **Yes** — renders inline as ordinary, unstyled paragraph text directly under the heading, alongside the fragment text, with no gating. Confirmed by rendering. |
-| Presentation | **No** — present in the DOM (so a naive `innerText`/text-search check reads `true`) but wrapped in a `div.translate.hidden-visually.lia-tts-N` container: a visually-hidden CSS technique (collapsed to `1px × ~22px`, `display:block`, `visibility:visible`, but not legible/visible to a sighted viewer). No speaker-notes panel exists in this mode at all. |
-| Slides | **In a side panel** — shown in a dedicated, genuinely visible speaker-notes side panel (`aside.lia-notes`, real layout, e.g. `315×848px`, `display:flex`, `visibility:visible`), docked at the right edge of the viewport. Separate from the main slide body, not inline like Textbook mode. (The panel's container carries a `hide-lg-down` responsive class — narrow-viewport/mobile behavior wasn't independently tested.) |
+To reveal several blocks together (a bold label, an image, a list), wrap them in a `***` block (or `<section>`). Put the narration *inside*, after the label, so Textbook mode reads label → explanation → content:
 
-**Balance pattern — confirmed.** In `Textbook` mode all three bullets and their narration markers render simultaneously, each tagged with its own step-number badge. In both `Presentation` and `Slides` mode the bullets are step-gated: before any click, no bullet text exists in the DOM at all; after one "next" click, only the first bullet appears (with a real rendered box) while the second and third remain completely absent as DOM text nodes.
+```markdown
+                      {{1}}
+************************************************************
 
-**Step-0 pattern — confirmed.** Ungated content (`INTRO-PARAGRAPH-MARKER`, no `{{n}}` tag) is visible immediately in all three modes, including before any click in `Presentation`/`Slides`. A `{{1}}`-gated fragment is absent from the visibly rendered page in both `Presentation` and `Slides` prior to the first click, while `Textbook` mode — which doesn't gate `{{n}}`/`--{{n}}--` content — shows everything immediately, as expected. `--{{0}}--` narration itself follows the same per-mode visibility rule as any other `--{{n}}--` comment (see table above) — it isn't a special case for visibility, only for *not requiring* a matching `{{n}}` bullet.
+**LiaScript-DevServer:**
+
+                    --{{1}}--
+If you use another editor, you can run a local development server.
+It updates your course in the browser on every save.
+
+![Screencast of the dev server](img/devserver.gif)
+
+************************************************************
+```
+
+## Sequences with `{{n-m}}`
+
+`{{n-m}}` shows a block from step `n` and hides it again at step `m`. Use it for a picture sequence where each picture replaces the previous one, e.g. screenshots of a workflow or the stages of a story:
+
+```markdown
+                    --{{0}}--
+Click the share button in the top right corner.
+
+          {{0-1}}
+![Share menu](img/step-1.png)
+
+                    --{{1}}--
+This opens the overview. Choose a backend.
+
+          {{1-2}}
+![Overview](img/step-2.png)
+
+                    --{{2}}--
+Enter a room name and connect.
+
+          {{2}}
+![Form](img/step-3.png)
+```
+
+In Presentation mode exactly one picture is visible at a time. In Textbook mode all pictures appear one below the other, each preceded by its explanation — a step-by-step guide. Only use `{{n-m}}` for content that still makes sense when every stage is shown together; never to "correct" something shown earlier, because Textbook mode shows both versions.
+
+## Narration that does not belong in the text
+
+Some remarks only make sense spoken: transitions ("Now let's look at…"), praise, "click next". Put them in an HTML comment — spoken in Presentation/Slides, never shown, also not in Textbook mode. It still counts as a step:
+
+```markdown
+<!-- --{{3}}--
+Well done! Now you know the dog. Let's go on to the next page.
+-->
+```
+
+Write all visible narration as full sentences that also work as reading text. A `--{{n}}--` without a matching `{{n}}` adds a step where only speech happens; use it deliberately, never as a substitute for `{{n}}` when something should appear.
+
+## Source layout
+
+The official docs indent narration markers and block markers far to the right (narration about 20 spaces, block markers 2 spaces further). Plain Markdown viewers show them as small code lines; in the source they stand out from the content, and the pairing is easy to see. Indentation of 4+ spaces does not change the meaning in LiaScript.
 
 ## Checklist
 
-- [ ] One heading per slide — don't cram multiple unrelated topics under one `#`/`##`.
-- [ ] Every `{{n}}` bullet that needs spoken narration gets its own `--{{n}}--` at the same `n`, directly below it.
-- [ ] Use a bare `--{{n}}--` (without a matching `{{n}}` bullet) only for deliberate narration-only steps, like `--{{0}}--` in Step 0 above — it never produces a visual reveal in the slide body outside Textbook mode.
-- [ ] Use `--{{0}}--` (or ungated plain text) for framing remarks that shouldn't wait for a click.
-- [ ] Preview the course in all three modes before publishing — `Presentation`/`Slides` for the live-narrated flow, `Textbook` for the self-paced reading flow — per the docs' own instruction to "balance these features properly."
+- [ ] Every new point that appears has narration, placed directly **before** its `{{n}}` block (or inside a `***` group after its label).
+- [ ] The slide starts with `--{{0}}--` and ungated content.
+- [ ] Spoken-only remarks are hidden in `<!-- --{{n}}-- … -->`.
+- [ ] `{{n-m}}` only for sequences whose stages all make sense together.
+- [ ] `narrator:` matches `language:` (see `philosophy-patterns.md`).
+- [ ] Previewed in Textbook (does it read like a text?), Presentation (does each click show and explain one thing?) and Slides.

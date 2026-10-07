@@ -21,7 +21,7 @@ data-ylabel="% of GDP"
 
 `data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end.
 
-**Caution:** if you add an authoring note (an ignoreable `<!--- ... --->` comment) near a chart table, never place it directly above the attribute comment with no blank line between them — the Markdown parser merges adjacent raw HTML comments into a single block, which breaks LiaScript's attribute extraction and silently turns the whole comment+table run into literal unrendered text (confirmed live: no table, no chart). Always separate them with a blank line. See `reference/syntax-core.md`'s "Ignoreable comments" subsection for the full rule.
+**Caution:** never put an authoring note (`<!--- ... --->`) directly above the attribute comment without a blank line in between. The two comments merge into one block, and the comment and table then show up as raw text, with no table and no chart. See `reference/syntax-core.md`'s "Ignoreable comments".
 
 **Type list** — what triggers each type automatically, and what it renders as:
 
@@ -109,13 +109,13 @@ A fenced code block tagged `ascii` or `art` (case-insensitive; with 9+ backticks
 ```
 ````
 
-Rendered and confirmed: real boxes with rounded/square corners, filled arrowheads on every `-->`/`<--`/`^`/`V`, and a rounded speech-bubble-style box for the `.----.`/`'----'` shape — exactly matching the ASCII layout, as an actual SVG (inspectable, scales to full slide width), not a monospace text block.
+The result is a real SVG that scales to the slide width: boxes with square or rounded corners, filled arrowheads on `-->`/`<--`/`^`/`V`, and a rounded box for the `.----.`/`'----'` shape.
 
-**Drawing vocabulary** (per docs, consistent with the rendered example above): borders `-`, `_`, `|` (straight) and `\`, `/` (diagonal); corners `+` (square), `.`/`,`/backtick/`'`/`´` (rounded — visually identical in the output, only the ASCII source differs), `(`/`)` (curvy, for rounded/organic shapes like `( 3 )`), and `*`/`#`/`o`/`O` (filled dot / filled square / empty dot, usable as corners or arrow endpoints); arrows use `<`/`>`/`v`/`V`/`^`/`A` for direction plus the same `*`/`#`/`o`/`O` endings (direction-independent); doubled heads (`---->>`, `<<-->>`) work too. A line only attaches cleanly to a box edge through a `+`. Unicode box-drawing characters (`─│┌┐└┘├┤┬┴┼` etc., plus double-line and shading block variants) can be mixed in freely, and full Unicode/emoji is supported directly in the drawing.
+**Drawing vocabulary**: borders `-`, `_`, `|` (straight) and `\`, `/` (diagonal); corners `+` (square), `.`/`,`/backtick/`'`/`´` (rounded — visually identical in the output, only the ASCII source differs), `(`/`)` (curvy, for rounded/organic shapes like `( 3 )`), and `*`/`#`/`o`/`O` (filled dot / filled square / empty dot, usable as corners or arrow endpoints); arrows use `<`/`>`/`v`/`V`/`^`/`A` for direction plus the same `*`/`#`/`o`/`O` endings (direction-independent); doubled heads (`---->>`, `<<-->>`) work too. A line only attaches cleanly to a box edge through a `+`. Unicode box-drawing characters (`─│┌┐└┘├┤┬┴┼` etc., plus double-line and shading block variants) can be mixed in freely, and full Unicode/emoji is supported directly in the drawing.
 
-**Styling** — an HTML-comment attribute block directly above the fence works the same as any other custom-styling target (see `reference/syntax-core.md`): `style="..."` can center the image, cap its width, or override the SVG's own `fill`/`stroke`. Rendered and confirmed on a small test box with `style="display: block; margin-left: auto; margin-right: auto; max-width: 315px; fill: red; stroke: green;"` above the fence: the resulting SVG was horizontally centered within its container and its border color was overridden to green (`fill: red` had no visible effect on this particular drawing since it only used unfilled border/corner characters — no `*`/`#`-style filled shape was present to show the fill override).
+**Styling** — an HTML-comment attribute block directly above the fence works the same as any other custom-styling target (see `reference/syntax-core.md`): `style="..."` can center the image, cap its width, or override the SVG's own `fill`/`stroke`, e.g. `style="display: block; margin: auto; max-width: 315px; stroke: green;"`. `fill` only affects filled shapes (`*`, `#`).
 
-**Title** — a one-liner of Markdown/LiaScript placed after the language tag on the opening fence line becomes a caption shown below the image, same mechanism as a multi-file code-project's per-block title. Rendered and confirmed: `` ``` ascii  Fig.: A simple box with a caption `` produced the literal text "Fig.: A simple box with a caption" in the DOM directly below the generated SVG image:
+**Title** — a one-liner of Markdown/LiaScript placed after the language tag on the opening fence line becomes a caption shown below the image, same mechanism as a multi-file code-project's per-block title:
 
 ````markdown
 ``` ascii  Fig.: Working with branches in git
@@ -149,7 +149,7 @@ main   *---*-+-*---*---*-------------*----
 
 ## SVG
 
-A raw, unfenced `<svg>...</svg>` block placed directly in the document body is rendered as a live SVG image — standard elements (`<circle>`, `<rect>`, `<line>`, `<path>`, `<text>`, `<defs>`/`<marker>`, ...) all work as plain SVG. **This must NOT be wrapped in a fenced code block** — a fenced `` ```svg `` (or `` ````svg ````) block displays as literal source code instead of rendering (confirmed directly: identical content wrapped in a 4-backtick `svg`-tagged fence rendered as a syntax-highlighted code listing; the same content as a bare `<svg>` tag in the body rendered as the actual image). The docs' own tutorial deliberately shows both forms side by side — a fenced "here's the markup" block followed by the unfenced live render — which is easy to misread as "either form renders"; only the unfenced form does.
+A raw, unfenced `<svg>...</svg>` block placed directly in the document body is rendered as a live SVG image — standard elements (`<circle>`, `<rect>`, `<line>`, `<path>`, `<text>`, `<defs>`/`<marker>`, ...) all work as plain SVG. **Do not wrap it in a fenced code block**: a fenced `` ```svg `` block shows the source code instead of the image. The official tutorial shows both forms side by side (markup, then live render), which is easy to misread as "either form renders"; only the unfenced form does.
 
 ```markdown
 <svg viewBox="0 0 200 100">
@@ -161,7 +161,7 @@ A raw, unfenced `<svg>...</svg>` block placed directly in the document body is r
 
 ### `foreignObject`
 
-`<foreignObject>` embeds real Markdown/LiaScript content (math, styled text, even other interactive elements) inside the SVG's coordinate space — `x`, `y`, `width`, and `height` are required and position/size it like any other SVG element. Rendered and confirmed on a labeled-circle diagram with three `foreignObject`s (a $$C = 2\pi r$$ display formula, an inline `$r$` label, and a $$A = \pi r^2$$ display formula): all three rendered as real, correctly-typeset KaTeX at their given positions over the circle/line/dot drawn with plain SVG shapes, no console errors.
+`<foreignObject>` embeds real Markdown/LiaScript content (math, styled text, even other interactive elements) inside the SVG's coordinate space — `x`, `y`, `width`, and `height` are required and position/size it like any other SVG element. Formulas inside are typeset with KaTeX as usual.
 
 ```markdown
 <svg viewBox="0 0 280 200">

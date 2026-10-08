@@ -251,7 +251,7 @@ f = sin(t)^4 - 2*cos(t/2)^3*sin(t)
 
 **Styling** — attributes go in an HTML comment directly above the fence. `data-showGutter="false"` removes the line-number gutter; `data-theme="chaos"` (any Ace theme name) switches the editor's color theme; `data-marker="y1 x1 y2 x2 color type;"` (repeatable, `;`-separated) highlights a row/column range with a color keyword (`error`/`log`/`warn`/`debug`/`info`, or a spaceless `rgba(...)`) and an optional marker type (`text`, `fullLine` default, `screenLine`). Further attributes and their defaults: `data-tabSize="2"`, `data-fontSize="12pt"` (must be given in `pt`), `data-firstLineNumber="0"`. By default, non-executable code blocks show no line numbers (useful for pseudo-code), executable ones do.
 
-**Write attribute names exactly as listed here.** Up to LiaScript 2.1.2 they are matched case-sensitively: `data-showGutter`, `data-tabSize`, `data-fontSize` and `data-firstLineNumber` are camelCase, but `data-readonly` is all lowercase.
+**Attribute names:** after LiaScript 2.1.2 they are matched case-insensitively, so `data-readOnly` and `data-readonly` mean the same. Up to 2.1.2 write them exactly as listed here: `data-showGutter`, `data-tabSize`, `data-fontSize` and `data-firstLineNumber` in camelCase, but `data-readonly` in lowercase.
 
 - `data-readonly="true"` locks an executable block against editing. Executable blocks are editable by default, non-executable ones are read-only, and `data-readonly="false"` makes them editable.
 - `data-rtl="true"` switches the editor to right-to-left, e.g. for Arabic or Hebrew code comments.
@@ -520,7 +520,7 @@ AND
 
 Toggling either checkbox updates the combining script live. If two scripts reference each other's output (a cycle), give both a `default` value; without it the first calculation has nothing to read and fails with a `TypeError`.
 
-**Internationalization API** — `format="..."` (`number`, `datetime`, `list`, `relativetime`, `pluralrules`) applies a `locale`-aware `Intl.*` formatter to the script's output, for display only (the `@input` value seen by connected scripts is unchanged). `format="number" locale="de-DE"` shows `1234.5` as `1.234,5`. The `Intl` options are passed as attributes and **must be written in lowercase**, e.g. `maximumfractiondigits="2"`, `currencydisplay="name"`. For `Intl.NumberFormat`'s `style` option use `localestyle`, because `style` is reserved for CSS:
+**Internationalization API** — `format="..."` (`number`, `datetime`, `list`, `relativetime`, `pluralrules`) applies a `locale`-aware `Intl.*` formatter to the script's output, for display only (the `@input` value seen by connected scripts is unchanged). `format="number" locale="de-DE"` shows `1234.5` as `1.234,5`. The `Intl` options are passed as attributes, e.g. `maximumFractionDigits="2"`, `currencyDisplay="name"`. For `Intl.NumberFormat`'s `style` option use `localeStyle`, because `style` is reserved for CSS. Up to LiaScript 2.1.2 these names only work in lowercase (`localestyle`, `maximumfractiondigits`); after 2.1.2 any spelling works. Lowercase works in every version:
 
 ```markdown
 <script format="number" locale="de-DE" localestyle="currency" currency="EUR">1234.5</script>

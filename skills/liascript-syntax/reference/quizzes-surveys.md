@@ -165,6 +165,7 @@ Die [->[Katze]] jagt die [->[Maus]], der [->[(Hund)|Kuh]] bellt.
 - Options can contain inline Markdown and math like Select options.
 - Without a mouse, select a blank first (click, or Enter/Space), then the card. On touch screens dragging starts with press-and-hold (since 2.1.0).
 - `data-show-partial-solution` colors each blank green or red after a check.
+- In a quiz script on a gap text, `@input` holds one entry per drag blank: the index of the dropped word among *that blank's own* options, or `-1` if the blank is empty or holds a word from another blank. For `Die [->[Katze]] jagt die [->[Maus]], der [->[(Hund)|Kuh]] bellt.` solved correctly this is `[0, 0, 0]`. This needs a LiaScript version after 2.1.2; up to 2.1.2 every drag blank reports `-1`, and the state of drag quizzes is not restored after a reload.
 
 ### Escaping inside `[[...]]`
 

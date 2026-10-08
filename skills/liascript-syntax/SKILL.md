@@ -45,7 +45,7 @@ These fail silently — the course renders, just wrong. Check them first when re
 6. **`--{{n}}--` never makes anything appear**; content that should appear needs `{{n}}` (`interactivity.md`, Effects).
 7. **Separate HTML comments with a blank line.** Two stacked comments merge, and the attribute comment (chart, style, quiz settings) is lost (`syntax-core.md`, Comments).
 8. **Image + text side by side needs no blank line** between them (`syntax-core.md`, Text Formatting).
-9. **Write attribute names exactly as documented**: `data-readonly`, `localestyle` and other `Intl` options in lowercase, `data-showGutter` in camelCase (`interactivity.md`).
+9. **Attribute names up to LiaScript 2.1.2 are case-sensitive**: `data-readonly`, `localestyle` and other `Intl` options only work in lowercase, `data-showGutter` only in camelCase. After 2.1.2 any spelling works (`interactivity.md`).
 10. **External CSS/JS is not bundled**: animate.css classes, fonts and libraries need a `link:`/`script:` entry first (`interactivity.md`, Effects).
 11. **Raw `<svg>` must not be fenced**, and an `ascii` fence must start at the left margin (`visuals.md`).
 12. **`version: 0.x` never stores quiz state**; use `>= 1.0.0` for a published course (`syntax-core.md`, Meta-Header).

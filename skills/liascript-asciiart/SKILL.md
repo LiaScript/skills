@@ -24,6 +24,13 @@ character, including all box drawing, symbols and emoji, is drawn as a font
 glyph in its cell. So the same character is a line in one place and text in
 another, and letters next to lines can turn into shapes.
 
+**Versions:** this skill and `scripts/render.py` follow elm-svgbob 5.0.8, which
+LiaScript ships after 2.1.2. LiaScript up to 2.1.2 bundles 5.0.7: there dashed
+`~ : !` and double `=` lines stay text, emoji and other wide characters can shift
+the rest of a row, emoji split `"…"` verbatim runs, and multi-line verbatim
+blocks can start at the wrong row. For a course that must look right on 2.1.2, draw
+dashes and double lines with `-`/`|` and check wide characters there.
+
 ## Workflow
 
 1. Pick the means per element (table below) and a template from

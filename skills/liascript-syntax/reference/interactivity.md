@@ -199,6 +199,8 @@ result
 
 Each run of edited code is saved as a new version; the user can step back and forth between versions (editing an older version appends a new one).
 
+**Fences inside code:** up to LiaScript 2.1.2 three backticks *within* a line of code (e.g. a JS string that builds Markdown, `` "```js" ``) ended the block, and a `~~~` line could close a backtick block. After 2.1.2 only a line that starts with backticks closes it. For older interpreters, open the block with more backticks (```` ```` ````) than the code contains, or split the string (`` "``" + "`" ``).
+
 **Multi-file projects** — several fenced code blocks placed back-to-back with *no blank line between them* become one project with one shared `<script>` tag at the end. Give each block a filename after the language (prefix `-` to start hidden/minimized, `+` — the default — to start visible), and reference an individual block from the script with `@input(n)` (0-indexed; `@input` alone is equivalent to `@input(0)`):
 
 ````markdown
@@ -253,7 +255,7 @@ f = sin(t)^4 - 2*cos(t/2)^3*sin(t)
 
 **Attribute names:** after LiaScript 2.1.2 they are matched case-insensitively, so `data-readOnly` and `data-readonly` mean the same. Up to 2.1.2 write them exactly as listed here: `data-showGutter`, `data-tabSize`, `data-fontSize` and `data-firstLineNumber` in camelCase, but `data-readonly` in lowercase.
 
-- `data-readonly="true"` locks an executable block against editing. Executable blocks are editable by default, non-executable ones are read-only, and `data-readonly="false"` makes them editable.
+- `data-readonly="true"` locks an executable block against editing. Executable blocks are editable by default, non-executable ones are read-only, and `data-readonly="false"` makes them editable. Up to LiaScript 2.1.2 such an editable, non-executable block on a slide with executable projects could write its edits into the executable project with the same index; after 2.1.2 it only changes its own code, and <kbd>Ctrl</kbd>+<kbd>Enter</kbd> only runs executable projects.
 - `data-rtl="true"` switches the editor to right-to-left, e.g. for Arabic or Hebrew code comments.
 - `data-ace-options="spellcheck hardWrap=80, tabSize=8"` (since 2.1.1) passes options straight to the Ace editor. It takes whitespace- or comma-separated `name` or `name=value` pairs; a bare name means `true`, and values are read as JSON. The extensions behind `spellcheck`, `hardWrap`, `useElasticTabstops` and the autocompletion options are loaded on demand. Since 2.1.1, autocompletion and snippets are on in executable blocks.
 
@@ -268,7 +270,7 @@ LiaScript runs two kinds of scripts, and they get **different `send` objects**:
 |---|---|---|
 | `send.lia(msg, details, ok)` | yes | yes |
 | `send.log(type, sep, list)`, `send.handle(...)` | yes | no |
-| `send.register(...)`, `send.dispatch(...)` | yes | **no** (`send.register is not a function`) |
+| `send.register(...)`, `send.dispatch(...)` | yes | after LiaScript 2.1.2 yes (not with `worker`); up to 2.1.2 **no** (`send.register is not a function`) |
 | `send.output(msg)`, `send.wait()`, `send.stop()`, `send.clear()` | no | yes |
 | `send.html(msg)`, `send.liascript(msg)` | no (use the `HTML:` / `LIASCRIPT:` prefix) | yes |
 | `console.*` into the terminal panel | yes | no (the browser's console) |
@@ -307,7 +309,7 @@ send.log("warn", "", ["This is a warning", 12, [1,2,3]])
 send.handle("input", input => { /* runs on each line the user submits */ })
 send.handle("stop",  e     => { /* runs when the user clicks stop */ })
 
-// Pub/sub between code blocks
+// Pub/sub between code blocks (and <script> tags after 2.1.2)
 send.register("event-name", callback)
 send.dispatch("event-name", payload)
 ```
@@ -315,6 +317,21 @@ send.dispatch("event-name", payload)
 - **Async pattern** — end the run with `"LIA: wait"`, and call `send.lia(...)` once the async work finishes, with `"LIA: stop"` at the end or as a separate call. The Execute button is hidden while waiting.
 - **`"LIA: terminal"` + `send.handle`** — after Execute, an input line with a send button appears below the output; each submitted line goes to the `input` handler. <kbd>Shift</kbd>+<kbd>Enter</kbd> inserts a new line, Enter submits.
 - **`send.register`/`send.dispatch`** work across slides: a listener registered by a code block on one slide also receives events dispatched from another slide. Listeners are global and are never removed. **There is only one listener per event name**: a later `register` with the same name replaces the earlier one. Output of a listener (`console.log`, `send.lia`) goes to the terminal of the block that registered it, so it is not visible while that slide is not shown. To change something visible from another slide, change shared state instead, e.g. a `window` variable.
+- **Standalone `<script>` tags** share the same event names with code blocks after LiaScript 2.1.2 (not scripts with `worker`, they have their own `send`). A listening script can update its own result from the handler with `send.lia`, `send.html` or `send.liascript`, without running again, so it keeps its state. Scripts can be chained this way:
+
+  ```markdown
+  <script>
+  send.register("score", n => send.html(`<b>${n}</b> points`))
+  "LIA: wait"
+  </script>
+
+  <script input="range" value="3" min="0" max="10" input-always-active>
+  send.dispatch("score", @input)
+  ""
+  </script>
+  ```
+
+  For interpreters up to 2.1.2 use `` @input(`topic`) `` with `output="topic"` instead (Connecting scripts via `output`/`input` below).
 - **Error annotations in the editor** — pass line-specific details as the second argument of `send.lia` (one inner list per code block of the project), or throw a `LiaError`:
 
   ```js
@@ -399,7 +416,7 @@ A multi-line parameter can be passed inline by wrapping it in a triple-backtick 
 
 **Escaping for use inside a JS string** — prefix with `'`: `@'input`, `@'input(1)`, `@'0`, or `@'MacroName(...)` backslash-escape the substituted value so it's safe to embed inside a JS template literal, per the official docs. Apply it once only; chaining escaped macros can double-escape special characters.
 
-**Debugging a call** without running it — prefix with an extra `@` (`@@MyMacro(args)`) to show its fully expanded output in a gray, read-only code block instead of executing it.
+**Debugging a call** without running it — prefix with an extra `@` (`@@MyMacro(args)`) to show its fully expanded output in a gray, read-only code block instead of executing it. After LiaScript 2.1.2 the box shows the expansion exactly as text; up to 2.1.2 escaping backslashes were shown, nested macros appeared as `@-@name` and HTML in the macro body was rendered instead of shown.
 
 For *authoring* your own macros/templates — the block/single-line macro syntax, `@uid`, the 12 established implementation patterns for wrapping a JS library, `LiaError` for editor annotations, and the full template file layout — see the `liascript-templates` skill; that content is not duplicated here.
 
@@ -420,9 +437,13 @@ Every script — code-block or standalone — runs in its own local scope; two `
 
 If a script throws, the error message is displayed as its result.
 
+**Script bodies up to LiaScript 2.1.2:** the end of a `<script>` was found with regexes, which cut valid JavaScript at the wrong place or froze the course for minutes: `</` inside a regular expression (`/<\/b>/`) or a comment, quotes inside a regular expression, nested template strings (`` `a ${`b`}` ``), escaped backslashes at the end of a string, and an unclosed string or template literal. After 2.1.2 a JavaScript-aware scanner ends the script only at `</script>`. For older interpreters avoid these constructs, or move the code into a code block or a template loaded via `script:`.
+
 Scripts combine with animation numbers the same way any block does (`{{1}} <script>...</script>`) to delay execution until that step is reached; in `Textbook` mode all of a slide's scripts run once the slide loads. A script without an animation number runs whenever the slide is opened — again on every visit (use `run-once` to prevent that, see Script attributes below).
 
 **Returning HTML or LiaScript** — a plain string result is shown as text. Prefix it with `HTML:` to render it as HTML, or with `LIASCRIPT:` to have it parsed as LiaScript (tables, formulas, even quizzes). Scripts render inline by default; `style="display: block"` gives them the full line. Quizzes/code generated this way are not persisted — only elements written directly in the Markdown keep their state.
+
+After LiaScript 2.1.2 a `LIASCRIPT:` result is a complete sub-section at any depth: its own `<script>` tags run (delayed, like scripts in a solution block), and their results can again be `LIASCRIPT:`; quizzes, surveys and code blocks inside it are checked with the result's own scripts. Up to 2.1.2 only the first level was reliable: a quiz script inside a result could evaluate an unrelated script of the slide, results of scripts inside a result did not come back, and a quiz/survey script inside a result could freeze the tab.
 
 ```markdown
 <script run-once>"LIASCRIPT: $$\\frac{1}{x} = 0$$"</script>

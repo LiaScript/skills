@@ -106,6 +106,18 @@ Well done! Now you know the dog. Let's go on to the next page.
 
 Write all visible narration as full sentences that also work as reading text. A `--{{n}}--` without a matching `{{n}}` adds a step where only speech happens; use it deliberately, never as a substitute for `{{n}}` when something should appear.
 
+## Speakers and avatars
+
+After LiaScript 2.1.2 a template can show a **narrator avatar**, an animated figure in the video-comment overlay, for every step that has narration but no video. An attribute comment in front of a narration marker passes extra information to it, e.g. who speaks:
+
+```markdown
+                    <!-- data-speaker="anna" data-mood="happy" -->
+                    --{{1}}--
+When a dog is happy, it barks.
+```
+
+Every `data-*` annotation of the step's comments reaches the avatar as an attribute, together with `data-voice` and `data-step`. Without an avatar template the annotations have no visible effect, so they are safe to write. Video comments always take precedence, and the setting "Hide video & avatar comments" hides avatars too. Building such an avatar is template work (`liascript-templates` skill, Narrator hook).
+
 ## Source layout
 
 The official docs indent narration markers and block markers far to the right (narration about 20 spaces, block markers 2 spaces further). Plain Markdown viewers show them as small code lines; in the source they stand out from the content, and the pairing is easy to see. Indentation of 4+ spaces does not change the meaning in LiaScript.

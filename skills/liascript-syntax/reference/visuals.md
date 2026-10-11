@@ -4,7 +4,7 @@ Three independent visualization mechanisms: **table→chart** (a Markdown table 
 
 ## Table → Chart Syntax
 
-Any Markdown table is, by default, shown as a plain sortable table with a small toggle icon that switches to a chart view. LiaScript inspects the table's shape (numeric vs. text columns, duplicate first-column values, row/column counts, value-range spread) to guess which chart type fits, and renders it via a `lia-chart` web component (Apache ECharts). Attach settings by placing an HTML comment with `key="value"` pairs directly above the table — the same attribute-comment mechanism used for custom styling elsewhere (see `reference/syntax-core.md`).
+Any Markdown table is, by default, shown as a plain sortable table. If LiaScript finds a chart type that fits the data, a small toggle icon switches to a chart view. It inspects the table's shape (numeric vs. text columns, the values of the first column, row/column counts, value-range spread) to guess the type (rules below; `data-type` forces one, and only then does a text-heavy table get a chart), and renders it via a `lia-chart` web component (Apache ECharts). Attach settings by placing an HTML comment with `key="value"` pairs directly above the table — the same attribute-comment mechanism used for custom styling elsewhere (see `reference/syntax-core.md`).
 
 ```markdown
 <!--
@@ -19,28 +19,41 @@ data-ylabel="% of GDP"
 | 1996 | 6.9     | 3.3 | 4.5     |
 ```
 
-`data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end.
+`data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end. An empty `data-xlim=""` counts as unset after LiaScript 2.1.2; up to 2.1.2 it was passed to ECharts as an empty limit, so leave the attribute out instead.
 
 **Caution:** never put an authoring note (`<!--- ... --->`) directly above the attribute comment without a blank line in between. The two comments merge into one block, and the comment and table then show up as raw text, with no table and no chart. See `reference/syntax-core.md`'s "Ignoreable comments".
 
-**Type list** — what triggers each type automatically, and what it renders as:
+**Type list** — what each type renders as, and when it is guessed (details below):
 
-| Type | Triggered by | Renders as |
+| Type | Guessed for | Renders as |
 |---|---|---|
-| `LinePlot` | First column all-numeric, no repeated value → treated as a function | Connected multi-series line chart with legend |
-| `ScatterPlot` | Like `LinePlot`, but the first column has repeated values (not a function) | Disconnected dots, no connecting line |
-| `BoxPlot` | Not auto-detected — force with `data-type="boxplot"` | Real box-and-whisker plot, one box per column |
-| `BarChart` | First column has at least one non-numeric entry (a category table), fewer than 50 cells, and column maxima within a factor of 10 | Grouped vertical bars, one group per row |
-| `Radar` | A category table (fewer than 50 cells) whose largest column maximum is more than 10× the smallest | Multi-axis polygon per row; needs 3+ numeric columns for a readable shape |
-| `PieChart` | Exactly one data row | Real pie sectors with labels; a non-numeric first cell in that row becomes the title/subtitle |
-| `Funnel` | Not auto-detected — force with `data-type="funnel"` (same table shape as `PieChart`) | Pyramid/funnel shape, one layer per column |
-| `Map` | `data-type="map"` plus `data-src="<geojson-url>"` naming a GeoJSON file whose feature names match the first column; only one data column is supported | Choropleth map; give it room with `style="height: 600px"` |
-| `HeatMap` | Header and first column both purely numeric (coordinates); force with `data-type="heatmap"` otherwise | Colored grid with a color-scale legend; `data-title` applies here too |
-| `Parallel` | A category table with 50 or more cells (rows × header columns) | Parallel coordinates: one vertical axis per column, one line per row |
-| `Graph` | Table is a square matrix: header row and first column list the same node names | Node/edge diagram; symmetric matrix → undirected graph, asymmetric → directed (edge weight = cell value, may be negative or fractional); no self-loops or multi-edges |
-| `None` | `data-type="none"` | Absence case — disables charting for that table entirely (also disables the first-column-fixed-while-scrolling behavior); nothing to render |
+| `LinePlot` | Numeric x values in the first column, strictly increasing or decreasing; dates or times in the first column | Connected multi-series line chart with legend |
+| `ScatterPlot` | Numeric x values that are not monotonic | Disconnected dots, no connecting line |
+| `BarChart` | Categories in the first column (default case) | Grouped vertical bars, one group per row |
+| `Radar` | Categories, 3+ numeric columns whose maxima differ by more than 10× | Multi-axis polygon per row |
+| `Parallel` | Categories, 3+ numeric columns and 50+ cells; or maxima differing by more than 10× with fewer than 3 numeric columns | Parallel coordinates: one vertical axis per column, one line per row |
+| `PieChart` | Exactly one data row with positive values | Real pie sectors with labels; a non-numeric first cell in that row becomes the title/subtitle |
+| `HeatMap` | Numeric header and numeric, unique first column (coordinates); or an adjacency matrix with a filled diagonal | Colored grid with a color-scale legend; `data-title` applies here too |
+| `Graph` | Adjacency matrix: header row and first column list the same node names, diagonal empty or `0` | Node/edge diagram; symmetric matrix → undirected graph, asymmetric → directed (edge weight = cell value, may be negative or fractional); no self-loops or multi-edges |
+| `BoxPlot` | Never, use `data-type="boxplot"` | Real box-and-whisker plot, one box per column |
+| `Funnel` | Never, use `data-type="funnel"` (same table shape as `PieChart`) | Pyramid/funnel shape, one layer per column |
+| `Sankey` | Never, use `data-type="sankey"` (same shape as `Graph`) | Directed flows; leave cells without a flow empty |
+| `WordCloud` | Never, use `data-type="wordcloud"` (after LiaScript 2.1.2) | One word cloud per data row, see Word clouds below |
+| `Map` | `data-src="<geojson-url>"` (with or without `data-type="map"`), feature names must match the first column; only one data column is supported | Choropleth map; give it room with `style="height: 600px"` |
+| `None` | Text-heavy tables, truth tables (see below); `data-type="none"` | No chart and no toggle; `data-type="none"` also disables the first-column-fixed-while-scrolling behavior |
 
-**How a category table is classified** (first column not purely numeric), in this order: 50 or more cells → `Parallel`; otherwise, if the largest column maximum exceeds 10× the smallest → `Radar`; otherwise `BarChart`. If the heuristic picks the wrong type for your data, force it explicitly:
+**How the type is guessed (after LiaScript 2.1.2)** — `data-transpose` is applied first, then these rules in order:
+
+1. Only the columns after the first count, empty cells are ignored. A column is numeric if more than half of its filled cells are numbers. A number may be followed by a unit (`12 kg`, `5 %`); an ordinal like `5.` is text. **If there are not more numeric than text columns, the table stays a plain table without a chart.**
+2. Header names equal to the first-column values (an adjacency matrix) → `Graph` if the diagonal is empty or `0`, else `HeatMap`.
+3. Only `0` and `1` in the first column and in all numeric columns (a truth table) → `None`.
+4. Exactly one data row → `PieChart` if the table has a header and all values are positive, else `None`. A place-value table with zeros stays a table.
+5. Numbers in the whole first column (x values): a numeric header with at least two names and unique x values → `HeatMap`; strictly increasing or decreasing x values → `LinePlot`; otherwise `ScatterPlot`.
+6. Categories in the first column: a table without a header stays plain. First cells that all start with a digit (dates and times like `2024-03-01`, `01.05.2024`, `08:00`) → `LinePlot`. 3+ numeric columns and at least 50 cells (rows × header columns) → `Parallel`. Column maxima that differ by more than 10× → `Radar` with 3+ numeric columns, else `Parallel`. Otherwise `BarChart`.
+
+**Up to LiaScript 2.1.2** the guess was more eager: every table with at least one number got a chart toggle. A numeric first column without repeated values was a `LinePlot`, with repeats a `ScatterPlot`; exactly one data row was a `PieChart`; a numeric header and first column were a `HeatMap`; a square matrix with matching names a `Graph`. For a category table: 50 or more cells → `Parallel`; otherwise, if the largest column maximum exceeds 10× the smallest → `Radar`; otherwise `BarChart`.
+
+If the heuristic picks the wrong type for your data, force it explicitly; this works the same in every version:
 
 ```markdown
 <!-- data-show data-type="radar" -->
@@ -63,7 +76,7 @@ data-ylabel="% of GDP"
 **Other attributes:**
 
 - **`data-transpose`** (or `="true"`) — mirrors the table so rows and columns swap (e.g. a category-per-row table becomes the same pie chart as the category-per-column form).
-- **`data-orientation="horizontal"`** / `"vertical"` — horizontal bars with categories on the y-axis vs. the default vertical bars.
+- **`data-orientation="horizontal"`** / `"vertical"` — horizontal bars with categories on the y-axis vs. the default vertical bars. Write the value in lowercase: it is matched case-insensitively only after LiaScript 2.1.2.
 - **`data-src`** — GeoJSON URL for `data-type="map"`; store the file in your own project rather than on an external host, to avoid CORS issues.
 - **`data-sortable`** — every column of the table view is sortable by default. Set `data-sortable="false"` on the table, and override it per column with a comment inside the header cell:
 
@@ -73,7 +86,20 @@ data-ylabel="% of GDP"
   | -------- | -------------------------------------- |
   ```
 
-`data-type` accepts (case-insensitive): `bar`/`barchart`, `boxplot`, `funnel`, `graph`, `heatmap`, `line`/`lineplot`, `map`, `none`, `parallel`, `pie`/`piechart`, `radar`, `sankey`, `scatter`/`scatterplot`. `sankey` draws a directed-flow diagram from the same adjacency-matrix table shape as `Graph` (leave cells without a flow empty).
+`data-type` accepts (case-insensitive): `bar`/`barchart`, `boxplot`, `funnel`, `graph`, `heatmap`, `line`/`lineplot`, `map`, `none`, `parallel`, `pie`/`piechart`, `radar`, `sankey`, `scatter`/`scatterplot`, and after LiaScript 2.1.2 `wordcloud`. `sankey` draws a directed-flow diagram from the same adjacency-matrix table shape as `Graph` (leave cells without a flow empty).
+
+**Word clouds** (after LiaScript 2.1.2) — `data-type="wordcloud"` turns the header cells into words and every data row into one cloud, sized by its values; the first cell of the row is the cloud's subtitle. Several rows give clouds side by side that share one font scale, so equal values have equal sizes, and every word keeps its color across clouds. A long word list is easier to write one word per row, with `data-transpose`. Effects in cells animate the cloud like any other chart. An older interpreter ignores the unknown type and guesses one.
+
+```markdown
+<!-- data-type="wordcloud" data-transpose data-show -->
+| Language   | Votes |
+| ---------- | ----: |
+| Python     |    42 |
+| JavaScript |    30 |
+| Elm        |     8 |
+| Rust       |    17 |
+| Haskell    |     5 |
+```
 
 ### Custom Diagrams with ECharts
 

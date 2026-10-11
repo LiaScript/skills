@@ -37,9 +37,9 @@ Systematically verifies scientific literature references using web search. Outpu
 
 ## liascript-exporter
 
-Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` catalog files for LiaScript repositories. Covers all export formats (PDF, SCORM 1.2/2004, IMS, ePub, DOCX, xAPI, Android, web), automated deployment to GitHub Pages, multi-project site patterns, and quality check pipelines. Includes ready-made examples for common scenarios.
+Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` catalog files for LiaScript repositories. Covers all export formats (PDF, SCORM 1.2/2004, IMS, ePub, DOCX, xAPI, Android, web, JSON), LMS presets, exporting straight from a Git repository or only a sub-folder of it, the web/desktop app, automated deployment to GitHub Pages, multi-project site patterns with cached downloads, and quality check pipelines. Includes ready-made examples for common scenarios.
 
-**Activates when:** a user wants to export a LiaScript course to any format; create or update a GitHub Actions workflow; build a project website that aggregates multiple courses; set up automated deployment to GitHub Pages; or asks anything involving the `liaex` CLI, `@liascript/exporter`, or LiaScript CI/CD.
+**Activates when:** a user wants to export a LiaScript course to any format or for a specific LMS (Moodle, ILIAS, OPAL, …); create or update a GitHub Actions workflow; build a project website that aggregates multiple courses; set up automated deployment to GitHub Pages; or asks anything involving the `liaex` CLI, `@liascript/exporter`, or LiaScript CI/CD.
 
 ---
 

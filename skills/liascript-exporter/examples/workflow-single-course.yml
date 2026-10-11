@@ -54,56 +54,19 @@ jobs:
 
       - name: Generate SCORM 2004
         # Use scorm1.2 + --scorm-embed for Moodle 4 / OPAL / Open edX
-        # Use scorm2004 + --scorm-iframe for ILIAS / OpenOLAT / scorm.cloud
+        # Use scorm2004 + --scorm-iframe for ILIAS / scorm.cloud (OpenOLAT: scorm1.2 + --scorm-embed)
         run: liaex -i project/README.md --format scorm2004 --output "$EXPORT_DIR/SCORM" --scorm-masteryScore 80
 
       - name: Generate IMS package
         run: liaex -i project/README.md --format ims --output "$EXPORT_DIR/IMS"
 
-      - name: Stage release assets
+      - name: Publish as release "latest"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p outputs
-          cp "$EXPORT_DIR/Documentation.pdf" outputs/Documentation.pdf
-          cp "$EXPORT_DIR/SCORM.zip" outputs/SCORM.zip
-          cp "$EXPORT_DIR/IMS.zip" outputs/IMS.zip
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "latest"
-          release_name: "Latest Course Export"
-          draft: false
-          prerelease: false
-
-      - name: Upload PDF
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: outputs/Documentation.pdf
-          asset_name: Documentation.pdf
-          asset_content_type: application/pdf
-
-      - name: Upload SCORM
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: outputs/SCORM.zip
-          asset_name: SCORM.zip
-          asset_content_type: application/zip
-
-      - name: Upload IMS
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: outputs/IMS.zip
-          asset_name: IMS.zip
-          asset_content_type: application/zip
+          # Recreate the release so the "latest" tag always points at this commit.
+          # (actions/create-release@v1 is archived and fails once the tag exists.)
+          gh release delete latest --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+          gh release create latest --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Latest Course Export" --notes "Built from $GITHUB_SHA" \
+            "$EXPORT_DIR/Documentation.pdf" "$EXPORT_DIR/SCORM.zip" "$EXPORT_DIR/IMS.zip"

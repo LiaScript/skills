@@ -2,10 +2,16 @@
 name: liascript-exporter
 description: >
   Generates LiaScript export workflows, GitHub Actions, and project.yaml files for LiaScript repositories.
-  Use when a user wants to: export a LiaScript course to PDF/SCORM/IMS/ePub/DOCX/xAPI/Android; create or update
-  a GitHub Actions workflow for LiaScript; build a project website (index page) that aggregates multiple courses;
-  set up automated deployment to GitHub Pages; add quality checks (spell/style) to a LiaScript repo;
-  or asks anything involving the liaex CLI, @liascript/exporter, or LiaScript CI/CD.
+  Use when a user wants to: export a LiaScript course to PDF/SCORM/IMS/ePub/DOCX/xAPI/Android/JSON; pick the
+  right SCORM settings or LMS preset for Moodle 3/4/5, ILIAS, OPAL, OpenOLAT, Open edX, LearnWorlds or SCORM Cloud;
+  export straight from a GitHub repository (--git-url) or only a sub-folder of it; create or update a GitHub
+  Actions workflow for LiaScript; build a project website (index page) that aggregates multiple courses, with
+  generated PDF/SCORM/ePub/DOCX/xAPI/APK downloads; set up automated deployment to GitHub Pages; add quality
+  checks (spell/style) to a LiaScript repo; or asks anything involving the liaex CLI, @liascript/exporter,
+  the LiaScript Exporter web app/desktop app, or LiaScript CI/CD. Also triggers on German requests such as
+  "Kurs als SCORM für Moodle exportieren", "SCORM-Paket für ILIAS/OPAL erstellen", "LiaScript-Kurs als PDF",
+  "Kursübersicht/Projektseite aus mehreren Kursen bauen", "GitHub Action für den LiaScript-Export",
+  "nur einen Unterordner des Repos packen".
 license: CC0-1.0
 ---
 
@@ -56,6 +62,7 @@ Use the decision matrix in Section 11 to select format and required flags based 
 - Moodle 4.x / OPAL / Open edX / OpenOLAT → `scorm1.2 --scorm-embed`
 - ILIAS / learnworlds.com / scorm.cloud → `scorm2004 --scorm-iframe`
 - State persistence needed → use `scorm2004` (not `scorm1.2`)
+- For a quick one-off export, the built-in presets (`liaex -f presets --<id>`, Section 2.2) are an alternative — but see the caveat there.
 
 ### Step 3: Generate the Artifact
 
@@ -63,7 +70,8 @@ Use the templates in Sections 4–5 as starting points. Always:
 - Use `force_orphan: true` in `peaceiris/actions-gh-pages` steps
 - Use `raw.githubusercontent.com` URLs in `project.yaml` (never HTML GitHub URLs)
 - Set `--pdf-timeout 50000` (or higher) for large courses
-- Add `--project-generate-cache -p ./cache` for large project websites
+- For large project websites add `--project-generate-cache` and persist the generated `assets/` folder between runs (Section 4.4) — `-p` does **not** set the cache location
+- If a course lives in a sub-folder of its repository, restrict packing to it: `-p <folder>` for single exports, `path:` per course in `project.yaml` (Section 4.5)
 - Isolate exporter outputs from source files: write to a temp directory outside the repo (e.g., `/tmp/lia-exports-${{ github.run_id }}` or `${{ runner.temp }}` when valid in step scope)
 - For Docker-based exports, mount source as read-only and mount a separate output directory (`-v "$GITHUB_WORKSPACE:/work:ro"` and `-v "$EXPORT_DIR:/out"`)
 - Stage release assets only after all exports finish (copy final files into `outputs/`), never export directly into `outputs/`
@@ -89,7 +97,7 @@ Use this safe pattern:
 3. Copy only final files to a clean `outputs/` staging folder.
 4. Upload assets from `outputs/`.
 
----
+`--format project` is a special case: it always writes its generated downloads to `./assets/<format>/` and clones repositories into `./tmp/`, both relative to the **current working directory**. Isolate it by running `liaex` from inside the export directory (Section 4.4).
 
 ---
 
@@ -115,12 +123,22 @@ npm install -g @liascript/exporter
 sudo npm install -g @liascript/exporter
 ```
 
-The CLI command is `liaex` (also available as `liascript-exporter`).
+The CLI command is `liaex` (also available as `liascript-exporter`). The npm version string has the form `<exporter>--<LiaScript>` (e.g. `3.4.3--2.1.2`).
+
+**Alternative: Web App (no installation)**
+<https://liascript.github.io/LiaScript-Exporter/> runs entirely in the browser — the course is never uploaded. Accepts Markdown files, a `.zip` of the course folder, or a public GitHub repository, and offers all presets and advanced settings. Limits: no Android export, PDF/ePub/DOCX of very large courses may run out of memory, only public GitHub repos (others: upload as `.zip`), one export at a time while its status page is open. Recommend it to users who just want a file, not automation.
 
 **Alternative: Desktop App**
-Download from [GitHub Releases](https://github.com/LiaScript/LiaScript-Exporter/releases) — no Node.js required.
+Download from [GitHub Releases](https://github.com/LiaScript/LiaScript-Exporter/releases) — same UI, no Node.js required, exports run in a separate process (better than the web app for very large courses).
 
-**Alternative: Docker (Android exports)**
+**Alternative: local Web UI via CLI**
+```bash
+liaex serve                 # export server with web interface on port 3000
+liaex serve --port 8080
+liaex serve --no-browser    # don't open the browser automatically
+```
+
+**Alternative: Docker (Android exports, or the web UI)**
 ```bash
 docker pull liascript/exporter
 docker run --rm \
@@ -128,6 +146,9 @@ docker run --rm \
   -v "/tmp/lia-exports:/out" \
   liascript/exporter \
   liaex -f android -i /work/README.md --android-appId io.github.example.course --output /out/android
+
+# Web UI inside the container
+docker run --rm -p 4000:4000 liascript/exporter   # then open http://localhost:4000
 ```
 
 ---
@@ -140,20 +161,62 @@ liaex -i <input-file> -f <format> -o <output-name> [options]
 
 | Flag | Long form | Description |
 |------|-----------|-------------|
-| `-i` | `--input` | Input file (Markdown or YAML for projects) |
-| `-f` | `--format` | Output format (see Section 3) |
-| `-o` | `--output` | Output name (extension set by format) |
-| `-p` | `--path` | Path to pack (defaults to input file's directory) |
+| `-i` | `--input` | Input file (Markdown, or YAML for `--format project`) |
+| `-f` | `--format` | Output format (see Section 3), or `presets` (Section 2.2). Default: `json` |
+| `-o` | `--output` | Output name (extension set by format), default `output` |
+| `-p` | `--path` | Folder to pack into the package (default: the input file's directory) |
 | `-s` | `--style` | Inject additional CSS |
 | `-k` | `--key` | ResponsiveVoice key for TTS |
 | `-v` | `--version` | Print version |
 | `-h` | `--help` | Show help |
+| | `--git-url` | Clone a git/GitHub repository and export from it (instead of `-i`) |
+| | `--git-branch` | Branch or tag to check out (default: repository default) |
+| | `--git-subdir` | Sub-directory of the clone to use as root |
+| | `--git-file` | Markdown file to export (default: `README.md` or first `.md` found) |
 
-**Web UI mode:**
+**What gets packed (`-p`):** Packaging formats (SCORM, IMS, web, xAPI, Android) copy a whole folder next to the course. Without `-p` that is the directory of the input file, so `liaex -i course/README.md …` packs only `course/`. Set `-p .` when the course references files outside its own folder (e.g. `../img/`), or `-p some/folder` to restrict packing to one folder. Hidden files are skipped.
+
+A failed export exits non-zero, so CI steps fail properly.
+
+### 2.1 Export directly from a Git repository
+
 ```bash
-liaex serve          # starts local web server on port 3000
-liaex serve --port 8080
+# README.md of a repository → SCORM 2004
+liaex --git-url https://github.com/LiaScript/LiaScript -f scorm2004 -o course
+
+# A specific file from a branch and sub-directory
+liaex --git-url https://github.com/user/repo \
+  --git-branch main --git-subdir docs --git-file 01_Intro.md \
+  -f web -o course
 ```
+
+The repo is cloned to a temporary directory that is removed afterwards. `--git-file` is relative to `--git-subdir` (if given). Works together with presets.
+
+### 2.2 Presets (LMS shortcuts)
+
+Presets bundle a format with recommended options for one platform:
+
+```bash
+liaex -f presets                                            # list all presets
+liaex -f presets --moodle4 -i course/README.md -o course    # export with a preset
+liaex -f presets --ilias -i course/README.md -o course --scorm-organization "My Org"   # extra flags override the preset
+liaex -f presets --opal --git-url https://github.com/user/repo -o course
+```
+
+| Preset flag | Platform | Effective settings (from `presets.yaml`) |
+|-------------|----------|------------------------------------------|
+| `--moodle3` | Moodle 3.x | scorm1.2 + iframe |
+| `--moodle4` | Moodle 4.x | scorm1.2 + embed |
+| `--moodle5` | Moodle 5.x | scorm1.2 + embed |
+| `--ilias` | ILIAS | scorm1.2 + iframe |
+| `--opal` | OPAL | scorm2004, no iframe/embed |
+| `--scormcloud-1.2` | SCORM Cloud | scorm1.2 + iframe |
+| `--scormcloud-2004` | SCORM Cloud | scorm2004 + iframe |
+| `--openolat` | OpenOLAT | scorm1.2 + embed |
+| `--openedx` | Open edX | scorm2004 + iframe |
+| `--learnworlds` | LearnWorlds | scorm2004 + iframe, masteryScore 80 |
+
+> ⚠️ The preset ID must be exact — there is no bare `--moodle`. Presets set no `masteryScore` except LearnWorlds; add `--scorm-masteryScore 80` yourself if needed. For ILIAS, OPAL and Open edX the presets differ from the tested commands in Section 3.1 — when generating CI workflows, prefer the explicit flags from Section 3.1.
 
 ---
 
@@ -170,7 +233,7 @@ Produces `my-course.zip`. SCORM 1.2 stores only location (not quiz/survey states
 **Key options:**
 | Option | Description |
 |--------|-------------|
-| `--scorm-masteryScore` | 0–100, default 80. Set to 0 to let everyone pass. |
+| `--scorm-masteryScore` | 0–100, default **0** (everyone passes). The tested LMS commands below use 80. |
 | `--scorm-typicalDuration` | ISO 8601 duration, e.g. `PT1H30M0S`. Default: `PT0H5M0S` |
 | `--scorm-organization` | Sets organization in `imsmanifest` |
 | `--scorm-iframe` | Fix for ILIAS, OpenOLAT, learnworlds.com that break startingParameter |
@@ -296,10 +359,12 @@ liaex --format pdf --pdf-preview -i https://raw.githubusercontent.com/.../README
 liaex -i README.md --format epub --epub-title "My Course" --epub-author "Author Name" --output course
 ```
 
+Title, author, language, description and cover default to the course header (`title`/first heading, `author:`, `language:`, `comment:`, `logo:`), so a plain `liaex -i README.md --format epub` works.
+
 | Option | Description |
 |--------|-------------|
-| `--epub-title` | **Required.** Title of the book |
-| `--epub-author` | **Required.** Semicolon-separated for multiple authors |
+| `--epub-title` | Title of the book (default: course title) |
+| `--epub-author` | Semicolon-separated for multiple authors (default: `author:` from header) |
 | `--epub-publisher` | Publisher name |
 | `--epub-cover` | Path or URL to cover image |
 | `--epub-description` | Book description |
@@ -377,17 +442,27 @@ liaex -f android \
   --output output
 ```
 
-Produces `output.apk`. Uses Capacitor.js. Best done via Docker (see Section 1).
+Produces `output.apk` (debug build by default). Uses Capacitor.js. Best done via Docker (see Section 1). Not available in the web app.
 
 | Option | Description |
 |--------|-------------|
-| `--android-sdk` | Path to Android SDK |
-| `--android-appId` | Unique reverse-domain app ID |
+| `--android-sdk` | Path to Android SDK (not needed in Docker) |
+| `--android-appId` | **Required.** Unique reverse-domain app ID |
 | `--android-appName` | App name (default: course title) |
 | `--android-icon` | App icon (1024×1024 px) |
-| `--android-splash` | Splash screen image (2732×2732 px) |
-| `--android-splashDuration` | Splash duration in ms (default: 0) |
-| `--android-preview` | Open Android Studio preview |
+| `--android-iconBackgroundColor` | Background color of the adaptive icon |
+| `--android-iconBackgroundColorDark` | Same for dark mode |
+| `--android-release` | Signed release APK (needs keystore) |
+| `--android-bundle` | Signed release AAB for the Play Store (needs keystore) |
+| `--android-keystore` | Path to keystore file |
+| `--android-keystorePassword` | Keystore password (or env `KEYSTORE_PASSWORD`) |
+| `--android-keyAlias` | Key alias (default `release`, or env `KEY_ALIAS`) |
+| `--android-keyPassword` | Key password (or env `KEY_PASSWORD`) |
+| `--android-preview` | Open the project in Android Studio |
+
+In CI, pass signing secrets via the environment variables, never as literal flags in the workflow file. Play Store publishing steps: [PLAYSTORE_GUIDE.md](https://github.com/LiaScript/LiaScript-Exporter/blob/master/PLAYSTORE_GUIDE.md).
+
+> `--android-splash` / `--android-splashDuration` from older docs are no longer read by the exporter.
 
 ---
 
@@ -412,7 +487,16 @@ Exports LiaScript course metadata as JSON-LD or N-Quads (schema.org `Course`).
 
 ---
 
-### 3.11 Project (Index Website)
+### 3.11 JSON (parsed course)
+
+```bash
+liaex -i README.md --format json -o course       # default format if -f is omitted
+liaex -i README.md --format fullJson -o course   # complete parsed course (what the other exporters consume)
+```
+
+Writes `course.json` — useful for analyses or custom tooling, not for learners. The format name is case-insensitive.
+
+### 3.12 Project (Index Website)
 
 See Section 4 for the full project workflow.
 
@@ -491,6 +575,11 @@ collection:
       - Tutorial
       - Beginner
 
+  # Course that lives in a sub-folder of a larger repository:
+  # pack only that folder into SCORM/IMS/xAPI/APK (see Section 4.5)
+  - url: https://raw.githubusercontent.com/username/monorepo/main/courses/intro/README.md
+    path: courses/intro
+
   # Per-course export override (long flag names without --)
   - url: https://raw.githubusercontent.com/username/repo3/main/README.md
     arguments:
@@ -559,9 +648,13 @@ liaex -i project.yaml --format project --output index --project-generate-ims
 liaex -i project.yaml --format project --output index \
   --project-generate-pdf --project-generate-scorm12
 
-# With caching (skip already-generated files)
+# ePub, DOCX, xAPI or Android APK for every course
 liaex -i project.yaml --format project --output index \
-  --project-generate-pdf --project-generate-scorm12 --project-generate-cache -p ./cache
+  --project-generate-epub --project-generate-docx --project-generate-xapi
+
+# With caching (skip files that already exist in ./assets/<format>/)
+liaex -i project.yaml --format project --output index \
+  --project-generate-pdf --project-generate-scorm12 --project-generate-cache
 
 # PDF with custom theme
 liaex -i project.yaml --format project --output index \
@@ -591,8 +684,54 @@ liaex -i project.yaml --format project --output index --project-search
 | `--project-generate-scorm12` | Auto-generate SCORM 1.2 for every course |
 | `--project-generate-scorm2004` | Auto-generate SCORM 2004 for every course |
 | `--project-generate-ims` | Auto-generate IMS package for every course |
-| `--project-generate-cache` | Skip generation if output file already exists |
+| `--project-generate-epub` | Auto-generate ePub for every course |
+| `--project-generate-docx` | Auto-generate DOCX for every course |
+| `--project-generate-xapi` | Auto-generate xAPI package (zip) for every course |
+| `--project-generate-android` | Auto-generate Android APK for every course (needs Android SDK/Docker) |
+| `--project-generate-cache` | Skip generation if the file already exists in `./assets/<format>/` |
 | `--project-search` | Enable full-text fuzzy search across all courses |
+
+All format-specific flags (`--pdf-*`, `--scorm-*`, `--epub-*`, …) can be passed alongside and apply to every course; per-course `arguments:` override them.
+
+### 4.4 Where generated files go (and how caching works)
+
+Generated downloads are always written relative to the **current working directory**, named by a hash of the course URL, and linked from the page as relative paths:
+
+```
+./<output>.html
+./assets/pdf/<hash>.pdf          ./assets/epub/<hash>.epub     ./assets/docx/<hash>.docx
+./assets/scorm12/<hash>.zip      ./assets/scorm2004/<hash>.zip ./assets/ims/<hash>.zip
+./assets/xapi/<hash>.zip         ./assets/android/<hash>.apk
+```
+
+Consequences:
+- **Deploy `assets/` next to the HTML**, otherwise the download buttons break. Copying the whole folder is enough (it also carries your own images if the repo has an `assets/` folder).
+- **`-p` has no effect on this location.** To keep outputs out of the source tree, `cd` into an export directory and pass the YAML by absolute path: `cd "$EXPORT_DIR" && liaex -i "$GITHUB_WORKSPACE/project.yaml" -f project -o index …`. Relative `logo:` paths in the YAML are just copied into the HTML, so copy those image files to the deploy folder too.
+- **Caching** = persist `assets/` between runs (e.g. `actions/cache` on `$EXPORT_DIR/assets`) and add `--project-generate-cache`. A cached file is never refreshed, so content changes in a course are only picked up when the cache key changes — rotate it (e.g. weekly) or drop the cache for fresh downloads.
+- Several YAML files exported from the same directory share one `assets/` folder; identical courses are generated once.
+- SCORM/IMS/xAPI/APK need the full course folder, so the exporter runs `git clone` into **`./tmp/`** and deletes it afterwards (`rm -rf tmp`). Never run a project export in a directory that has its own `tmp/` folder; after a crashed run, delete the leftover `tmp/` or the next clone fails.
+- Cloning only works for `raw.githubusercontent.com/<org>/<repo>/<branch>/<file>` URLs. For other hosts, SCORM/IMS/xAPI/APK are silently not generated for that course, while its card still shows a (broken) download link; PDF/ePub/DOCX still work.
+
+### 4.5 Packing only a sub-folder of a repository
+
+For SCORM/IMS/xAPI/APK, a project export packs the **entire cloned repository** by default — including every other course, slides and large media of a monorepo. Restrict it per course with `path:` (relative to the repository root, like `-p` for single exports):
+
+```yaml
+collection:
+  - url: https://raw.githubusercontent.com/org/lectures/main/week-01/README.md
+    path: week-01
+  - url: https://raw.githubusercontent.com/org/lectures/main/week-02/README.md
+    path: week-02
+```
+
+The Markdown file must lie inside `path`. Equivalent options elsewhere:
+
+| Context | Option |
+|---------|--------|
+| Single CLI export, local file | `-p <folder>` (default: folder of the input file) |
+| CLI export from a repo | `--git-url … --git-subdir <folder>` |
+| GitHub Action | `course-path: <folder>` |
+| `project.yaml` course entry | `path: <folder>` |
 
 ---
 
@@ -616,6 +755,8 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    env:
+      EXPORT_DIR: /tmp/lia-exports-${{ github.run_id }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -630,58 +771,34 @@ jobs:
       - name: Install LiaScript Exporter
         run: npm install -g @liascript/exporter
 
+      - name: Prepare isolated output directory
+        run: mkdir -p "$EXPORT_DIR"
+
+      # Chromium system libraries for PDF: see Section 8
+
       - name: Generate PDF
         env:
           PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
-        run: liaex -i project/README.md --format pdf --output Documentation --pdf-timeout 50000
+        run: liaex -i project/README.md --format pdf --output "$EXPORT_DIR/Documentation" --pdf-timeout 50000
 
       - name: Generate SCORM 2004
-        run: liaex -i project/README.md --format scorm2004 --output SCORM
+        run: liaex -i project/README.md --format scorm2004 --output "$EXPORT_DIR/SCORM" --scorm-masteryScore 80
 
       - name: Generate IMS Package
-        run: liaex -i project/README.md --format ims --output IMS
+        run: liaex -i project/README.md --format ims --output "$EXPORT_DIR/IMS"
 
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Publish as release "latest"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: 'latest'
-          release_name: 'Latest LiaScript Documentation'
-          draft: false
-          prerelease: false
-
-      - name: Upload PDF
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: Documentation.pdf
-          asset_name: Documentation.pdf
-          asset_content_type: application/pdf
-
-      - name: Upload SCORM
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: SCORM.zip
-          asset_name: SCORM.zip
-          asset_content_type: application/zip
-
-      - name: Upload IMS
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: IMS.zip
-          asset_name: IMS.zip
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Recreate the release so the "latest" tag moves to this commit
+          gh release delete latest --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+          gh release create latest --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Latest LiaScript Documentation" --notes "Built from $GITHUB_SHA" \
+            "$EXPORT_DIR/Documentation.pdf" "$EXPORT_DIR/SCORM.zip" "$EXPORT_DIR/IMS.zip"
 ```
+
+> Do not use `actions/create-release@v1` / `actions/upload-release-asset@v1`: both are archived, and `create-release` fails on every run after the first because the tag already exists.
 
 ---
 
@@ -752,6 +869,9 @@ permissions:
 jobs:
   run_exporter:
     runs-on: ubuntu-latest
+    env:
+      # Fixed path outside the repo: liaex writes ./assets/<format>/ and ./tmp/ into its CWD
+      SITE_DIR: /tmp/lia-site
     steps:
       - name: Install LiaScript Exporter
         run: npm install -g @liascript/exporter
@@ -759,37 +879,41 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Restore cached resources
+      - name: Prepare site directory and cache week
+        id: week
+        run: |
+          mkdir -p "$SITE_DIR"
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore generated downloads
         uses: actions/cache@v4
         with:
-          path: ./cache
-          key: ${{ runner.os }}-resources-${{ hashFiles('project.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-resources-
+          path: /tmp/lia-site/assets
+          # Cached files are never refreshed by liaex; rotating the key weekly
+          # picks up content changes in the courses at least once a week.
+          key: lia-assets-${{ hashFiles('project.yaml') }}-${{ steps.week.outputs.week }}
 
-      - name: Create cache directory
-        run: mkdir -p ./cache
+      # Chromium system libraries for PDF: see Section 8
 
       - name: Generate website with PDFs and SCORM packages
+        working-directory: /tmp/lia-site
+        env:
+          PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
         run: |
-          liaex -i project.yaml --format project --output index \
+          liaex -i "$GITHUB_WORKSPACE/project.yaml" --format project --output index \
             --project-generate-pdf \
             --project-generate-scorm12 \
-            --project-generate-cache \
-            -p ./cache
+            --project-generate-cache
 
       - name: Prepare deployment directory
         run: |
           mkdir -p gh-pages-deploy
-          cp index.html gh-pages-deploy/
-
-          # Copy assets
-          [ -f logo.jpg ] && cp logo.jpg gh-pages-deploy/
-          [ -f icon.png ] && cp icon.png gh-pages-deploy/
-
-          # Copy generated PDFs and SCORM ZIPs from cache
-          find ./cache -name "*.pdf" -exec cp {} gh-pages-deploy/ \;
-          find ./cache -name "*.zip" -exec cp {} gh-pages-deploy/ \;
+          cp "$SITE_DIR/index.html" gh-pages-deploy/
+          # Generated downloads — must sit next to index.html (links are assets/<format>/<hash>.*)
+          cp -r "$SITE_DIR/assets" gh-pages-deploy/
+          # Images referenced by project.yaml
+          if [ -f logo.jpg ]; then cp logo.jpg gh-pages-deploy/; fi
+          if [ -d assets ]; then cp -r assets/. gh-pages-deploy/assets/; fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -823,17 +947,10 @@ assets/                ← shared images referenced by project pages
 **File:** `.github/workflows/deploy.yml` — see full example at [examples/workflow-multi-project.yml](examples/workflow-multi-project.yml).
 
 Key points:
-- Run `liaex` with `working-directory: project` (or use `liaex -i project/topic-a.yaml`)
+- Run every `liaex` call with `working-directory` set to one shared export directory outside the repo and pass the YAML files by absolute path (`-i "$GITHUB_WORKSPACE/project/topic-a.yaml"`). All pages then share one `assets/` folder.
 - Set `PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"` env var on the generate step
 - Use `force_orphan: true` on `peaceiris/actions-gh-pages@v4`
-- Preserve PDF/ZIP subdirectory structure when copying to the deploy directory:
-  ```bash
-  find project -name "*.pdf" | while read f; do
-    rel="${f#project/}"
-    mkdir -p "gh-pages-deploy/$(dirname "$rel")"
-    cp "$f" "gh-pages-deploy/$rel"
-  done
-  ```
+- Deploy all `*.html` files plus the export directory's `assets/` folder (the generated downloads) side by side, then add the repo's own images
 
 ---
 
@@ -915,6 +1032,7 @@ Use directly in a workflow without installing the exporter:
     format: 'scorm1.2'
     output-name: 'my-course'
     scorm-organization: 'My Organization'
+    # course-path: 'courses/intro'   # folder to pack, like -p (default: folder of input-file)
 
 - name: Upload SCORM
   uses: actions/upload-artifact@v4
@@ -922,6 +1040,8 @@ Use directly in a workflow without installing the exporter:
     name: scorm-package
     path: '*.zip'
 ```
+
+Supported `format` values: `scorm1.2`, `scorm2004`, `pdf`, `web`, `ims`, `xapi`, `rdf`, `json`, `project` — for ePub, DOCX or Android install the CLI instead (Section 5.1 / Docker). Inputs use kebab-case (`scorm-mastery-score`, `pdf-print-background`, …); outputs are `output-file`, `file-size`, `format`, `success`.
 
 Full documentation: [action/README.md](https://github.com/liascript/liascript-exporter/blob/HEAD/action/README.md)
 
@@ -1114,7 +1234,7 @@ collection:
 
 3. **Web exports need HTTP** — `liaex --format web` outputs cannot be opened via `file://`. Use `npx serve` or Python HTTP server for local testing.
 
-4. **Caching with `-p ./cache`** — Use `--project-generate-cache -p ./cache` to avoid regenerating unchanged PDFs/SCORM in large collections.
+4. **Project caching lives in `./assets/`, not in `-p`** — `--project-generate-cache` skips files that already exist in `./assets/<format>/` of the working directory. Persist that folder between runs and deploy it next to the HTML (Section 4.4). Cached files are never refreshed.
 
 5. **SCORM state persistence** — SCORM 1.2 stores location only; use SCORM 2004 for quiz/survey state persistence.
 
@@ -1132,6 +1252,14 @@ collection:
 
 12. **Prevent recursive package growth (critical):** never export into the repository source tree when creating multiple formats in one run. Export into an isolated temp directory first, then copy the final artifacts into a clean staging folder for upload. For Docker exports, mount source read-only and outputs on a separate mount.
 
+13. **Pack only what belongs to the course** — `-p <folder>` (single export), `--git-subdir` (git export), `course-path` (Action) or `path:` per course in `project.yaml` (Section 4.5). Without `path:`, project-generated SCORM/IMS/xAPI/APK contain the *whole* repository.
+
+14. **Project export and `./tmp/`** — the project exporter clones into `./tmp/` and runs `rm -rf tmp` afterwards. Never run it in a folder with a `tmp/` directory you need; remove a leftover `tmp/` after a crashed run.
+
+15. **`[ -f x ] && cp …` as the last line of a `run:` block fails the step** when the file is missing (the step's exit code is that of the last command). Use `if [ -f x ]; then cp …; fi`.
+
+16. **Preset IDs are exact** — `--moodle3|4|5`, `--ilias`, `--opal`, `--openolat`, `--openedx`, `--learnworlds`, `--scormcloud-1.2`, `--scormcloud-2004`; `liaex -f presets` lists them.
+
 ---
 
 ## 11. Quick Reference: Format Decision Matrix
@@ -1139,9 +1267,9 @@ collection:
 | Goal | Format | Key flag(s) |
 |------|--------|-------------|
 | Upload to Moodle 3.x | `scorm1.2` | `--scorm-iframe` |
-| Upload to Moodle 4.x | `scorm1.2` | `--scorm-embed` |
-| Upload to ILIAS / OpenOLAT | `scorm2004` | `--scorm-iframe` |
-| Upload to OPAL / Open edX | `scorm1.2` | `--scorm-embed` |
+| Upload to Moodle 4.x / 5.x | `scorm1.2` | `--scorm-embed` |
+| Upload to ILIAS / scorm.cloud / learnworlds.com | `scorm2004` | `--scorm-iframe` |
+| Upload to OPAL / Open edX / OpenOLAT | `scorm1.2` | `--scorm-embed` |
 | Printable PDF | `pdf` | `--pdf-theme`, `--pdf-format` |
 | E-reader / ePub | `epub` | `--epub-title`, `--epub-author` |
 | Word document | `docx` | optional `--docx-*` |
@@ -1150,9 +1278,10 @@ collection:
 | xAPI / LRS tracking | `xapi` | `--xapi-endpoint` |
 | Course catalog website | `project` | `project.yaml` input |
 | Metadata export | `rdf` | `--rdf-format jsonld` |
+| Parsed course data | `json` / `fullJson` | — |
+| Just one file, no install | Web app | <https://liascript.github.io/LiaScript-Exporter/> |
+| Course in a sub-folder of a repo | any packaging format | `-p` / `--git-subdir` / `path:` |
 
 ---
 
----
-
-*Sources: [LiaScript-Exporter GitHub](https://github.com/liascript/liascript-exporter), [Automating LiaScript Transformations](https://liascript.github.io/blog/automating-liascript-transformations-on-github/), [Quality Checks](https://liascript.github.io/blog/quality-checks-on-liascript-with-github-ensuring-document-excellence/), [Creating Project Websites](https://liascript.github.io/blog/creating-project-websites-with-liascript-exporter/) — Retrieved May 2026*
+*Sources: [LiaScript-Exporter GitHub](https://github.com/liascript/liascript-exporter) (verified against source of `@liascript/exporter` 3.4.3--2.1.2, October 2026), [Automating LiaScript Transformations](https://liascript.github.io/blog/automating-liascript-transformations-on-github/), [Quality Checks](https://liascript.github.io/blog/quality-checks-on-liascript-with-github-ensuring-document-excellence/), [Creating Project Websites](https://liascript.github.io/blog/creating-project-websites-with-liascript-exporter/)*

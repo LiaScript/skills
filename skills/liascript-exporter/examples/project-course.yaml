@@ -60,6 +60,9 @@ collection:
   # Orientation / syllabus document (no PDF needed, simple entry)
   - url: https://raw.githubusercontent.com/USERNAME/REPO/refs/heads/main/materials/0-intro.md
     title: "Course Overview & Organisation"
+    # With --project-generate-scorm12/scorm2004/ims/xapi the whole cloned repo is
+    # packed by default. Restrict packing to the course folder (relative to repo root):
+    # path: materials
     tags:
       - Introduction
       - Overview

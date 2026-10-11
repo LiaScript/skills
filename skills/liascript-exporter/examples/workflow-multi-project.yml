@@ -29,8 +29,10 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      EXPORT_DIR: /tmp/lia-exports-${{ github.run_id }}-${{ github.run_attempt }}
-      CACHE_DIR: /tmp/lia-cache-${{ github.run_id }}-${{ github.run_attempt }}
+      # liaex --format project writes ./assets/<format>/ (generated downloads) and
+      # ./tmp/ (repo clones) into its working directory, so all exports run inside
+      # this directory outside the repository. A fixed path allows caching.
+      SITE_DIR: /tmp/lia-site
 
     steps:
       - name: Checkout repository
@@ -44,10 +46,19 @@ jobs:
       - name: Install LiaScript Exporter
         run: npm install -g @liascript/exporter
 
-      - name: Prepare isolated output directories
+      - name: Prepare site directory and cache week
+        id: week
         run: |
-          rm -rf "$EXPORT_DIR" "$CACHE_DIR"
-          mkdir -p "$EXPORT_DIR" "$CACHE_DIR"
+          mkdir -p "$SITE_DIR"
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore generated downloads
+        uses: actions/cache@v4
+        with:
+          path: /tmp/lia-site/assets
+          # --project-generate-cache never refreshes an existing file; rotating the
+          # key weekly picks up content changes in the courses.
+          key: lia-assets-${{ hashFiles('project/*.yaml') }}-${{ steps.week.outputs.week }}
 
       - name: Install Chromium system dependencies (required for PDF)
         run: |
@@ -59,55 +70,48 @@ jobs:
             fonts-liberation ca-certificates wget
 
       - name: Generate all project pages
-        working-directory: project
+        working-directory: /tmp/lia-site
         env:
           # Required for Puppeteer inside GitHub Actions (no sandbox needed in CI)
           PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
+          SRC: ${{ github.workspace }}/project
         run: |
           # Top-level index page — no PDF/SCORM needed here
-          liaex -f project -i index.yaml -o "$EXPORT_DIR/index"
+          liaex -f project -i "$SRC/index.yaml" -o index
 
           # Per-topic pages with PDF and SCORM generation + full-text search.
-          # Use an isolated cache path so generated ZIP/PDF files are never inside project/.
-          liaex -f project -i topic-a.yaml -o "$EXPORT_DIR/topic-a" \
+          # All pages share ./assets/ here; identical courses are generated once.
+          liaex -f project -i "$SRC/topic-a.yaml" -o topic-a \
             --project-search --project-generate-pdf --project-generate-scorm12 \
-            --project-generate-cache -p "$CACHE_DIR"
+            --project-generate-cache
 
-          liaex -f project -i topic-b.yaml -o "$EXPORT_DIR/topic-b" \
+          liaex -f project -i "$SRC/topic-b.yaml" -o topic-b \
             --project-search --project-generate-pdf --project-generate-scorm12 \
-            --project-generate-cache -p "$CACHE_DIR"
+            --project-generate-cache
 
-          liaex -f project -i topic-c.yaml -o "$EXPORT_DIR/topic-c" \
+          liaex -f project -i "$SRC/topic-c.yaml" -o topic-c \
             --project-search --project-generate-pdf --project-generate-scorm12 \
-            --project-generate-cache -p "$CACHE_DIR"
+            --project-generate-cache
 
           # Add further topic YAML files by duplicating the block above.
           # Use --project-generate-scorm2004 instead of --project-generate-scorm12
-          # when targeting ILIAS, OpenOLAT, or scorm.cloud.
+          # when targeting ILIAS or scorm.cloud.
+          # If several courses share one repository, add `path: <course-folder>`
+          # to each entry so SCORM packages don't contain the whole repository.
 
       - name: Prepare deployment directory
         run: |
           mkdir -p gh-pages-deploy
 
-          # All generated HTML files from isolated export output
-          cp "$EXPORT_DIR"/*.html gh-pages-deploy/
+          # Generated HTML pages
+          cp "$SITE_DIR"/*.html gh-pages-deploy/
 
-          # Generated PDFs — preserve subdirectory structure from cache
-          find "$CACHE_DIR" -name "*.pdf" | while read f; do
-            rel="${f#$CACHE_DIR/}"
-            mkdir -p "gh-pages-deploy/$(dirname "$rel")"
-            cp "$f" "gh-pages-deploy/$rel"
-          done
+          # Generated downloads (PDF/SCORM). The pages link to assets/<format>/<hash>.*,
+          # so this folder must sit next to the HTML files.
+          cp -r "$SITE_DIR/assets" gh-pages-deploy/
 
-          # Generated SCORM packages (ZIP) — preserve subdirectory structure
-          find "$CACHE_DIR" -name "*.zip" | while read f; do
-            rel="${f#$CACHE_DIR/}"
-            mkdir -p "gh-pages-deploy/$(dirname "$rel")"
-            cp "$f" "gh-pages-deploy/$rel"
-          done
-
-          # Shared assets (images, CSS) referenced by the project pages
-          [ -d assets ] && cp -r assets gh-pages-deploy/
+          # Shared images/CSS from the repository referenced by the project pages
+          if [ -d assets ]; then cp -r assets/. gh-pages-deploy/assets/; fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

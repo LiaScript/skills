@@ -41,10 +41,11 @@ jobs:
         run: |
           mkdir -p gh-pages-deploy
           cp index.html gh-pages-deploy/
-          [ -f logo.jpg ] && cp logo.jpg gh-pages-deploy/
-          [ -f logo.png ] && cp logo.png gh-pages-deploy/
+          # Use if/fi: a failing `[ … ] && cp` as last line would fail the step
+          if [ -f logo.jpg ]; then cp logo.jpg gh-pages-deploy/; fi
+          if [ -f logo.png ]; then cp logo.png gh-pages-deploy/; fi
           # Copy any assets/ directory if it exists
-          [ -d assets ] && cp -r assets gh-pages-deploy/
+          if [ -d assets ]; then cp -r assets gh-pages-deploy/; fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

@@ -10,10 +10,11 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 |-------|-------------|
 | [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for GitHub-hosted OER |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
-| [exporter-workflow](skills/exporter-workflow/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
+| [liascript-exporter](skills/liascript-exporter/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
 | [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes & surveys, narrated presentations, charts, agent links, and a tested example course |
-| [template-development](skills/template-development/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
+| [liascript-templates](skills/liascript-templates/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
 | [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
+| [liascript-asciiart](skills/liascript-asciiart/) | Draw ASCII-art / box-drawing / emoji diagrams for LiaScript ```` ```ascii ```` blocks, with grid checker, renderer and tested templates |
 | [creativity](skills/creativity/) | Develop creative works (stories, courses, lectures) through open-ended, multi-agent ideation instead of direct drafting |
 
 ---
@@ -34,7 +35,7 @@ Systematically verifies scientific literature references using web search. Outpu
 
 ---
 
-## exporter-workflow
+## liascript-exporter
 
 Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` catalog files for LiaScript repositories. Covers all export formats (PDF, SCORM 1.2/2004, IMS, ePub, DOCX, xAPI, Android, web), automated deployment to GitHub Pages, multi-project site patterns, and quality check pipelines. Includes ready-made examples for common scenarios.
 
@@ -50,7 +51,7 @@ Complete LiaScript authoring reference: full markdown syntax (meta-header, docum
 
 ---
 
-## template-development
+## liascript-templates
 
 Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, and the established conventions from the LiaTemplates ecosystem.
 
@@ -63,6 +64,14 @@ Expert guidance for building LiaScript templates — standard `README.md` course
 Turns any design source into one tested header block (`link:` + `@style` + `@custom`) that restyles a whole LiaScript course: colors, fonts, font sizes, corner radius, borders, shadows, surfaces, light and dark mode — while LiaScript's built-in color themes stay selectable. The agent extracts design tokens into a small `theme.json` (from a textual mood description, a PowerPoint/.potx, an image or photo, a PDF brand guide or a website); bundled scripts build the CSS, derive a dark palette, check WCAG contrast and inject the block idempotently. Includes `pptx_theme.py` (theme + actually used colors, fonts, sizes, shapes from a deck, stdlib only), `image_palette.sh` (dominant colors via ImageMagick), a showcase course for previews, seven ready-made designs that can be applied by name (incl. artistic ones: chalkboard, watercolor, medieval manuscript), tested recipes for layout, motion, textures and artistic effects, and a reference of LiaScript's CSS variables, classes, specificity traps and known theming gaps.
 
 **Activates when:** a user wants to change, customize, brand or theme the look of a LiaScript course, match a corporate design, recreate the style of slides or a picture, add a dark mode, or asks about LiaScript's CSS variables, the `custom:` macro or `@style` — also in German ("Design des Kurses ändern", "Stil aus dem Bild übernehmen"), or names one of the bundled designs (`paper-ink`, `sunset-lake`, `candy-pptx`, `beehive-pptx`, `chalkboard` / Tafel & Heft, `watercolor` / Aquarell, `manuscript` / Codex) to apply it in one step.
+
+---
+
+## liascript-asciiart
+
+Draws, reviews and debugs diagrams in LiaScript's ```` ```ascii ```` / ```` ```art ```` blocks, which elm-svgbob renders to SVG. Explains the 8 × 16 px cell grid and which ASCII characters become strokes, corners, arrowheads and dots depending on their neighbours, when to use ASCII lines vs. Unicode box drawing vs. emoji vs. `"…"` verbatim Markdown (math, links, quiz gaps, images), the `<!-- style / class / stroke -->` parameters and `@style` for colors and width, and a table of common traps (`src/`, `...`, `->` in labels, emoji widths). Includes a catalogue of verified templates (flowcharts, architecture, sequence, state machines, data structures, circuits, timing, git graphs, UI mockups, tables, charts), `check.py` (cell count per row, wide-character and tab warnings) and `render.py` (renders the blocks to a PNG with LiaScript's settings, light/dark; needs `elm` and `chromium`).
+
+**Activates when:** a user wants to draw, edit, review or fix an ASCII-art, box-drawing or emoji diagram in a LiaScript course — also in German ("ASCII-Art", "Flussdiagramm", "Skizze in LiaScript", "Rahmenzeichen"). Not for Mermaid, PlantUML or ASCII art that stays an unrendered code block.
 
 ---
 
@@ -90,9 +99,11 @@ npx skills add LiaScript/skills
 # Install a specific skill
 npx skills add LiaScript/skills --skill oersi-metadata
 npx skills add LiaScript/skills --skill reference-checker
+npx skills add LiaScript/skills --skill liascript-exporter
 npx skills add LiaScript/skills --skill liascript-syntax
-npx skills add LiaScript/skills --skill template-development
+npx skills add LiaScript/skills --skill liascript-templates
 npx skills add LiaScript/skills --skill liascript-theming
+npx skills add LiaScript/skills --skill liascript-asciiart
 npx skills add LiaScript/skills --skill creativity
 
 # Install to all agents without prompts

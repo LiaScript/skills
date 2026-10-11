@@ -1,5 +1,5 @@
 ---
-name: template-development
+name: liascript-templates
 description: >
   Expert guidance for developing LiaScript templates — creating reusable macros, integrating
   JavaScript libraries (via CDN or as bundled npm projects), handling async execution, and following

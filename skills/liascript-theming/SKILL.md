@@ -18,7 +18,7 @@ description: >
   Kreidetafel), watercolor (Aquarell), manuscript (Codex / Mittelalter / alte
   Bibelhandschrift) — e.g. "nimm das Chalkboard-Theme", "apply the manuscript design".
   For general course syntax see liascript-syntax; for shipping a theme as an importable
-  template see template-development.
+  template see liascript-templates.
 license: CC0-1.0
 ---
 
@@ -151,7 +151,7 @@ Rules that are easy to get wrong (all verified):
 - **Never leave an empty block (`@style` ⏎ `@end`) in a header** — LiaScript then drops the
   whole header silently (macros, language, links).
 - `@style` is local; it is **not** carried along when another course `import:`s this one.
-  Use `--css` + `link:` (or a template, see template-development) for reusable themes.
+  Use `--css` + `link:` (or a template, see liascript-templates) for reusable themes.
 
 Beyond colors, fonts and shape, `theme.json` has verified tokens for **layout**
 (`heading_align`, `content_width`, accent `header`), **density** (`compact`/`airy`),

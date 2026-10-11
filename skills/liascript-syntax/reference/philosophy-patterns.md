@@ -42,4 +42,4 @@ The two fields are independent; LiaScript does not derive one from the other. Pi
 
 ### Pin `import:` for a stable course
 
-Use a tagged or commit URL in `import:` once a course is finished (e.g. `.../Pyodide/0.3.5/README.md`), and `master`/`main` only while developing the template alongside the course. An unpinned import can change or break the course whenever the template's default branch changes. Templates usually offer both URLs (see the `template-development` skill, Pattern 10).
+Use a tagged or commit URL in `import:` once a course is finished (e.g. `.../Pyodide/0.3.5/README.md`), and `master`/`main` only while developing the template alongside the course. An unpinned import can change or break the course whenever the template's default branch changes. Templates usually offer both URLs (see the `liascript-templates` skill, Pattern 10).

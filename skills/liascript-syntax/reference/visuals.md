@@ -94,6 +94,8 @@ For anything the table-driven mechanism can't express, drop to the underlying `l
 
 A fenced code block tagged `ascii` or `art` (case-insensitive; with 9+ backticks the tag is optional) is parsed by an embedded SvgBob-derived renderer and turned into a real SVG diagram. **At top level the fence must sit at the left margin** — an indented fence is not recognized and shows as plain text; inside a list item or blockquote, align it with the item's content like any other block.
 
+This section covers the syntax only. For actually drawing diagrams (grid rules, character traps, Unicode/emoji widths, tested templates, a checker and a renderer that shows the result) use the `liascript-asciiart` skill.
+
 ````markdown
 ``` ascii
 +------+   +-----+   +-----+   +-----+

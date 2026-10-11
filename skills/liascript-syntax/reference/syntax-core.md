@@ -45,7 +45,7 @@ link:     https://cdn.example.com/lib.css
 | `script` | External JS URL(s) to load before the course renders; repeatable or multi-line. Write the key in uppercase, `SCRIPT:`, to load the URL as an ES module (`<script type="module">`). |
 | `link` | External CSS URL(s); repeatable or multi-line. |
 
-Other fields that exist but are less commonly needed: `base` (base URL against which relative paths of images, scripts etc. are resolved), `date`, `translation` (link to translated versions), `font` (paired with `link` to a webfont), `dark` (force dark/light), `classroom`, `sharing`, `translateWithGoogle`, `import` (pull in another course's macros/header — see `reference/interactivity.md`'s Using Macros, and the `template-development` skill for authoring), `onload`/`style` (raw JS/CSS blocks in the header — see `reference/interactivity.md`), `formula` (KaTeX macros — see Comments, Footnotes, Math below).
+Other fields that exist but are less commonly needed: `base` (base URL against which relative paths of images, scripts etc. are resolved), `date`, `translation` (link to translated versions), `font` (paired with `link` to a webfont), `dark` (force dark/light), `classroom`, `sharing`, `translateWithGoogle`, `import` (pull in another course's macros/header — see `reference/interactivity.md`'s Using Macros, and the `liascript-templates` skill for authoring), `onload`/`style` (raw JS/CSS blocks in the header — see `reference/interactivity.md`), `formula` (KaTeX macros — see Comments, Footnotes, Math below).
 
 ## Structuring
 

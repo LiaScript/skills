@@ -1,5 +1,5 @@
 ---
-name: exporter-workflow
+name: liascript-exporter
 description: >
   Generates LiaScript export workflows, GitHub Actions, and project.yaml files for LiaScript repositories.
   Use when a user wants to: export a LiaScript course to PDF/SCORM/IMS/ePub/DOCX/xAPI/Android; create or update

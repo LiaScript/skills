@@ -96,7 +96,7 @@ liaex -i README.md -f <format> -o <output-name>
 - `liaex --version` prints `<exporter>--<bundled LiaScript>`. The bundled interpreter can lag behind the current release, so check it when new syntax does not show up in an export.
 - Classrooms are disabled in SCORM/IMS exports unless the header says `classroom: enable` (see `quizzes-surveys.md`).
 
-For everything else — the flags of each format, LMS-specific setup, `project.yaml`, CI/GitHub Actions workflows and their pitfalls — use the **`exporter-workflow` skill**. It is the maintained reference; this section is only an overview.
+For everything else — the flags of each format, LMS-specific setup, `project.yaml`, CI/GitHub Actions workflows and their pitfalls — use the **`liascript-exporter` skill**. It is the maintained reference; this section is only an overview.
 
 ## Editors
 

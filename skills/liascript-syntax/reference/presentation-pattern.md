@@ -108,7 +108,7 @@ Write all visible narration as full sentences that also work as reading text. A 
 
 ## Speakers and avatars
 
-After LiaScript 2.1.2 a template can show a **narrator avatar**, an animated figure in the video-comment overlay, for every step that has narration but no video. An attribute comment in front of a narration marker passes extra information to it, e.g. who speaks:
+Since LiaScript 2.2.0 a template can show a **narrator avatar**, an animated figure in the video-comment overlay, for every step that has narration but no video. An attribute comment in front of a narration marker passes extra information to it, e.g. who speaks:
 
 ```markdown
                     <!-- data-speaker="anna" data-mood="happy" -->

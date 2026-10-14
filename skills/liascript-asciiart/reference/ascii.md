@@ -19,7 +19,7 @@ rendering.
 | `||` | double vertical | two `|` columns side by side |
 | `- - -` | dashed look | each lone `-` draws a short stroke. An arrowhead needs a `-` directly before it: `- - -->` |
 
-Dashed and double lines need elm-svgbob 5.0.8 (LiaScript after 2.1.2); up to 2.1.2 these characters stay text. There is no vertical form of `=` and no diagonal dashes. A `+` inside a `=`
+Dashed and double lines need elm-svgbob 5.0.8 (LiaScript 2.2.0 and later); up to 2.1.2 these characters stay text. There is no vertical form of `=` and no diagonal dashes. A `+` inside a `=`
 run breaks the double line into a short single stroke; branch off a double line
 with `|` or `!` directly below (or above) a `=` cell instead. A vertical `||`
 splits boxes it touches, so run double-line paths horizontally.

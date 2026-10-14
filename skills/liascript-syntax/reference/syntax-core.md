@@ -370,6 +370,12 @@ $$
 $$
 ```
 
+**Reading formulas aloud** — since LiaScript 2.2.1 screen readers and the narrator read a formula as spoken maths, generated in German or English (other languages fall back to English). Where the generated text is not what you want, put your own after the formula as an attribute comment; it is read instead and also reaches screen readers:
+
+```markdown
+Euler: $e^{i\pi} + 1 = 0$<!-- aria-label="e to the i pi plus one equals zero" -->
+```
+
 Chemical equations use the `mhchem` `\ce{...}` command: `$\ce{CO2 + C -> 2 CO}$`.
 
 Local KaTeX macros (`\def`, even `\gdef`) only affect the formula they are defined in, because LiaScript renders one slide at a time. Reusable macros are defined once in the header with `formula:` (repeatable; the first word is the name, its leading backslash optional; `#1` parameters work) and used in every formula on every slide; a slide can override one locally by adding its own `formula:` header. **Global and local macros cannot be mixed in one formula** — as soon as a formula defines a local macro, no global ones are passed to it:

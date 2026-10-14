@@ -50,7 +50,7 @@ A template is a standard LiaScript course (`README.md`) whose **header comment**
 - **URL as last param**: `@[MacroName(p0)](url)` — relative URLs auto-resolved to absolute
 - **Escaped for JS strings**: `@'input` or `@'0` — backslash-escapes the value (safe for template literals)
 
-**Parameter expansion up to LiaScript 2.1.2** — these were fixed afterwards; keep a template compatible with older interpreters by avoiding them:
+**Parameter expansion up to LiaScript 2.1.2** — these were fixed in 2.2.0; keep a template compatible with older interpreters by avoiding them:
 - Only `@0`–`@9` are safe: `@10` was replaced as `@1` followed by `0`.
 - Inserted values were searched for parameters again, so a value containing `@1` could pull in another argument.
 - An unknown `@name` inside an argument (an e-mail address, CSS `@media`, a decorator) stopped the expansion of **all following macros** on that line.
@@ -71,7 +71,7 @@ A template is a standard LiaScript course (`README.md`) whose **header comment**
 ```markdown
 @@MyMacro(args)
 ```
-After LiaScript 2.1.2 the box shows the expansion exactly as text. Up to 2.1.2 it was escaped for Markdown: escaping backslashes were visible, nested macros showed as `@-@name`, and HTML in the macro body was rendered instead of shown, so a broken tag could look fine there.
+Since LiaScript 2.2.0 the box shows the expansion exactly as text. Up to 2.1.2 it was escaped for Markdown: escaping backslashes were visible, nested macros showed as `@-@name`, and HTML in the macro body was rendered instead of shown, so a broken tag could look fine there.
 
 ---
 
@@ -265,13 +265,19 @@ send.register("event-name", callback)
 send.dispatch("event-name", payload)
 ```
 
-**Events between code blocks and `<script>` tags** — after LiaScript 2.1.2 standalone `<script>` tags have `send.register`/`send.dispatch` too, with the same global event names as code blocks (not in `worker` scripts). A listening script can replace its own result from the handler (`send.lia`, `send.html`, `send.liascript`) without being executed again, so it keeps its state. That makes it easy for a template to chain widgets: one macro renders a listener, another dispatches to it. One listener per name, a later `register` replaces the earlier one, so build the name from `@uid` or a parameter when a macro can appear several times. Up to 2.1.2 `<script>` tags throw `send.register is not a function`; connect them via `output="topic"` and `` @input(`topic`) `` instead.
+**Events between code blocks and `<script>` tags** — since LiaScript 2.2.0 standalone `<script>` tags have `send.register`/`send.dispatch` too, with the same global event names as code blocks (not in `worker` scripts). A listening script can replace its own result from the handler (`send.lia`, `send.html`, `send.liascript`) without being executed again, so it keeps its state. That makes it easy for a template to chain widgets: one macro renders a listener, another dispatches to it. One listener per name, a later `register` replaces the earlier one, so build the name from `@uid` or a parameter when a macro can appear several times. Up to 2.1.2 `<script>` tags throw `send.register is not a function`; connect them via `output="topic"` and `` @input(`topic`) `` instead.
 
-**Script bodies** — up to LiaScript 2.1.2 the end of a `<script>` in a macro was found with regexes: `</` in a regex or comment, quotes in a regex, nested template strings and unclosed string literals cut the script or froze the course. After 2.1.2 only `</script>` ends it. Templates that must run on older interpreters keep such code in a JS file loaded via `script:` and call it from the macro.
+**How the event bus behaves** (`LiaEvents` in `Script.ts`, same in every version):
+- **One global table, one listener per name.** `register` overwrites an earlier listener of the same name, on any slide (and in any message of LiaScript/Chat). There is no way to unregister through `send`.
+- **No buffering.** `dispatch` to a name nobody has registered yet does nothing. Put the listener before the dispatcher on the slide (scripts start in document order), or let the listener read shared state (`window.…`) when it registers.
+- **Synchronous.** `dispatch` calls the listener directly and returns `undefined`; an exception in the listener is thrown in the dispatching script. Wrap risky listener code in `try`/`catch`.
+- **Output goes to the registering block.** `console.log`/`send.lia` in a listener write to the terminal or result of the script that registered it, not to the dispatcher. See Pattern 13 for a template built on this.
+
+**Script bodies** — up to LiaScript 2.1.2 the end of a `<script>` in a macro was found with regexes: `</` in a regex or comment, quotes in a regex, nested template strings and unclosed string literals cut the script or froze the course. Since 2.2.0 only `</script>` ends it. Templates that must run on older interpreters keep such code in a JS file loaded via `script:` and call it from the macro.
 
 ---
 
-## Narrator Hook & Avatars (after LiaScript 2.1.2)
+## Narrator Hook & Avatars (since LiaScript 2.2.0)
 
 Templates can follow the narration (`--{{n}}--` read via TTS, or played as audio/video recordings) and show an **avatar** in the draggable video-comment overlay. Check for the hook, older interpreters do not have it: `if (window.LIA && window.LIA.narrator) { … }`.
 
@@ -292,7 +298,7 @@ Templates can follow the narration (`--{{n}}--` read via TTS, or played as audio
 
 `window.LIA.narrator.state` returns the same state at any time, `window.LIA.narrator.EVENT` is `"lia-narrator"`.
 
-**Avatar** — `window.LIA.narrator.registerAvatar('tag-name')` registers a custom element (a valid name with a hyphen, else it is rejected with a console warning; `null` removes it). LiaScript renders it in the overlay for every animation step that has narration but **no video**; videos always win. The element gets `id="lia-tts-avatar"`, `data-voice` (the narrator), `data-step` and every `data-*` annotation of the step's comments, written in the course as `<!-- data-speaker="anna" -->` in front of `--{{n}}--`. LiaScript keeps the element across steps and only changes its attributes, so react in `attributeChangedCallback`. The overlay is hidden when the user turns on "Hide video & avatar comments".
+**Avatar** — `window.LIA.narrator.registerAvatar('tag-name')` registers a custom element (a valid name with a hyphen, else it is rejected with a console warning; `null` removes it). LiaScript renders it in the overlay for every animation step that has narration but **no video**; videos always win. The element gets `id="lia-tts-avatar"`, `data-voice` (the narrator), `data-step` and every `data-*` annotation of the step's comments, written in the course as `<!-- data-speaker="anna" -->` in front of `--{{n}}--`. LiaScript keeps the element across steps and only changes its attributes, so react in `attributeChangedCallback`. After 2.2.2 (not yet released) YouTube, Vimeo and other embedded videos in narration comments are played in the same overlay. They count as videos, so they replace the avatar too, and their events have `source: 'video'` with `media: null` (they are iframes, not `<video>` elements). The overlay is hidden when the user turns on "Hide video & avatar comments".
 
 ```markdown
 <!--
@@ -325,7 +331,18 @@ if (window.LIA && window.LIA.narrator && !customElements.get('dog-avatar')) {
 
 ---
 
-## 12 Implementation Patterns
+## Templates in LiaScript/Chat (since LiaScript 2.2.1)
+
+`@liascript/chat` (`<lia-chat>`) renders every chat message as a LiaScript section, so templates work there too. What changes for a template:
+- The **header of any message** (`import:`, `script:`, `link:`, macros, `@onload`, `@style`) applies to the whole chat; the host can also load templates without a visible message via `chat.define({ import: [...], script: [...], link: [...], header: '…' })`. Messages are buffered until the templates are loaded. Relative template URLs resolve against the host page (`base`).
+- Scripts run like on a slide, so `@input` and `"LIA: wait"` work as usual.
+- `output="name"` / `` @input(`name`) `` are scoped to their message, but **element ids are not**: the same id in two messages refers to the first one. Never render fixed ids from a macro, use `@uid` (Pattern 2) or return the element as script output (`"HTML: …"`).
+- `send.register`/`send.dispatch` names are global across all messages; include a parameter or `@uid` in the name when a widget can appear in several messages.
+- `agent:` links are reported to the host as an `agent` event instead of being opened.
+
+---
+
+## 13 Implementation Patterns
 
 ### Pattern 1 — Synchronous interpreter (AlaSQL, BiwaScheme, Skulpt)
 ```markdown
@@ -513,6 +530,25 @@ Every slide in README.md demonstrates one macro with a live example, then an "Im
 | `@input(N)` | Inside `<script>` tags | Nth code block in a multi-file project |
 | `@'input` | Inside `<script>` tags | Backslash-escaped input (for JS strings) |
 | `@output` | Code block header | Marks which block is the output display |
+
+### Pattern 13 — Widgets connected by events (since LiaScript 2.2.0)
+`send.register` in one macro, `send.dispatch` in another: the display keeps its state and only updates its own result, nothing is executed again. The parameter becomes part of the event name, so several pairs can live in one course.
+```markdown
+@meter.display
+<script style="display: block">
+send.register("meter-@0", value => send.html(`<b>${value}</b> / 10`))
+"LIA: wait"
+</script>
+@end
+
+@meter.input
+<script input="range" value="0" min="0" max="10" input-always-active>
+send.dispatch("meter-@0", @input)
+""
+</script>
+@end
+```
+Use in a course: `@meter.display(score)` above `@meter.input(score)`. The display must come first, an event without a listener is dropped (see How the event bus behaves). `"LIA: wait"` keeps the listening script alive. For interpreters up to 2.1.2 use `output="meter-@0"` on the input and `` @input(`meter-@0`) `` in the display instead.
 
 ---
 

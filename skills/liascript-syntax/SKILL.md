@@ -45,13 +45,13 @@ These fail silently — the course renders, just wrong. Check them first when re
 6. **`--{{n}}--` never makes anything appear**; content that should appear needs `{{n}}` (`interactivity.md`, Effects).
 7. **Separate HTML comments with a blank line.** Two stacked comments merge, and the attribute comment (chart, style, quiz settings) is lost (`syntax-core.md`, Comments).
 8. **Image + text side by side needs no blank line** between them (`syntax-core.md`, Text Formatting).
-9. **Attribute names up to LiaScript 2.1.2 are case-sensitive**: `data-readonly`, `localestyle` and other `Intl` options only work in lowercase, `data-showGutter` only in camelCase. After 2.1.2 any spelling works (`interactivity.md`).
+9. **Attribute names up to LiaScript 2.1.2 are case-sensitive**: `data-readonly`, `localestyle` and other `Intl` options only work in lowercase, `data-showGutter` only in camelCase. Since 2.2.0 any spelling works (`interactivity.md`).
 10. **External CSS/JS is not bundled**: animate.css classes, fonts and libraries need a `link:`/`script:` entry first (`interactivity.md`, Effects).
 11. **Raw `<svg>` must not be fenced**, and an `ascii` fence must start at the left margin (`visuals.md`).
 12. **`version: 0.x` never stores quiz state**; use `>= 1.0.0` for a published course (`syntax-core.md`, Meta-Header).
 13. **Use `<!--- … --->` for authoring notes**, LiaScript ignores them; a plain `<!-- -->` is read as attributes or hidden narration. Inside a note never write `-->`: the note ends at the first `-->`, and the rest shows up as text (`syntax-core.md`, Comments).
 14. **Narration goes before its block**, not collected at the top or bottom of a slide; otherwise Textbook mode shows all pictures first and all explanations after (`presentation-pattern.md`).
-15. **A table without enough numeric columns gets no chart** after LiaScript 2.1.2, not even the toggle; truth tables (only 0/1) and single rows with zeros stay tables too. Force a chart with `data-type` (`visuals.md`, How the type is guessed).
+15. **A table without enough numeric columns gets no chart** since LiaScript 2.2.0, not even the toggle; truth tables (only 0/1) and single rows with zeros stay tables too. Force a chart with `data-type` (`visuals.md`, How the type is guessed).
 16. **Up to LiaScript 2.1.2, `<script>` bodies are cut at the wrong place** by `</` in a regex or comment, nested template strings and unclosed strings, and three backticks inside a line end a code block (`interactivity.md`).
 17. **Before saying "LiaScript can't do that"**, check the reference — many quiz behaviors are configurable (feedback texts, solution button, trials, read-aloud).
 
@@ -66,13 +66,15 @@ These fail silently — the course renders, just wrong. Check them first when re
 | Read questions and answers aloud | Yes: a playback button `{!>}{…}` (same as `{\|>}{…}`) in the question and in every option |
 | Word bank / matching exercise | Yes: drag & drop gaps `[->[…]]` in a paragraph or table, with `data-randomize` |
 | Let learners change a submitted survey | Yes: `data-updates-allowed` |
-| Change survey "thank you"/submit texts | No, only via CSS; after 2.1.2 a `***` solution block below the survey appears after submitting |
-| Explain the answer after a survey | After 2.1.2 yes: `***` solution block below the survey (`quizzes-surveys.md`) |
-| Word cloud | Of survey answers: one-line text survey in the classroom. From a table: `data-type="wordcloud"` after 2.1.2 (`visuals.md`) |
+| Change survey "thank you"/submit texts | No, only via CSS; since 2.2.0 a `***` solution block below the survey appears after submitting |
+| Explain the answer after a survey | Since 2.2.0 yes: `***` solution block below the survey (`quizzes-surveys.md`) |
+| Word cloud | Of survey answers: one-line text survey in the classroom. From a table: `data-type="wordcloud"` since 2.2.0 (`visuals.md`) |
 | Disable the quiz "check" button | No |
+| Read formulas aloud / own wording for a formula | Since 2.2.1 automatically (German, English); own text via `$…$<!-- aria-label="…" -->` (`syntax-core.md`, Math) |
+| YouTube/Vimeo video as narration | After 2.2.2 (not yet released): `!?[⏯](youtube-url)` in a `--{{n}}--` comment; before, only video files (`interactivity.md`) |
 | Narrated slides that also read as a text | Yes: `presentation-pattern.md`, `examples/course-template.md` |
 | Run code (JS, Python, SQL, …) | Yes: JS directly; other languages via templates (`liascript-templates` skill) |
-| Animated speaker/avatar for the narration | After 2.1.2 via a template: `LIA.narrator.registerAvatar` (`liascript-templates` skill); per-step `data-*` annotations (`presentation-pattern.md`) |
+| Animated speaker/avatar for the narration | Since 2.2.0 via a template: `LIA.narrator.registerAvatar` (`liascript-templates` skill); per-step `data-*` annotations (`presentation-pattern.md`) |
 | Talk to an AI agent from the course | Yes, in the DevServer: `agent:` links (`tooling.md`) |
 
 ## Cheatsheet

@@ -19,7 +19,7 @@ data-ylabel="% of GDP"
 | 1996 | 6.9     | 3.3 | 4.5     |
 ```
 
-`data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end. An empty `data-xlim=""` counts as unset after LiaScript 2.1.2; up to 2.1.2 it was passed to ECharts as an empty limit, so leave the attribute out instead.
+`data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end. An empty `data-xlim=""` counts as unset since LiaScript 2.2.0; up to 2.1.2 it was passed to ECharts as an empty limit, so leave the attribute out instead.
 
 **Caution:** never put an authoring note (`<!--- ... --->`) directly above the attribute comment without a blank line in between. The two comments merge into one block, and the comment and table then show up as raw text, with no table and no chart. See `reference/syntax-core.md`'s "Ignoreable comments".
 
@@ -38,11 +38,11 @@ data-ylabel="% of GDP"
 | `BoxPlot` | Never, use `data-type="boxplot"` | Real box-and-whisker plot, one box per column |
 | `Funnel` | Never, use `data-type="funnel"` (same table shape as `PieChart`) | Pyramid/funnel shape, one layer per column |
 | `Sankey` | Never, use `data-type="sankey"` (same shape as `Graph`) | Directed flows; leave cells without a flow empty |
-| `WordCloud` | Never, use `data-type="wordcloud"` (after LiaScript 2.1.2) | One word cloud per data row, see Word clouds below |
+| `WordCloud` | Never, use `data-type="wordcloud"` (since LiaScript 2.2.0) | One word cloud per data row, see Word clouds below |
 | `Map` | `data-src="<geojson-url>"` (with or without `data-type="map"`), feature names must match the first column; only one data column is supported | Choropleth map; give it room with `style="height: 600px"` |
 | `None` | Text-heavy tables, truth tables (see below); `data-type="none"` | No chart and no toggle; `data-type="none"` also disables the first-column-fixed-while-scrolling behavior |
 
-**How the type is guessed (after LiaScript 2.1.2)** — `data-transpose` is applied first, then these rules in order:
+**How the type is guessed (since LiaScript 2.2.0)** — `data-transpose` is applied first, then these rules in order:
 
 1. Only the columns after the first count, empty cells are ignored. A column is numeric if more than half of its filled cells are numbers. A number may be followed by a unit (`12 kg`, `5 %`); an ordinal like `5.` is text. **If there are not more numeric than text columns, the table stays a plain table without a chart.**
 2. Header names equal to the first-column values (an adjacency matrix) → `Graph` if the diagonal is empty or `0`, else `HeatMap`.
@@ -76,7 +76,7 @@ If the heuristic picks the wrong type for your data, force it explicitly; this w
 **Other attributes:**
 
 - **`data-transpose`** (or `="true"`) — mirrors the table so rows and columns swap (e.g. a category-per-row table becomes the same pie chart as the category-per-column form).
-- **`data-orientation="horizontal"`** / `"vertical"` — horizontal bars with categories on the y-axis vs. the default vertical bars. Write the value in lowercase: it is matched case-insensitively only after LiaScript 2.1.2.
+- **`data-orientation="horizontal"`** / `"vertical"` — horizontal bars with categories on the y-axis vs. the default vertical bars. Write the value in lowercase: it is matched case-insensitively only since LiaScript 2.2.0.
 - **`data-src`** — GeoJSON URL for `data-type="map"`; store the file in your own project rather than on an external host, to avoid CORS issues.
 - **`data-sortable`** — every column of the table view is sortable by default. Set `data-sortable="false"` on the table, and override it per column with a comment inside the header cell:
 
@@ -86,9 +86,9 @@ If the heuristic picks the wrong type for your data, force it explicitly; this w
   | -------- | -------------------------------------- |
   ```
 
-`data-type` accepts (case-insensitive): `bar`/`barchart`, `boxplot`, `funnel`, `graph`, `heatmap`, `line`/`lineplot`, `map`, `none`, `parallel`, `pie`/`piechart`, `radar`, `sankey`, `scatter`/`scatterplot`, and after LiaScript 2.1.2 `wordcloud`. `sankey` draws a directed-flow diagram from the same adjacency-matrix table shape as `Graph` (leave cells without a flow empty).
+`data-type` accepts (case-insensitive): `bar`/`barchart`, `boxplot`, `funnel`, `graph`, `heatmap`, `line`/`lineplot`, `map`, `none`, `parallel`, `pie`/`piechart`, `radar`, `sankey`, `scatter`/`scatterplot`, and since LiaScript 2.2.0 `wordcloud`. `sankey` draws a directed-flow diagram from the same adjacency-matrix table shape as `Graph` (leave cells without a flow empty).
 
-**Word clouds** (after LiaScript 2.1.2) — `data-type="wordcloud"` turns the header cells into words and every data row into one cloud, sized by its values; the first cell of the row is the cloud's subtitle. Several rows give clouds side by side that share one font scale, so equal values have equal sizes, and every word keeps its color across clouds. A long word list is easier to write one word per row, with `data-transpose`. Effects in cells animate the cloud like any other chart. An older interpreter ignores the unknown type and guesses one.
+**Word clouds** (since LiaScript 2.2.0) — `data-type="wordcloud"` turns the header cells into words and every data row into one cloud, sized by its values; the first cell of the row is the cloud's subtitle. Several rows give clouds side by side that share one font scale, so equal values have equal sizes, and every word keeps its color across clouds. A long word list is easier to write one word per row, with `data-transpose`. Effects in cells animate the cloud like any other chart. An older interpreter ignores the unknown type and guesses one.
 
 ```markdown
 <!-- data-type="wordcloud" data-transpose data-show -->

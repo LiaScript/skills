@@ -1,0 +1,4 @@
+# build caches of skill helper scripts
+elm-stuff/
+__pycache__/
+*.pyc

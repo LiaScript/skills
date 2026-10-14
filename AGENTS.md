@@ -23,7 +23,7 @@ AGENTS.md              # this file; CLAUDE.md only imports it
 LICENSE                # repo-level MIT license (distinct from each skill's own license field)
 ```
 
-The list of skills lives in `README.md` (and `ls skills/`); it is not repeated here so it cannot go stale. Adding a skill means adding a `skills/<name>/SKILL.md` directory — there is no registry or index file to update besides `README.md`. A skill's reference material can be nested as deep as its structure needs (see `creativity/references/agents/triggered/`); pick whichever layout fits.
+The list of published skills lives in `README.md`; it is not repeated here so it cannot go stale. Folders under `skills/` that are listed in `.gitignore` (currently `creativity`) are local only: not published, not in the README, not to be referenced from published skills. Adding a skill means adding a `skills/<name>/SKILL.md` directory — there is no registry or index file to update besides `README.md`. A skill's reference material can be nested as deep as its structure needs; pick whichever layout fits.
 
 ## Working on a skill
 
@@ -31,7 +31,7 @@ The list of skills lives in `README.md` (and `ls skills/`); it is not repeated h
 - For descriptions longer than a single sentence, use a YAML block scalar (`description: >`) rather than one giant single-line string — see commit `a56a630`, which reformatted two skills for this reason.
 - Every `SKILL.md` must open with the three required frontmatter fields: `name`, `description`, `license`. `name` must match the folder name. A missing or thin `description` is treated as a bug (commit `a56a630`, "fix: 2 skills were missing important metadata").
 - `license` in frontmatter is per skill (currently `CC0-1.0` for all skills) and independent of the repository's own `LICENSE` file (MIT, for the repo's own code/structure).
-- **Naming:** skills that only make sense for LiaScript start with `liascript-`. Generic skills (`oersi-metadata`, `reference-checker`, `creativity`) do not.
+- **Naming:** skills that only make sense for LiaScript start with `liascript-`. Generic skills (`oersi-metadata`, `reference-checker`) do not.
 - Long skills put copy-paste-ready reference material in `examples/` or `reference/` and link to it from `SKILL.md` rather than inlining everything — follow this pattern for large templates/configs.
 - Skills encode hard-won operational gotchas as explicit rules (e.g. liascript-exporter's "never export into the repository source tree" / `force_orphan: true` / `libasound2t64` on Ubuntu 24). When editing, preserve these callouts — they exist because of specific past failures, not generic advice.
 - **Scripts** inside a skill are called with paths relative to the skill folder (`python3 scripts/check.py`), never with a path into one person's home directory. Keep them dependency-free where possible (Python standard library); name any required external tool (ImageMagick, `elm`, `chromium`, …) in `SKILL.md`.

@@ -15,7 +15,6 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [liascript-templates](skills/liascript-templates/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
 | [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
 | [liascript-asciiart](skills/liascript-asciiart/) | Draw ASCII-art / box-drawing / emoji diagrams for LiaScript ```` ```ascii ```` blocks, with grid checker, renderer and tested templates |
-| [creativity](skills/creativity/) | Develop creative works (stories, courses, lectures) through open-ended, multi-agent ideation instead of direct drafting |
 
 ---
 
@@ -75,14 +74,6 @@ Draws, reviews and debugs diagrams in LiaScript's ```` ```ascii ```` / ```` ```a
 
 ---
 
-## creativity
-
-Implements the Emergent Creativity Protocol (ECP): a multi-agent, artifact-based process that first expands a rich "meaning space" of interconnected ideas (via Dreamer, Questioner, World Builder, Character Finder, and other role agents), then converges on a concrete text through an Explorer/Resonance/Distiller pipeline and a final Narrative Compiler step. Renders a live Cognitive-Field-Map artifact alongside the compiled work.
-
-**Activates when:** a user wants to develop a creative work — a story, novel, course, lecture, article, or presentation — through open-ended exploratory ideation instead of jumping straight to a draft.
-
----
-
 ## Installation
 
 ### Via `npx skills` (recommended)
@@ -104,7 +95,6 @@ npx skills add LiaScript/skills --skill liascript-syntax
 npx skills add LiaScript/skills --skill liascript-templates
 npx skills add LiaScript/skills --skill liascript-theming
 npx skills add LiaScript/skills --skill liascript-asciiart
-npx skills add LiaScript/skills --skill creativity
 
 # Install to all agents without prompts
 npx skills add LiaScript/skills --all

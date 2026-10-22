@@ -30,7 +30,12 @@ The official docs admit that "not all of the previous examples we have shown wer
 - Write the question as a plain paragraph directly above each quiz; LiaScript uses it as the quiz's accessible label.
 - For quizzes whose result is only visible as a checkmark or grid position (e.g. matrix quizzes), add `[[?]]` hints and a `***` solution block with the reasoning in words.
 - Use `--{{n}}--` to say what is shown at that step, not a different remark. For young readers and language learners, put `{|>}{…}` read-aloud buttons into questions and quiz options (`quizzes-surveys.md`'s Reading quizzes aloud).
-- Give images meaningful alt text; it is also what a plain Markdown viewer shows.
+- Give images, audio and video meaningful alt text; it is also what a plain Markdown viewer shows. Since LiaScript 2.3.0 the `"title"` is only a caption, not a name, and an empty alt text marks an image as decorative.
+- Name every `<script input=…>` with `aria-label` (`interactivity.md`, Naming inputs); without it a screen reader only hears "slider" or "checkbox".
+- Give a chart an `aria-label` that states its message (`visuals.md`, Accessible name).
+- Never carry information only by color or movement. Learners can switch on "do not rely on color alone" (patterns in charts, solid/dashed quiz borders), and since 2.3.0 the system setting "reduce motion" stops all CSS animations, the author's included (`interactivity.md`, Effects).
+
+Since LiaScript 2.3.0 the interpreter itself aims at WCAG AA: keyboard operation of all controls (table of contents tree, dropdowns, matrix quizzes, galleries, drag & drop), readable colors in all built-in themes, named controls, and screen readers hear only what changes. The keyboard keys are listed in the official docs (chapter "Using LiaScript", Keyboard Navigation); point learners there instead of copying the table.
 
 ### Offline and durability: keep external dependencies minimal
 

@@ -119,7 +119,7 @@ What is the derivative function of $f(x) = x^6$?
 
 ### Gap-Text Extreme
 
-Embed Text-Quiz (`[[solution]]`) or Selection-Quiz (`[[a|(b)|c]]`) patterns directly inline inside any Markdown block — the input becomes a normal inline element, so it can be wrapped in `**bold**`, `_italic_`, `~strike~`, etc., and its width matches the length of the placeholder text.
+Embed Text-Quiz (`[[solution]]`) or Selection-Quiz (`[[a|(b)|c]]`) patterns directly inline inside any Markdown block — the input becomes a normal inline element, so it can be wrapped in `**bold**`, `_italic_`, `~strike~`, etc., and its width matches the length of the placeholder text. Since LiaScript 2.3.0 a gap is always wide enough for its solution; up to 2.2.2 gaps could be too narrow for it.
 
 ```markdown
 __I (learn) [[  have been learning  ]] English for seven years now.__
@@ -243,7 +243,7 @@ Right (no blank line before the opening `***`):
 
 ## Quiz Settings (`data-*` attributes)
 
-Settings go in an HTML attribute comment directly above the quiz (after the question paragraph). Several settings can be combined in one comment:
+Settings go in an HTML attribute comment directly above the quiz block. Several settings can be combined in one comment:
 
 ```markdown
 You have only two trials, without a solution button ;-)
@@ -266,6 +266,39 @@ data-randomize
 | `data-show-partial-solution` (short: `data-show-partials`) | For gap texts and matrix quizzes: highlights which gaps (or which matrix rows) are correct and which are wrong, instead of only "all right / wrong". |
 | `data-score="2.5"` | Weight of this quiz in a SCORM export (integer or float, default `1`). Learners don't see it; since 2.0 the classroom's quiz table shows it in a "Score" column. |
 | `data-text-solved="..."`, `data-text-failed="..."`, `data-text-resolved="..."` | Replace the default feedback line for solved, wrong, and resolved (after max trials / show solution). Inline Markdown allowed, so a single emoji works (`data-text-solved="⭐"`); an empty value (`data-text-solved=""`) shows no feedback line at all. Since LiaScript 2.0. |
+
+**Where the comment goes** — an attribute comment belongs to the block that follows it. A quiz block starts at its first option line (`- [( )]`, `- [[ ]]`, `[[solution]]`, `[[a|(b)]]`), not at the question. So the order is: question paragraph, blank line, comment, options. For a gap text the quiz block is the paragraph or table holding the gaps, so the comment goes directly above that paragraph.
+
+```markdown
+<!-- data-max-trials="2" -->
+Wrong: this comment sets attributes on the question paragraph, the quiz ignores it.
+
+- [( )] option A
+- [(X)] option B
+```
+
+```markdown
+Right: the question stays a plain paragraph.
+
+<!-- data-max-trials="2" -->
+- [( )] option A
+- [(X)] option B
+```
+
+Write the options directly below the comment. Choice quizzes happen to tolerate a blank line in between (tested in 2.4.0), but a gap text, like every other block, loses the comment after a blank line.
+
+**The solution button is on by default.** Without `data-solution-button`, the "show solution" button is visible from the start, also when `data-max-trials` is set. `data-max-trials` only resolves the quiz automatically after the last trial; it does not hide the button. For self-checks, young learners and free-text quizzes switch it off explicitly:
+
+```markdown
+Which one is right?
+
+<!-- data-hint-button="1" data-max-trials="2" data-solution-button="off" -->
+- [( )] option A
+- [(X)] option B
+[[?]] a hint in plain words
+```
+
+Here the hint button appears after the first wrong trial, and the solution is shown automatically after the second.
 
 ### Feedback texts and buttons
 
@@ -390,7 +423,9 @@ if ("@input(`quiz:37+15`)" == "42") {
 </script>
 ```
 
-**Accessibility** — write the question as an ordinary paragraph directly above the quiz: LiaScript uses it as the quiz's accessible label. If the question needs several blocks (a list, an image, ...), wrap them in one `<div>`; the quiz is then labelled with that element via `aria-labelledby`.
+**Accessibility** — write the question as an ordinary paragraph directly above the quiz: LiaScript uses it as the quiz's accessible label. If the question needs several blocks (a list, an image, ...), wrap them in one `<div>`; the quiz is then labelled with that element via `aria-labelledby`. A heading directly above does not count. An attribute comment between question and options does not break the link (it belongs to the quiz). Since LiaScript 2.3.0 this works for surveys and task lists too, and also inside animations, lists and quotes; up to 2.2.2 only for quizzes.
+
+**Clicking the option text** (since LiaScript 2.3.0): the text of a quiz, survey or task option names its checkbox or radio button, but it is no longer a `<label>`. Clicking the text or an image in the option does not tick it any more, only the box itself does. Up to 2.2.2 a click on the text ticked the option.
 
 ## Survey Types
 

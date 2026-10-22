@@ -120,6 +120,8 @@ link:   https://cdn.example.com/style.css
 ```
 Multiple URLs: one per line, indented. Script/tag execution delayed until all loaded.
 
+**When a file fails to load** (since LiaScript 2.3.1): a loading screen lists the README, every `import:` template and every `script:`/`link:` file with its state, stays until all are done, and warns "Some resources could not be loaded" with a button to proceed. A template that cannot be loaded no longer stops the course: the course starts without its macros, so calls to them show up unexpanded. Up to 2.3.0 a failed template stopped the course with an error. Since 2.3.1 scripts and CSS loaded as blobs (e.g. from raw.githubusercontent.com) are cached by the service worker, so they work offline after the first visit.
+
 ### Inline CSS (not shared when imported)
 ```markdown
 <!--
@@ -298,7 +300,7 @@ Templates can follow the narration (`--{{n}}--` read via TTS, or played as audio
 
 `window.LIA.narrator.state` returns the same state at any time, `window.LIA.narrator.EVENT` is `"lia-narrator"`.
 
-**Avatar** — `window.LIA.narrator.registerAvatar('tag-name')` registers a custom element (a valid name with a hyphen, else it is rejected with a console warning; `null` removes it). LiaScript renders it in the overlay for every animation step that has narration but **no video**; videos always win. The element gets `id="lia-tts-avatar"`, `data-voice` (the narrator), `data-step` and every `data-*` annotation of the step's comments, written in the course as `<!-- data-speaker="anna" -->` in front of `--{{n}}--`. LiaScript keeps the element across steps and only changes its attributes, so react in `attributeChangedCallback`. After 2.2.2 (not yet released) YouTube, Vimeo and other embedded videos in narration comments are played in the same overlay. They count as videos, so they replace the avatar too, and their events have `source: 'video'` with `media: null` (they are iframes, not `<video>` elements). The overlay is hidden when the user turns on "Hide video & avatar comments".
+**Avatar** — `window.LIA.narrator.registerAvatar('tag-name')` registers a custom element (a valid name with a hyphen, else it is rejected with a console warning; `null` removes it). LiaScript renders it in the overlay for every animation step that has narration but **no video**; videos always win. The element gets `id="lia-tts-avatar"`, `data-voice` (the narrator), `data-step` and every `data-*` annotation of the step's comments, written in the course as `<!-- data-speaker="anna" -->` in front of `--{{n}}--`. LiaScript keeps the element across steps and only changes its attributes, so react in `attributeChangedCallback`. Since 2.3.0 YouTube, Vimeo and other embedded videos in narration comments are played in the same overlay. They count as videos, so they replace the avatar too, and their events have `source: 'video'` with `media: null` (they are iframes, not `<video>` elements). The overlay is hidden when the user turns on "Hide video & avatar comments".
 
 ```markdown
 <!--
@@ -341,6 +343,18 @@ if (window.LIA && window.LIA.narrator && !customElements.get('dog-avatar')) {
 - `agent:` links are reported to the host as an `agent` event instead of being opened.
 
 ---
+
+## Accessibility and Keyboard (since LiaScript 2.3.0)
+
+LiaScript 2.3.0 made the interpreter keyboard- and screen-reader-friendly. Template code has to play along:
+
+- **Arrow keys switch slides** unless the event is `defaultPrevented`, a modifier (Alt, Ctrl, Meta, Shift) is held, the focus is in an `input` (not checkbox/button), `textarea`, `select` or `contenteditable`, or inside an element with one of the roles `slider`, `spinbutton`, `radiogroup`, `radio`, `listbox`, `combobox`, `tablist`, `grid`, `tree`, `separator`. A widget that uses arrow keys must call `event.preventDefault()` or carry such a role. A swipe that starts in a horizontally scrolling element no longer changes the slide. Up to 2.2.2 arrow keys switched slides almost always.
+- **No more announcements for free**: slides and tables are no longer `aria-live`. Content a template updates (results, status, counters) is not announced unless the template gives its own container `aria-live="polite"`.
+- **Name what you render**: inputs, buttons, canvases and SVGs need an accessible name (`aria-label`, or `role="img"` plus `aria-label` for a picture). Let course authors pass the name as a macro parameter.
+- **`#lia-focus` is gone**: the id of the active script input is now `lia-focus-<scriptId>`. Templates that query `#lia-focus` must use `[id^="lia-focus"]` or their own element.
+- **Do not rely on color alone**: the learner setting adds the class `lia-decals` on `<html>` and fires a `lia-decals` event on `window`. A template with its own ECharts or color-coded states can switch to patterns or line styles when it is set.
+- **Reduce motion**: under the system setting LiaScript cuts every CSS animation and transition to almost zero, also template CSS (`animationend`/`transitionend` still fire). JavaScript, canvas and Web Animations are not stopped; check `matchMedia('(prefers-reduced-motion: reduce)')` there yourself.
+- Script errors in standalone `<script>` tags name their kind since 2.3.0 (`ReferenceError: …`), which helps when debugging template macros.
 
 ## 13 Implementation Patterns
 
@@ -499,6 +513,7 @@ throw e;
 | `modify="false"` | Disable double-click-to-edit |
 | `modify="// marker\n"` | Custom delimiter for the editable code region |
 | `style="display: block"` | Show script output as a block element |
+| `aria-label="…"` / `aria-labelledby="id"` | Name of an `input=…` widget for screen readers; give every input except `button`/`submit` one, or pass it in as a macro parameter. Groups (`radio`/`checkbox` with `options`) take it since 2.3.0 |
 
 ### Pattern 10 — Versioned import (for stability in courses)
 ```markdown
@@ -542,7 +557,7 @@ send.register("meter-@0", value => send.html(`<b>${value}</b> / 10`))
 @end
 
 @meter.input
-<script input="range" value="0" min="0" max="10" input-always-active>
+<script input="range" aria-label="@0" value="0" min="0" max="10" input-always-active>
 send.dispatch("meter-@0", @input)
 ""
 </script>

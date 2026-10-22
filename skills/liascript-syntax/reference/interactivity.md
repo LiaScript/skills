@@ -55,6 +55,8 @@ link: https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css
 This block flies in at step 1, with an {2}{inline part}<!-- class="animate__animated animate__flash" --> at step 2.
 ```
 
+Since LiaScript 2.3.0 the system setting "reduce motion" cuts every CSS animation and transition to almost zero, also the author's: animate.css classes, `@keyframes` from `@style` and template CSS jump to their end state. The steps themselves still appear one by one. So a slide must make sense without its animation; never put information only into the movement.
+
 **TTS-sync comments** — a paragraph marked with `--{{n}}--` is read aloud by the text-to-speech engine when animation step `n` is reached. Think of `{{n}}` as a presentation bullet (what appears) and `--{{n}}--` as the speaker notes for that same bullet (what is said). Where the text is visible depends on the mode:
 
 | Mode | `--{{n}}--` text |
@@ -139,12 +141,28 @@ The video is shown as an overlay the viewer can move and resize.
 - `#t=start,end` (in seconds) plays only that part of the file.
 - `data-rate` also applies to recordings; `data-pitch` does not.
 - If the user translates the course with Google Translate, translated comments are spoken with TTS in the target language instead of playing the recording.
-- **YouTube, Vimeo and other platform videos** (after LiaScript 2.2.2, not yet released): a platform link in the same `!?[⏯](https://www.youtube.com/watch?v=…)` form plays in the comment overlay too. YouTube and Vimeo are controlled through their player APIs (pause, seek, progress, `#t=` fragments). Dailymotion, PeerTube, TeacherTube, video.tu-freiberg.de and unknown platforms run as plain iframes that only autoplay, without pause, seeking or progress. Up to 2.2.2 a platform link is not a recording, the comment text is spoken by TTS; for older interpreters download the video and link the file.
+- **YouTube, Vimeo and other platform videos** (since LiaScript 2.3.0): a platform link in the same `!?[⏯](…)` form plays in the comment overlay too. The rules are the same as for own videos: one link at the beginning or the end of the comment, several comments play in sequence. The comment text is shown but not read aloud, the video replaces the voice.
+
+  ```markdown
+      --{{0}}--
+  !?[⏯](https://www.youtube.com/watch?v=8pTEmbeENF4&start=60&end=75)
+  The video plays seconds 60 to 75 instead of reading this text.
+
+      --{{1}}--
+  Vimeo videos are cut with a time fragment.
+  !?[⏯](https://vimeo.com/76979871#t=10,25)
+  ```
+
+  - Only a part: `&start=60&end=75` (seconds) for YouTube, or `#t=60,75` for YouTube and Vimeo.
+  - YouTube and Vimeo are controlled by LiaScript: pause and seek in the bar at the bottom, the next comment starts when the video ends. Dailymotion, PeerTube, TeacherTube, video.tu-freiberg.de and unknown platforms are plain iframes: they cannot be paused, do not end on their own, and some need a click on their own play button.
+  - The video is only shown with the sound on and not in Textbook mode. It needs a network connection and is not part of the offline media download.
+  - In a course translated with Google Translate, the translated comment is read aloud and YouTube/Vimeo are muted; YouTube captions follow the course language.
+  - Up to 2.2.2 a platform link is not a recording, the comment text is spoken by TTS; for older interpreters download the video and link the file.
 
 **What is read aloud** — TTS reads the text of the comment, with a few rules worth knowing:
 - **Formulas** are read like people read maths (since LiaScript 2.2.1), in the language of the voice: German and English, any other language falls back to English ("e hoch i pi", "d y nach d x", "H 2 O"). An `aria-label` of the author replaces the generated text (see Math in `syntax-core.md`). Up to 2.2.0 formulas in narration comments were skipped, and playback blocks read a stray period after them.
 - **Quizzes, surveys and task lists** in playback blocks are read as natural lists since 2.2.0 ("blue or red", "row: true or false"), followed by the buttons; before, every checkbox was read as "on".
-- **Emojis** are skipped after 2.2.2 (not yet released; `©`, `®` and `™` are still read); up to 2.2.2 they are read by name ("smiling face"). On browsers older than Firefox 78 they are still read.
+- **Emojis** are skipped since 2.3.0 (`©`, `®` and `™` are still read); up to 2.2.2 they are read by name ("smiling face"). On browsers older than Firefox 78 they are still read.
 
 **Playback** — `{{|>}}` (block) or `{|>}{...}` (inline) attaches a visible Play/Pause button that reads the paragraph aloud on click, independent of the animation step machinery and visible in every presentation mode (unlike TTS-sync comments, which never appear inline outside Textbook mode — see above):
 
@@ -331,7 +349,7 @@ send.dispatch("event-name", payload)
   "LIA: wait"
   </script>
 
-  <script input="range" value="3" min="0" max="10" input-always-active>
+  <script input="range" aria-label="score" value="3" min="0" max="10" input-always-active>
   send.dispatch("score", @input)
   ""
   </script>
@@ -441,7 +459,7 @@ Every script — code-block or standalone — runs in its own local scope; two `
 <script> window.a / 2 </script>
 ```
 
-If a script throws, the error message is displayed as its result.
+If a script throws, the error message is displayed as its result. Since LiaScript 2.3.0 it names its kind (`ReferenceError: x is not defined`) and a thrown plain string is shown too; up to 2.2.2 only the message appeared and a thrown string showed nothing. (Quiz, survey and code-block scripts are unchanged, see `quizzes-surveys.md`.)
 
 **Script bodies up to LiaScript 2.1.2:** the end of a `<script>` was found with regexes, which cut valid JavaScript at the wrong place or froze the course for minutes: `</` inside a regular expression (`/<\/b>/`) or a comment, quotes inside a regular expression, nested template strings (`` `a ${`b`}` ``), escaped backslashes at the end of a string, and an unclosed string or template literal. Since 2.2.0 a JavaScript-aware scanner ends the script only at `</script>`. For older interpreters avoid these constructs, or move the code into a code block or a template loaded via `script:`.
 
@@ -492,30 +510,30 @@ The text updates in place without an Execute button. The process keeps running w
 **Input types** — add `input="<type>"` (plus `value="..."` for the initial value) to a `<script>` tag to turn it into a small interactive widget wired to `@input`; most HTML5 input types are supported: `text` (the default for a bare `input` attribute), `number`, `range`, `checkbox`, `radio`, `select`, `button`, `submit`, `search`, `password`, `email`, `url`, `tel`, `color`, `date`, `datetime-local`, `time`, `month`, `week`, `hidden`, and `textarea` (`file` and `image` are not supported). `text`/`number`/`range`/`radio`/`checkbox` re-run the script on every change, most others once the field loses focus or Enter is pressed — `update-on-change` overrides this. A `checkbox` with `options="Ben|Jerry"` becomes a multi-select returning a JSON list.
 
 ```markdown
-<script input="text" value="reverse">
+<script input="text" aria-label="text to reverse" value="reverse">
 let str = "@input"
 str.split("").reverse().join("")
 </script>
 
-<script input="number" value="1" min="0" max="1000000">
+<script input="number" aria-label="number to square" value="1" min="0" max="1000000">
 let i = @input
 "Square of " + i + " = " + i * i
 </script>
 
-<script input="range" value="0" min="0" max="360" step="0.1">
+<script input="range" aria-label="angle" value="0" min="0" max="360" step="0.1">
 let i = @input
 "Sinus of " + i + " = " + Math.sin(i)
 </script>
 
-<script input="checkbox" value="true">
+<script input="checkbox" aria-label="true or false" value="true">
 "@input"
 </script>
 
-<script input="radio" value="1" options="1|2|3|Hello World">
+<script input="radio" aria-label="choose an option" value="1" options="1|2|3|Hello World">
 "Selected option: @input"
 </script>
 
-<script input="select" value="1" options="1|2|3|Hello World">
+<script input="select" aria-label="choose an option" value="1" options="1|2|3|Hello World">
 "Selected option: @input"
 </script>
 
@@ -530,14 +548,28 @@ Math.random()
 
 `options` (`radio`/`select`, `|`-separated) and `default` (`submit`/`button` — the value shown before the first click) are LiaScript-specific, not standard HTML attributes. `text`/`number`/`range`/`radio`/`select`/`checkbox` execute immediately on load with their default `value`; `button` also executes on load and again on every click; `submit` does **not** execute on load — it shows its `default` text until clicked, and runs the script on every click.
 
+**Naming inputs** — a slider or checkbox without a name is announced by screen readers only as "slider" or "checkbox". Give every input except `button`/`submit` (named by their text) an `aria-label`, or point to visible text with `aria-labelledby`:
+
+```markdown
+<script input="range" min="0" max="100" value="50" aria-label="volume">
+"Volume: @input %"
+</script>
+
+<script input="checkbox" value='["Ben"]' options="Ben|Jerry|Tom" aria-label="Who is coming?">
+@input
+</script>
+```
+
+The attributes of the `<script>` tag are passed to the generated input. For text-like inputs, `range`, `select` and `textarea` this works in every version. Since LiaScript 2.3.0 it also works for a single `checkbox`, and `radio`/`checkbox` with `options` become a named group: `aria-label`/`aria-labelledby` name the group, every option is named by its own text. Up to 2.2.2 these got no name at all.
+
 **Connecting scripts via `output`/`input`** — give a script `output="channel-name"`, then reference its live, currently-displayed value from any other script (same slide) with `` @input(`channel-name`) `` (backticks required around the channel name):
 
 ```markdown
-<script input="checkbox" value="true" output="P" default="true">
+<script input="checkbox" aria-label="P" value="true" output="P" default="true">
 @input
 </script>
 AND
-<script input="checkbox" value="false" output="Q" default="false">
+<script input="checkbox" aria-label="Q" value="false" output="Q" default="false">
 @input
 </script>
 <script>

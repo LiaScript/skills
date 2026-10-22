@@ -1,4 +1,4 @@
-# LiaScript's CSS surface (2.x)
+# LiaScript's CSS surface (2.x, checked up to 2.4.0)
 
 Reference for writing selectors in `extra_css`. Paths are in the LiaScript repo under
 `src/scss/` (ITCSS layers `00_settings` … `06_utilities`). `1rem = 10px`.
@@ -12,9 +12,14 @@ Defined on `:root` in `03_elements/_elements.page.scss`.
 | `--color-background` | `--lia-white` · dark `--lia-grey-dark` | RGB triple | page, header, TOC, cards, tables, outline buttons (18 uses) |
 | `--color-text` | `--lia-anthracite` · dark `--lia-white` | RGB triple | body text, cards, submenu, default focus ring (10) |
 | `--color-border` | `--lia-grey-light` · dark `--lia-anthracite` | RGB triple | every `1px solid` border: header, TOC, tables, details, hr, kbd (13 + global border) |
-| `--color-highlight` | `--lia-turquoise` (20,115,117); per theme turquoise/red/blue/yellow | RGB triple | **92 uses**: links, buttons, checkbox/radio, range, pagination, active TOC, quiz icons, code frame, effect circles, progress, quote/summary tint, `.bg-/.text-/.border-highlight` |
+| `--color-highlight` | `--lia-turquoise` (20,115,117); per theme turquoise/red/blue/yellow | RGB triple | **92 uses** (2.2.2): links, buttons, checkbox/radio, range, pagination, active TOC (since 2.3.0 links, active TOC and form borders through `--color-accent`), quiz icons, code frame, effect circles, progress, quote/summary tint, `.bg-/.text-/.border-highlight` |
 | `--color-highlight-dark` | `--lia-turquoise-dark` | RGB triple | link hover, list markers, inline code, terminal gradient, summary text, quote text, kbd border |
 | `--color-highlight-menu` | accent; `--lia-white` in named themes | RGB triple | active TOC entry on the colored (non-default) TOC only |
+| `--color-accent` (since 2.3.0) | `rgb(var(--color-highlight))` · dark: highlight ×2.5 (`rgb(from …)` inside `@supports`, on `:root.lia-variant-dark`, 0,2,0) | **full color**, not a triple | text of every `a`/`.lia-link` (dark: also hover), active TOC entry and its bar, borders of checkbox/radio (checked radio ring), `.lia-select`, `.lia-dropdown`, `.lia-quiz__input`, TTS buttons, pressed support-menu button, `.text-highlight`/`.border-highlight`, inline code text in dark mode. `.lia-notes` and `.lia-responsive-voice` set their own value in dark mode (lifted towards white for `--lia-anthracite`) |
+| `--color-success` (since 2.3.0) | 63,122,42 · dark `--lia-success` | RGB triple | `.is-success` borders/fills of inputs, checkboxes, radios, dropdowns; `.lia-drop`; `.text-success` |
+| `--color-failure` (since 2.3.0) | `--lia-red` · dark 255,135,120 (255,0,0 in the code terminal) | RGB triple | `.is-failure` of the same; `.text-error` |
+| `--color-disabled` (since 2.3.0) | 112,112,112 · dark `--lia-grey` | RGB triple | `.text-disabled` |
+| `--editor-icon` (since 2.3.0) | on `.lia-code__input`: `rgb(var(--color-highlight))`, white over a dark Ace theme | full color | copy and min/max buttons on the code editor |
 | `--lia-<name>` ×21 | see palette | RGB triple | used *directly* by many components (below) |
 | `--global-font-family` | `'LiaSourceSansPro'` | full value | body, button, input, select, textarea |
 | `--global-font-mono` | `'LiaSourceCodePro'` | full value | only `kbd` |
@@ -38,35 +43,46 @@ Direct palette uses worth knowing (they ignore the semantic variables):
 |---|---|
 | `--lia-white` | button labels, pagination text, checkmark, effect circle digits, colored-TOC text, accordion header |
 | `--lia-grey-lighter` | alternating table rows (light) |
-| `--lia-grey-light` | notes, TTS bar, TOC separators, `.lia-select` border, disabled buttons, script refresh |
-| `--lia-grey` | disabled borders/text, notes counter, dark alternating rows (`.3`) |
+| `--lia-grey-light` | notes, TTS bar, TOC separators, disabled buttons, script refresh (`.lia-select` border up to 2.2.2; since 2.3.0 `--color-accent`) |
+| `--lia-grey` | disabled borders/text, notes counter underline, dark alternating rows (`.15` since 2.3.0, `.3` before) |
 | `--lia-anthracite` | dark notes/TTS bar, card subtitle, script output background |
 | `--lia-grey-dark` | dark background, dark settings submenu, modal |
 | `--lia-black` | code terminal background |
-| `--lia-red/yellow/success` | quiz/button status (`--failure`, `--warning`, `--success`) |
+| `--lia-red/yellow/success` | button status (`.lia-btn--failure/-warning/-success`); quiz states up to 2.2.2 (since 2.3.0 via `--color-success/-failure`) |
 
 ## Root and mode classes
 
 - `<html>`: `lia-theme-{default|turquoise|blue|red|yellow|custom}`,
-  `lia-variant-{light|dark}`, `lia-font-scale-{1|2|3}`; plus `lang`, `dir="rtl"`.
+  `lia-variant-{light|dark}`, `lia-font-scale-{1|2|3}`, since 2.3.0 optionally
+  `lia-decals` ("do not rely on color alone"); plus `lang`, `dir="rtl"`, and since 2.3.0
+  the attribute `data-mouse-focus` after a mouse click (hides the focus ring of `.lia-input`).
 - `.lia-canvas`: `lia-mode--{textbook|presentation|slides}`, `lia-toc--{visible|hidden}`,
-  `lia-support--{visible|hidden}`.
+  `lia-support--{visible|hidden}`, since 2.3.1 `lia-navigation--{visible|hidden}`.
+- `lia-navigation--hidden` ("Hide navigation" in the mode menu, not stored): `.lia-header`
+  becomes a narrow absolute column top right (no background box, no bottom border),
+  `#lia-btn-toc`, `#lia-btn-prev/-next` and `#lia-btn-sound` float over the content in
+  `--color-highlight`, the pagination number is hidden. Scope header decoration with
+  `:where(.lia-canvas:not(.lia-navigation--hidden))` (works on older versions too).
+- `lia-decals`: chart patterns; `.is-success` solid 2px / `.is-failure` dashed 2px borders on
+  inputs, dropdowns and unchecked boxes; a dashed outline around checked wrong boxes;
+  `.lia-drop` solid/dashed. Keep these border styles when restyling quiz states.
 - `html:not([class*='lia-theme-default'])` = any named or custom theme → accent-colored TOC.
 
 ## Component classes (selected)
 
 | Area | Classes | Hard-coded values worth overriding |
 |---|---|---|
-| Shell | `.lia-canvas`, `.lia-header`, `.lia-toc`, `.lia-toc__search`, `.lia-toc__content`, `.lia-toc__link--is-lvl-1…6`, `.lia-active`, `.lia-support-menu`, `.lia-support-menu__item`, `.lia-support-menu__submenu` | header height 5.6/7.8rem; TOC width 28.5rem; submenu shadow `0 0 1rem rgba(128,128,128,.2)`, radius .8rem |
-| Slide | `.lia-slide`, `.lia-slide__container`, `.lia-slide__content`, `.lia-slide__footer`, `.lia-pagination`, `.lia-pagination__content`, `.lia-notes`, `.lia-responsive-voice`, `.lia-progress` | content max-width 144rem, padding 0 3rem; pagination radius .8rem |
-| Title card | `.lia-card`, `__icon`, `__title`, `__subtitle`, `__body`, `__footer`, `__author` | border .4rem accent; author `grey` |
+| Shell | `.lia-canvas`, `.lia-header`, `.lia-toc`, `.lia-toc__search`, `.lia-toc__content`, `.lia-toc__link--is-lvl-1…6`, `.lia-active`, `.lia-toc__bottom` (home button, `margin: auto 3rem 0`), `.lia-support-menu`, `.lia-support-menu__item`, `.lia-support-menu__submenu`, `.lia-support-menu__lang` (language code) | header height 5.6/7.8rem; TOC width 28.5rem; submenu shadow `0 0 1rem rgba(128,128,128,.2)`, radius .8rem; selected submenu buttons `[aria-pressed=true]` in `--color-accent` |
+| TOC tree (since 2.3.0) | `ul.lia-toc__list > li > a.lia-toc__link`; a section with subsections: `li.lia-toc__parent > a[aria-expanded] + button.lia-toc__toggle + ul.lia-toc__list[role=group][hidden]`; current entry `a.lia-active[aria-current=page]` | toggle at `inset-inline-end: .5rem`, chevron icon |
+| Slide | `.lia-slide`, `.lia-slide__container`, `.lia-slide__content`, `.lia-slide__footer`, `.lia-pagination`, `.lia-pagination__content`, `.lia-notes`, `.lia-notes__step` (button, looks like the counter), `.lia-notes__counter`, `.lia-responsive-voice` (`--silent`, 2.3.1, hidden navigation: only the sound button), `.lia-progress` | content max-width 144rem, padding 0 3rem; pagination radius .8rem; notes counter `rgb(--color-text)` at opacity .8 |
+| Title card | `.lia-card`, `__icon`, `__title`, `__subtitle`, `__body`, `__footer`, `__author` | border .4rem accent; author `#707070` |
 | Section title | `<hN class="h1">` inside `.lia-slide__content` — **every** section title has `.h1`, the tag follows the level | styled like h1 at every level |
 | Text | `h1–h6` (+ utility classes `.h1–.h5`), `.lia-paragraph`, `.lia-list--ordered/--unordered`, `.lia-link`, `.lia-divider` (hr), `.lia-code--inline`, `kbd` | headings: h1 4rem (textbook 3.7rem), h2 2.9rem, h3 2.3rem, h4–6 1.6rem; strong = 600; line-height 1.47 |
 | Tables | `.lia-table-responsive` (`.has-thead-sticky`, `.has-first-col-sticky`), `.lia-table` (`.is-alternating`, `.is-compact`), `__head`, `__header`, `__row`, `__data` | cell padding 1.3rem 3.2rem 1.3rem 1.6rem |
 | Quotes | `.lia-quote`, `__text`, `__cite`, `__alert-note/-tip/-important/-warning/-caution`, `__alert-icon` | background accent 15 %, padding 2.4rem; alert borders are fixed hex (`#0b5ebe`, `#126229`, `#6e44ba`, `#805f1d`, `#ba131e`) |
 | Details | `details`, `summary` | radius .8rem, summary weight 600, tint 5 % accent |
 | Code | `.lia-code`, `.lia-code--block`, `.lia-code__input` (frame), `.ace_editor`, `.lia-code-control`, `.lia-code-terminal` | frame 1px accent; terminal black; editor colors = reader's Ace theme |
-| Forms/quiz | `.lia-btn` (`--outline`, `--transparent`, `--success/-warning/-failure`, `--tag`), `.lia-input`, `.lia-checkbox`, `.lia-radio`, `.lia-select`, `.lia-dropdown`, `.lia-label`, `.lia-quiz`, `.lia-quiz__*`, `.lia-survey-matrix` | radius .8rem; check/radio 2.4rem; radio 100 % |
+| Forms/quiz | `.lia-btn` (`--outline`, `--transparent`, `--success/-warning/-failure`, `--tag`), `.lia-input`, `.lia-checkbox`, `.lia-radio`, `.lia-select`, `.lia-dropdown` (keyboard option `[role=option].is-active`, 2.3.0), `.lia-drop` (drag-and-drop target), `.lia-label`, `.lia-quiz`, `.lia-quiz__*`, `.lia-survey-matrix` (row statements are `th scope=row` since 2.3.0); states `.is-success/.is-failure/.is-warning/.is-disabled` | radius .8rem; check/radio 2.4rem; radio 100 %; borders `--color-accent`, states `--color-success/-failure` |
 | Effects | `.lia-effect__circle`, `.lia-effect--inline`, `.lia-effect__playback-*` | circle 2rem, white digits |
 | Media | `figure`, `img`, `.lia-gallery > .lia-lightbox > figure.lia-figure > .lia-figure__media > img`, `.lia-lightbox__clickarea`, `.lia-modal` | tile `.lia-figure__media` black `rgba(0,0,0,.85)`, 25rem tiles, `object-fit: cover` |
 | Header | `header#lia-toolbar-nav.lia-header > .lia-header__left / __middle (logo img.lia_header__logo) / __right (#lia-support-menu.lia-support-menu)`, `.lia-progress`; the TOC toggle `#lia-btn-toc` lives in `.lia-toc` | header `margin: 0 3rem`; support menu has its own `--color-background`; progress bar = accent |

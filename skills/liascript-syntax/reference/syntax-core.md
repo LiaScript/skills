@@ -114,8 +114,8 @@ Links, media, and references (a mix of standard Markdown and LiaScript extension
 
 ```markdown
 [title](https://example.com "optional hover title")
-[internal link to slide 5](#5)
 [internal link by slide title](#slide-title)      <!-- percent-encode parentheses: %28 %29 -->
+[internal link to slide 5](#5)                     <!-- fragile: breaks when a slide is inserted before it -->
 [URL with parentheses](<https://en.wikipedia.org/wiki/Gymnasium_(Germany)>)
 <https://example.com/path_(with_parens)>          <!-- autolink, avoids escaping -->
 [preview-lia](https://raw.githubusercontent.com/org/repo/master/README.md)   <!-- rich course-preview card -->
@@ -129,6 +129,10 @@ Links, media, and references (a mix of standard Markdown and LiaScript extension
 ??[embed](https://sketchfab.com/models/xyz)        <!-- generic oEmbed/iframe fallback -->
 ```
 
+**Links to slides** — link to a heading, not to a slide number. `#5` always means the fifth slide and points elsewhere as soon as a slide is added before it. The heading anchor is built from the full heading text: formatting removed, lower case, `-` and runs of spaces become one `-`, punctuation stays. `## 3. Why do leaves fall?` is `#3.-why-do-leaves-fall?`, `## Brüche vergleichen` is `#brüche-vergleichen` (case is ignored, percent-encoding is decoded). Two headings with the same text share one anchor, and the link goes to the **first** of them — e.g. a course title and a chapter title that are equal. An anchor that matches no heading fails silently: a click on it does nothing. Inside the course these links are turned into slide numbers when the slide is rendered, so they always follow the current order. As a deep link from outside (`…/course/?<url>#summary`), a heading anchor works on the first visit, but LiaScript 2.4.0 ignores it when the learner has opened the course before and shows the last visited slide; a slide number works in both cases. Since LiaScript 2.3.1 a `<br>` in a heading counts as a space.
+
+**New tab** — every link except `#…` anchors opens in a new tab (external pages, files, other courses). Since LiaScript 2.3.0 these links tell screen readers so; the look is unchanged.
+
 Adjacent media lines (no blank line between them) become a gallery. `?[...](url)` also embeds SoundCloud, Spotify, Deezer, and YouTube Music links as players.
 
 Own video files accept `#t=start,end` (seconds) and the `autoplay`/`muted` attributes; for YouTube, Vimeo, etc. use the platform's URL parameters instead:
@@ -138,6 +142,11 @@ Own video files accept `#t=start,end` (seconds) and the `autoplay`/`muted` attri
 
 !?[Multimedia](https://www.youtube.com/watch?v=xyz&autoplay=1&mute=1&start=1895&end=1905)
 ```
+
+**Alt text and title of media** — write a real alt text; it is what screen readers announce. Since LiaScript 2.3.0:
+- The alt text names audio, video and embeds (YouTube, Vimeo, `??[…]`) when there is no title; up to 2.2.2 embeds without a title had no name.
+- The `"title"` of images, gallery images, audio, video and `[qr-code]` is only the caption below the media. There is no hover tooltip any more. Iframes still use it as their name. Link titles `[x](url "t")` are unchanged.
+- Images with an alt text can be zoomed with Enter or Space; `![](img.png)` with an empty alt text counts as decorative and is skipped by the keyboard. (Only images without an attribute comment can be zoomed, as before.)
 
 **Floating image + wrapped text** — an image followed *directly* by text, with **no blank line between them**, forms a single paragraph in which the image floats left at up to 50% width and the text flows beside it, like a two-column slide layout:
 
@@ -295,6 +304,8 @@ To restyle the *whole* course (colors, fonts, corner radius, dark mode, a corpor
 
 Attach an HTML comment containing HTML attributes (`style`, `class`, `id`, ...) directly before a block, or immediately after an inline element, to style it. LiaScript strips these comments from plain-Markdown rendering, so the source still reads cleanly elsewhere.
 
+"Directly before" is strict: the comment belongs to the block that starts on the next line. A blank line between comment and block detaches it, and the attributes are lost (tested in 2.4.0 for paragraphs, tables, images, lists, code blocks and gap texts; only choice quizzes tolerate it). This matters for every block that takes attributes: images, tables and charts, code blocks, and quizzes (where the block starts at the first option, not at the question — see Quiz Settings in `quizzes-surveys.md`).
+
 Block-level (comment goes *before* the block):
 
 ```markdown
@@ -375,6 +386,8 @@ $$
 ```markdown
 Euler: $e^{i\pi} + 1 = 0$<!-- aria-label="e to the i pi plus one equals zero" -->
 ```
+
+Links in formulas (`\href{url}{text}`, `\url{…}`) stay reachable for screen readers since LiaScript 2.3.0; such a formula is no longer announced as maths, its spoken text is read as hidden text instead.
 
 Chemical equations use the `mhchem` `\ce{...}` command: `$\ce{CO2 + C -> 2 CO}$`.
 

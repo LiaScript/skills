@@ -40,11 +40,14 @@ details, .lia-quote, .lia-code__input, .lia-table-responsive, .lia-card {
 .lia-code__input .ace_editor { border-radius: inherit; }
 .lia-support-menu__submenu { box-shadow: var(--theme-shadow-popup, 0 0 1rem rgba(128, 128, 128, 0.2)); }
 
-/* -- dark mode: LiaScript brightens the accent for text via
-      rgb(from … calc(r*2.5)), which turns a hand-picked accent into
-      pastel/yellow. For the course theme, text-like accent uses take
-      --color-highlight-dark (= "accent as text") instead. Scoped to
-      default/custom so the built-in color themes keep their behavior. -- */
+/* -- dark mode: LiaScript brightens the accent by multiplying RGB
+      (rgb(from … calc(r*2.5))), which turns a hand-picked accent into
+      pastel/yellow. Since LiaScript 2.3.0 links, inline code text, the
+      active TOC entry and form borders read --color-accent, which the
+      token block sets; the rules below cover what is still multiplied
+      and, marked "<= 2.2.2", what older interpreters multiply as well.
+      Scoped to default/custom so the built-in color themes keep their
+      behavior. -- */
 :root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-link, .lia-btn--outline, .lia-code--inline) {
   color: rgb(var(--color-highlight-dark));
   border-color: rgb(var(--color-highlight-dark));
@@ -53,15 +56,26 @@ details, .lia-quote, .lia-code__input, .lia-table-responsive, .lia-card {
 :root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-list--unordered, .lia-list--ordered) > li::marker {
   color: rgb(var(--color-highlight-dark));
 }
+/* .lia-btn--transparent: brightness filter; .lia-input: same filter <= 2.2.2 only */
 :root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-btn--transparent, .lia-input) {
   filter: none;
 }
-:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-input, .lia-checkbox[type='checkbox'], .lia-radio[type='radio']):not(:checked, .is-disabled, [disabled]) {
+/* hidden navigation (>= 2.3.1): icon buttons float on the page; without the
+   brightness filter above they need the accent as text */
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark .lia-navigation--hidden :is(#lia-btn-toc, #lia-btn-prev, #lia-btn-next, #lia-btn-sound, .lia-support-menu__item > button, .lia-support-menu__item > a.lia-btn) {
+  color: rgb(var(--color-highlight-dark));
+}
+/* <= 2.2.2: form borders used the plain accent; quiz states keep their own colors */
+:root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-input, .lia-checkbox[type='checkbox'], .lia-radio[type='radio']):not(:checked, .is-disabled, [disabled], .is-success, .is-failure, .is-warning) {
   border-color: rgb(var(--color-highlight-dark));
 }
-/* alternating table rows: LiaScript uses a neutral grey in dark mode */
-:root.lia-variant-dark .lia-table.is-alternating .lia-table__row:nth-child(2n) td,
-:root.lia-variant-dark .lia-table-responsive.has-thead-sticky.has-first-col-sticky .is-alternating .lia-table__row:nth-child(2n) td:first-child:before,
-:root.lia-variant-dark .lia-table-responsive.has-thead-sticky.has-last-col-sticky .is-alternating .lia-table__row:nth-child(2n) td:last-child:before {
+/* alternating table rows: LiaScript uses a neutral grey in dark mode;
+   survey matrices (>= 2.3.0) render the row statements as th */
+:root.lia-variant-dark .lia-table.is-alternating .lia-table__row:nth-child(2n) :is(td, th) {
   background-color: rgb(var(--lia-grey-dark));
+}
+/* sticky first/last column: since 2.3.0 a gradient on top, hence the shorthand */
+:root.lia-variant-dark .lia-table-responsive.has-thead-sticky.has-first-col-sticky .is-alternating .lia-table__row:nth-child(2n) :is(td, th):first-child:before,
+:root.lia-variant-dark .lia-table-responsive.has-thead-sticky.has-last-col-sticky .is-alternating .lia-table__row:nth-child(2n) :is(td, th):last-child:before {
+  background: rgb(var(--lia-grey-dark));
 }

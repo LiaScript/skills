@@ -116,6 +116,39 @@ def dark_palette(theme, light):
         out["accent_text"] = push_contrast(out["accent"], out["background"], 5.5, +1)
     return out
 
+# Quiz state colors of LiaScript >= 2.3.0 (--color-success / --color-failure,
+# _elements.page.scss and the dark-colors mixin of _tools.color.scss).
+STATE_DEFAULTS = {
+    False: {"success": (63, 122, 42), "failure": (191, 44, 26)},
+    True: {"success": (140, 201, 111), "failure": (255, 135, 120)},
+}
+
+def add_derived(p, dark_mode, given):
+    """Colors LiaScript >= 2.3.0 reads besides the highlight:
+    - link: --color-accent, the accent as text or border on the background
+      (links, active TOC entry, checkbox/radio/select/dropdown/quiz-input borders).
+      Light: the accent if it reaches 4.5:1, else accent_text. Dark: accent_text.
+    - accent_notes (dark): --color-accent on the notes and the TTS bar (surface_strong).
+    - success / failure: quiz states as text and borders, moved until 4.5:1."""
+    bg = p["background"]
+    if dark_mode or contrast(p["accent"], bg) < 4.5:
+        p["link"] = p["accent_text"]
+    else:
+        p["link"] = p["accent"]
+    if dark_mode:
+        p["accent_notes"] = push_contrast(p["accent_text"], p["surface_strong"], 3.0, +1)
+    step = +1 if dark_mode else -1
+    for key, default in STATE_DEFAULTS[dark_mode].items():
+        if key in given:
+            p[key] = hex2rgb(given[key])
+        elif contrast(default, bg) < 4.5:
+            p[key] = push_contrast(default, bg, 4.5, step)
+            print(f"note: LiaScript's {key} color {rgb2hex(default)} has only {contrast(default, bg):.2f}:1 on the "
+                  f"{'dark' if dark_mode else 'light'} background -> using {rgb2hex(p[key])}", file=sys.stderr)
+        else:
+            p[key] = default
+    return p
+
 # ---------------------------------------------------------------- checks
 
 def report(light, dark):
@@ -130,11 +163,17 @@ def report(light, dark):
     for mode, p in (("light", light), ("dark", dark)):
         chk(mode, "text / background", p["text"], p["background"], 4.5)
         chk(mode, "accent_text / background", p["accent_text"], p["background"], 4.5)
+        chk(mode, "link / background (links, TOC, forms)", p["link"], p["background"], 4.5)
         chk(mode, "white label / accent (buttons)", WHITE, p["accent"], 4.5, hard=False)
-        chk(mode, "accent / background (UI parts)", p["accent"], p["background"], 3.0, hard=False)
+        chk(mode, "accent / background (icons, fills)", p["accent"], p["background"], 3.0, hard=False)
         chk(mode, "text / surface_strong (notes)", p["text"], p["surface_strong"], 4.5)
+        if "accent_notes" in p:
+            chk(mode, "accent / surface_strong (notes, TTS)", p["accent_notes"], p["surface_strong"], 3.0, hard=False)
+        chk(mode, "success / background (quiz)", p["success"], p["background"], 4.5)
+        chk(mode, "failure / background (quiz)", p["failure"], p["background"], 4.5)
     if contrast(light["accent"], light["background"]) < 4.5:
-        rows.append("  note: links use the accent in light mode; accent/background < 4.5 makes links weak")
+        rows.append("  note: accent/background < 4.5 in light mode: links use accent_text instead "
+                    "(LiaScript >= 2.3.0; older versions show the weaker accent)")
     return ok, "\n".join(rows)
 
 # ---------------------------------------------------------------- output
@@ -185,11 +224,15 @@ def css_block(theme, light, dark):
     def variant(p, dark_mode):
         pal = ["  --lia-grey-dark: " + triple(p["surface"]) + ";", "  --lia-anthracite: " + triple(p["surface_strong"]) + ";"] if dark_mode \
             else ["  --lia-grey-lighter: " + triple(p["surface"]) + ";", "  --lia-grey-light: " + triple(p["surface_strong"]) + ";"]
+        # quiz states (LiaScript >= 2.3.0), only where LiaScript's own fail on this background
+        states = [f"  --color-{k}: {triple(p[k])};" for k in ("success", "failure")
+                  if p[k] != STATE_DEFAULTS[dark_mode][k]]
         return "\n".join([
             f"  --color-background: {triple(p['background'])};",
             f"  --color-text: {triple(p['text'])};",
             f"  --color-border: {triple(p['border'])};",
             *pal,
+            *states,
         ])
 
     hc = theme.get("heading_color")
@@ -207,10 +250,13 @@ def css_block(theme, light, dark):
         ":root.lia-variant-light {", variant(light, False), "}",
         ":root.lia-variant-dark {", variant(dark, True), "}",
         "/* accent: only the course theme (default) and the custom radio,",
-        "   so readers can still pick LiaScript's built-in color themes */",
+        "   so readers can still pick LiaScript's built-in color themes;",
+        "   --color-accent (LiaScript >= 2.3.0) = accent as text and border: links, active",
+        "   TOC entry, form borders; LiaScript would brighten it x2.5 in dark mode */",
         ":root:is(.lia-theme-default, .lia-theme-custom) {",
         f"  --color-highlight: {triple(light['accent'])};",
         f"  --color-highlight-dark: {triple(light['accent_text'])};",
+        f"  --color-accent: rgb({triple(light['link'])});",
         "}",
         ":root.lia-theme-default {",
         f"  --color-highlight-menu: {triple(light['accent'])};",
@@ -218,6 +264,11 @@ def css_block(theme, light, dark):
         ":root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark {",
         f"  --color-highlight: {triple(dark['accent'])};",
         f"  --color-highlight-dark: {triple(dark['accent_text'])};",
+        f"  --color-accent: rgb({triple(dark['link'])});",
+        "}",
+        "/* notes and TTS bar set their own --color-accent on surface_strong in dark mode */",
+        ":root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark :is(.lia-notes, .lia-responsive-voice) {",
+        f"  --color-accent: rgb({triple(dark['accent_notes'])});",
         "}",
     ]
     if heading_rule:
@@ -250,15 +301,18 @@ def feature_blocks(theme):
     if lay.get("content_width"):
         out.append(f".lia-canvas.lia-mode--textbook .lia-slide__content {{ max-width: {lay['content_width']}; margin-inline: auto; }}")
     if lay.get("header") == "accent":
+        # N: not in LiaScript's hidden navigation mode (>= 2.3.1), where the header is a
+        # narrow column over the content and the TOC button floats on the page
+        n = ":where(.lia-canvas:not(.lia-navigation--hidden))"
         out += [
-            "/* full-bleed header in the accent color with white icons */",
-            ".lia-header { background-color: rgb(var(--color-highlight)); border-bottom: 0; margin: 0; padding-inline: 3rem; }",
-            ".lia-header .lia-support-menu--closed, .lia-header .lia-support-menu__nav { background-color: transparent; }",
-            ".lia-header :is(.lia-btn, .lia-support-menu__item) { color: rgb(255, 255, 255) !important; }",
+            "/* full-bleed header in the accent color with white icons (not with hidden navigation) */",
+            f"{n} .lia-header {{ background-color: rgb(var(--color-highlight)); border-bottom: 0; margin: 0; padding-inline: 3rem; }}",
+            f"{n} .lia-header .lia-support-menu--closed, {n} .lia-header .lia-support-menu__nav {{ background-color: transparent; }}",
+            f"{n} .lia-header :is(.lia-btn, .lia-support-menu__item) {{ color: rgb(255, 255, 255) !important; }}",
             ".lia-support-menu--open .lia-btn, .lia-support-menu__submenu .lia-btn { color: rgb(var(--color-highlight)) !important; }",
             ":root.lia-variant-dark :is(.lia-support-menu--open .lia-btn, .lia-support-menu__submenu .lia-btn) { color: rgb(var(--color-highlight-dark)) !important; }",
-            ".lia-header .lia-progress { background-color: rgba(255, 255, 255, 0.75); }",
-            ".lia-toc--closed #lia-btn-toc, .lia-toc--hidden #lia-btn-toc { color: rgb(255, 255, 255); }",
+            f"{n} .lia-header .lia-progress {{ background-color: rgba(255, 255, 255, 0.75); }}",
+            f"{n} .lia-toc--closed #lia-btn-toc, .lia-toc--hidden:where(:not(.lia-navigation--hidden)) #lia-btn-toc {{ color: rgb(255, 255, 255); }}",
         ]
     d = DENSITY.get(theme.get("density", ""))
     if d:
@@ -327,6 +381,8 @@ def build(theme, base_dir="."):
         theme = dict(theme, extra_css=embed_assets(theme["extra_css"], base_dir))
     light = light_palette(theme["light"])
     dark = dark_palette(theme, light)
+    add_derived(light, False, theme["light"])
+    add_derived(dark, True, theme["dark"] if isinstance(theme.get("dark"), dict) else {})
     css = css_block(theme, light, dark)
     links = [u for u in [google_link(theme.get("fonts", {}))] + theme.get("fonts", {}).get("links", []) if u]
     if links:

@@ -53,7 +53,11 @@ These fail silently — the course renders, just wrong. Check them first when re
 14. **Narration goes before its block**, not collected at the top or bottom of a slide; otherwise Textbook mode shows all pictures first and all explanations after (`presentation-pattern.md`).
 15. **A table without enough numeric columns gets no chart** since LiaScript 2.2.0, not even the toggle; truth tables (only 0/1) and single rows with zeros stay tables too. Force a chart with `data-type` (`visuals.md`, How the type is guessed).
 16. **Up to LiaScript 2.1.2, `<script>` bodies are cut at the wrong place** by `</` in a regex or comment, nested template strings and unclosed strings, and three backticks inside a line end a code block (`interactivity.md`).
-17. **Before saying "LiaScript can't do that"**, check the reference — many quiz behaviors are configurable (feedback texts, solution button, trials, read-aloud).
+17. **A quiz's attribute comment goes between question and options**, directly above the first option, no blank line. Above the question it sets attributes on the paragraph and the quiz ignores it (`quizzes-surveys.md`, Where the comment goes).
+18. **The "show solution" button is on unless switched off**: `data-max-trials` alone does not hide it. Self-checks, young learners and free-text quizzes need `data-solution-button="off"` (`quizzes-surveys.md`, Quiz Settings).
+19. **Link to a heading anchor, not a slide number**: `#5` breaks when a slide is inserted. `## 3. Why do leaves fall?` → `#3.-why-do-leaves-fall?`; equal headings share the anchor of the first, and an unknown anchor silently does nothing (`syntax-core.md`, Links to slides).
+20. **Name every `<script input=…>` with `aria-label`**, else a screen reader only hears "slider" or "checkbox"; groups (`radio`/`checkbox` with `options`) take it since 2.3.0 (`interactivity.md`, Naming inputs).
+21. **Before saying "LiaScript can't do that"**, check the reference — many quiz behaviors are configurable (feedback texts, solution button, trials, read-aloud).
 
 ## Can LiaScript do this?
 
@@ -71,7 +75,8 @@ These fail silently — the course renders, just wrong. Check them first when re
 | Word cloud | Of survey answers: one-line text survey in the classroom. From a table: `data-type="wordcloud"` since 2.2.0 (`visuals.md`) |
 | Disable the quiz "check" button | No |
 | Read formulas aloud / own wording for a formula | Since 2.2.1 automatically (German, English); own text via `$…$<!-- aria-label="…" -->` (`syntax-core.md`, Math) |
-| YouTube/Vimeo video as narration | After 2.2.2 (not yet released): `!?[⏯](youtube-url)` in a `--{{n}}--` comment; before, only video files (`interactivity.md`) |
+| YouTube/Vimeo video as narration | Since 2.3.0: `!?[⏯](youtube-url&start=60&end=75)` in a `--{{n}}--` comment; up to 2.2.2 only video files (`interactivity.md`) |
+| Learners take media offline | Since 2.3.1 by the learner: "Download media for offline use"; streams like YouTube are skipped (`tooling.md`) |
 | Narrated slides that also read as a text | Yes: `presentation-pattern.md`, `examples/course-template.md` |
 | Run code (JS, Python, SQL, …) | Yes: JS directly; other languages via templates (`liascript-templates` skill) |
 | Animated speaker/avatar for the narration | Since 2.2.0 via a template: `LIA.narrator.registerAvatar` (`liascript-templates` skill); per-step `data-*` annotations (`presentation-pattern.md`) |
@@ -104,11 +109,22 @@ Multiple-choice quiz:
 - [[ ]] Incorrect, left unchecked
 ```
 
-Quiz settings go in an attribute comment directly above the quiz. Feedback texts, the solution button and trials are all configurable. Before telling a user that something is impossible, check Quiz Settings in `reference/quizzes-surveys.md`:
+Quiz settings go in an attribute comment between the question and the options, with no blank line before the options. Feedback texts, the solution button and trials are all configurable. Before telling a user that something is impossible, check Quiz Settings in `reference/quizzes-surveys.md`:
 ```markdown
+Welche Farbe hat der Himmel?
+
 <!-- data-text-solved="⭐ Super!" data-text-failed="🔁 Nochmal!" data-solution-button="off" -->
 - [( )] {|>}{grün}
 - [(X)] {|>}{blau}
+```
+
+Link to other slides by heading anchor: `[see the summary](#summary)`.
+
+Interactive script input, named for screen readers:
+```markdown
+<script input="range" min="0" max="100" value="50" aria-label="volume">
+"Volume: @input %"
+</script>
 ```
 
 Options, hints, and tasks can carry whole Markdown blocks (LiaScript ≥ 2.0) — indent the block to line up with the text after the marker: 8 spaces for `- [[X]] `/`- [(X)] `, 6 for a task's `- [ ] `. Too little indentation silently ends the quiz:

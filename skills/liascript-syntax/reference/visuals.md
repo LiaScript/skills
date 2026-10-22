@@ -21,6 +21,8 @@ data-ylabel="% of GDP"
 
 `data-show` (or `data-show="true"`) displays the chart immediately instead of the table; `data-title`/`data-xlabel`/`data-ylabel` set the chart's title and axis labels (without `data-title`, the first header cell is used as title); `data-xlim="1994,2000"` and `data-ylim="0,12.3"` override the automatically determined axis range — leave one side blank (`data-ylim=",12"`) to auto-determine only that end. An empty `data-xlim=""` counts as unset since LiaScript 2.2.0; up to 2.1.2 it was passed to ECharts as an empty limit, so leave the attribute out instead.
 
+**Accessible name** (since LiaScript 2.3.0) — a chart is announced as an image. Its name is, in this order: an `aria-label` in the attribute comment (`<!-- data-type="bar" aria-label="Education spending 1995–2000, Finland highest" -->`), else the description ECharts generates, else `data-title`. Since 2.3.0 `data-title` also names the table itself, via a hidden caption. The same `aria-label` works for ASCII charts and a raw `<lia-chart>`. Learners can turn on "do not rely on color alone" in the settings, which adds patterns to the chart series; a chart should still not depend on color alone, e.g. label the series directly where it matters.
+
 **Caution:** never put an authoring note (`<!--- ... --->`) directly above the attribute comment without a blank line in between. The two comments merge into one block, and the comment and table then show up as raw text, with no table and no chart. See `reference/syntax-core.md`'s "Ignoreable comments".
 
 **Type list** — what each type renders as, and when it is guessed (details below):

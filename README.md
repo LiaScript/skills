@@ -12,7 +12,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
 | [liascript-exporter](skills/liascript-exporter/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
 | [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes & surveys, narrated presentations, charts, agent links, and a tested example course |
-| [liascript-templates](skills/liascript-templates/) | Develop LiaScript templates — reusable macros, JS library integration, and async patterns |
+| [liascript-templates](skills/liascript-templates/) | Develop LiaScript templates — reusable macros, JS library integration, async patterns, and collaborative classroom widgets |
 | [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
 | [liascript-asciiart](skills/liascript-asciiart/) | Draw ASCII-art / box-drawing / emoji diagrams for LiaScript ```` ```ascii ```` blocks, with grid checker, renderer and tested templates |
 
@@ -52,9 +52,9 @@ Complete LiaScript authoring reference: full markdown syntax (meta-header, docum
 
 ## liascript-templates
 
-Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, and the established conventions from the LiaTemplates ecosystem.
+Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, template hooks (narrator avatars), collaborative templates on the classroom API (`LIA.classroom`: own layers per participant, publish/subscribe, peers, shared Yjs types, since LiaScript 2.5.0), and the established conventions from the LiaTemplates ecosystem.
 
-**Activates when:** a user wants to build, modify, or debug a LiaScript template; create reusable macros; or integrate a JavaScript library into a LiaScript course.
+**Activates when:** a user wants to build, modify, or debug a LiaScript template; create reusable macros; or integrate a JavaScript library into a LiaScript course; or build something participants share in a classroom (drawing together, votes, markers) — also in German ("gemeinsam zeichnen im Klassenraum", "kollaboratives Template").
 
 ---
 

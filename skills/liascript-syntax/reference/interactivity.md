@@ -599,15 +599,20 @@ LIA.focusOnMain = false   // don't move the focus to the main content on slide c
 LIA.scrollUpOnMain = false// don't scroll to the top on slide change
 ```
 
-`LIA.classroom` is a publish/subscribe interface for the live-presentation "Classroom" feature (peer-to-peer, active only while a classroom session is connected):
+`LIA.classroom` lets scripts share data in a live "Classroom" session:
 
 ```js
 LIA.classroom.connected                 // bool: is a classroom session active
 LIA.classroom.on("connect", () => {})
 LIA.classroom.on("disconnect", () => {})
 LIA.classroom.publish("topic", payload)
-const id = LIA.classroom.subscribe("topic", message => {})
+const id = LIA.classroom.subscribe("topic", (message, from) => {})  // from: since 2.5.0
 LIA.classroom.unsubscribe(id)
+
+// since LiaScript 2.5.0
+LIA.classroom.me / .owner / .mode / .peers()   // who is in the room
+LIA.classroom.layer("MyWidget:1")              // own stored state per participant
+LIA.classroom.array / .map / .text("name")     // shared Yjs types (experimental)
 ```
 
-`LIA.classroom.connected` is `false` outside a classroom session; the object always exists, so checking it never throws.
+`LIA.classroom.connected` is `false` outside a classroom session; the object always exists, so checking it never throws. Pubsub messages are not stored; anything that must be remembered (a drawing, a vote) belongs in a `layer`, which is kept in the browser and synced in the room, with visibility per classroom mode like quiz answers. The full API, its rules and examples are in the `liascript-templates` skill (`reference/classroom.md`).

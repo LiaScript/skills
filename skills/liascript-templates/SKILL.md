@@ -4,7 +4,11 @@ description: >
   Expert guidance for developing LiaScript templates — creating reusable macros, integrating
   JavaScript libraries (via CDN or as bundled npm projects), handling async execution, and following
   all established template patterns from the LiaTemplates ecosystem. Use when building, modifying, or
-  debugging a LiaScript template.
+  debugging a LiaScript template — also for collaborative templates that share state in a LiaScript
+  classroom via `LIA.classroom` (layers per participant, publish/subscribe, peers, shared Yjs types),
+  e.g. drawing together, votes, markers on a map, small multiplayer games, and for template hooks such
+  as `LIA.narrator`. German triggers: "Template für LiaScript bauen", "Makro-Template", "gemeinsam
+  zeichnen im Klassenraum", "Abstimmung/Daten im Classroom teilen", "kollaboratives Template".
 license: CC0-1.0
 ---
 
@@ -344,6 +348,28 @@ if (window.LIA && window.LIA.narrator && !customElements.get('dog-avatar')) {
 
 ---
 
+## Collaborative Templates: `LIA.classroom` (layers since LiaScript 2.5.0)
+
+In a LiaScript classroom, templates can share state through `window.LIA.classroom`. The object always exists, so the same code runs alone and in a room. **Read [`reference/classroom.md`](reference/classroom.md) before writing a collaborative template**: it has the full API, the visibility rules per classroom mode, backend differences and a complete example.
+
+| Part | For | Since |
+|---|---|---|
+| `connected`, `on('connect'/'disconnect')`, `publish`, `subscribe`, `unsubscribe` | short messages that may get lost (reactions, signals) | 0.14.0 |
+| `me`, `owner`, `mode`, `peers()`, `on('peers')`, sender as 2nd `subscribe` argument, `on()` returns a remover | who is in the room | 2.5.0 |
+| `layer(name)`: `push`, `set`, `get`, `on` | an own state per participant (strokes, votes, markers), stored locally and synced in the room | 2.5.0 |
+| `array`/`map`/`text(name)` | one Yjs type everyone edits, room only (experimental) | 2.5.0 |
+
+The rules that break templates most often:
+- **Use a layer for anything that must be remembered.** Pubsub is not stored, and in 2.5.0 the Ably and PubNub backends deliver only the own echo, not other peers' messages.
+- **Visibility follows the mode** like quiz answers: Shared shows all layers, Summary and Details only the own one, the owner sees all. Redraw from the `on((layers, info) => …)` list each time.
+- **Name layers `'<Template>:' + id`.** Names are shared by all templates of a course. `@uid` (`<slide>_<n>`) is the same for every participant, but changes when slides or `@uid` calls before it are added.
+- **Values are frozen JSON copies.** Copy before editing; `push`/`set` return promises that reject with the reason.
+- **Call `LIA.classroom.publish(…)` through the object**, never keep a reference to the function: it is swapped on connect and disconnect.
+- **Check for the API**, older interpreters lack it: `if (window.LIA?.classroom?.layer) { … } else { /* show a note */ }`.
+- Locally, layers are stored only in the LiaScript web app for courses with `version: 1.0.0` or higher; set `persistent: true` for templates that render into the DOM.
+
+---
+
 ## Accessibility and Keyboard (since LiaScript 2.3.0)
 
 LiaScript 2.3.0 made the interpreter keyboard- and screen-reader-friendly. Template code has to play along:
@@ -356,7 +382,7 @@ LiaScript 2.3.0 made the interpreter keyboard- and screen-reader-friendly. Templ
 - **Reduce motion**: under the system setting LiaScript cuts every CSS animation and transition to almost zero, also template CSS (`animationend`/`transitionend` still fire). JavaScript, canvas and Web Animations are not stopped; check `matchMedia('(prefers-reduced-motion: reduce)')` there yourself.
 - Script errors in standalone `<script>` tags name their kind since 2.3.0 (`ReferenceError: …`), which helps when debugging template macros.
 
-## 13 Implementation Patterns
+## 14 Implementation Patterns
 
 ### Pattern 1 — Synchronous interpreter (AlaSQL, BiwaScheme, Skulpt)
 ```markdown
@@ -540,7 +566,7 @@ Every slide in README.md demonstrates one macro with a live example, then an "Im
 ### Pattern 12 — Special built-in macros
 | Macro | Where valid | Effect |
 |---|---|---|
-| `@uid` | Anywhere except header | Unique DOM id, different on each call |
+| `@uid` | Anywhere except header | Unique DOM id, different on each call: `<slide>_<n>` for the n-th `@uid` on the slide, so it is the same in every browser (usable in classroom layer names) |
 | `@input` | Inside `<script>` tags | Current code block / quiz / user input |
 | `@input(N)` | Inside `<script>` tags | Nth code block in a multi-file project |
 | `@'input` | Inside `<script>` tags | Backslash-escaped input (for JS strings) |
@@ -564,6 +590,30 @@ send.dispatch("meter-@0", @input)
 @end
 ```
 Use in a course: `@meter.display(score)` above `@meter.input(score)`. The display must come first, an event without a listener is dropped (see How the event bus behaves). `"LIA: wait"` keeps the listening script alive. For interpreters up to 2.1.2 use `output="meter-@0"` on the input and `` @input(`meter-@0`) `` in the display instead.
+
+### Pattern 14 — Collaborative widget with a classroom layer (since LiaScript 2.5.0)
+Each participant writes into an own layer, `on` redraws from all visible layers. Works alone and in a classroom; the full vote example with escaping and a version check is in [`reference/classroom.md`](reference/classroom.md).
+```markdown
+@dots: @dots_(@uid)
+
+@dots_
+<canvas id="dots_@0" width="400" height="200" role="img" aria-label="Shared dots"></canvas>
+<script run-once>
+const layer = LIA.classroom.layer('dots:@0')
+const canvas = document.getElementById('dots_@0'), ctx = canvas.getContext('2d')
+canvas.onclick = e => layer.push([e.offsetX, e.offsetY])
+layer.on(layers => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  for (const l of layers) for (const [x, y] of l.values) {
+    ctx.fillStyle = l.color
+    ctx.beginPath(); ctx.arc(x, y, 6, 0, 2 * Math.PI); ctx.fill()
+  }
+})
+""
+</script>
+@end
+```
+Put `persistent: true` in the header so the canvas survives slide changes.
 
 ---
 

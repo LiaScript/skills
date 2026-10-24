@@ -81,6 +81,7 @@ These fail silently — the course renders, just wrong. Check them first when re
 | Run code (JS, Python, SQL, …) | Yes: JS directly; other languages via templates (`liascript-templates` skill) |
 | Animated speaker/avatar for the narration | Since 2.2.0 via a template: `LIA.narrator.registerAvatar` (`liascript-templates` skill); per-step `data-*` annotations (`presentation-pattern.md`) |
 | Talk to an AI agent from the course | Yes, in the DevServer: `agent:` links (`tooling.md`) |
+| Draw, vote or place markers together in a classroom | Since 2.5.0 via a template on `LIA.classroom.layer`, e.g. [CollaborativeDrawing](https://github.com/LiaTemplates/CollaborativeDrawing) (`liascript-templates` skill, `reference/classroom.md`) |
 
 ## Cheatsheet
 

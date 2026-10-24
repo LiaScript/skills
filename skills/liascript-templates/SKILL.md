@@ -99,6 +99,8 @@ persistent: true
 -->
 ```
 
+**Template versions always stay below `1.0.0`** (`0.x.y`) — a convention of the LiaTemplates ecosystem; never bump a template's `version:` to `1.0.0` or higher. Side effect: LiaScript stores no local state (quizzes, classroom layers) for courses below `1.0.0`, so the template's own demo starts empty after a reload. Test persistence in a separate course with `version: 1.0.0` that imports the template.
+
 ---
 
 ## Loading External JS & CSS

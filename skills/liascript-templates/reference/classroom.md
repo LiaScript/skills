@@ -54,8 +54,8 @@ LIA.classroom.unsubscribe(id)
 - **Always call `LIA.classroom.publish(…)` through the object.** LiaScript replaces the function on connect and back on disconnect. A reference taken earlier (`const pub = LIA.classroom.publish`) keeps the stub that only logs "not connected".
 - Without a classroom `publish` drops the message with a console warning.
 - `from` (since 2.5.0) is the sender as a person object. The sender's browser claims it, nobody verifies it. Messages from LiaScript before 2.5.0 arrive without `from`.
-- **Own messages:** whether your own message comes back to your own `subscribe` depends on the backend. Edrys, Nostr, MQTT, Torrent, IPFS, Ably and PubNub echo it, GUN, PeerJS, SimplePeer and WebSocket do not. Update the own view directly after publishing and skip messages with `from && from.me`.
-- In 2.5.0 the Ably and PubNub backends do not deliver messages from other peers to `subscribe`, only the own echo. The Local backend has no pubsub at all. Layers work on all backends; use them when the widget must work everywhere.
+- **Own messages:** whether your own message comes back to your own `subscribe` depends on the backend. Edrys, Nostr, the Trystero backends (MQTT, Nostr, Torrent, IPFS), Ably and PubNub echo it, GUN, PeerJS, SimplePeer and WebSocket do not. Update the own view directly after publishing and skip messages with `from && from.me`.
+- In 2.5.0 the Ably and PubNub backends do not deliver messages from other peers to `subscribe`, only the own echo; fixed in 2.6.0. The Local backend has no pubsub at all. Layers work on all backends; use them when the widget must work everywhere.
 - A new subscriber gets the last message of the topic again, after 100 ms (late slides, revisits). That also holds for `0`, `false` and `""` since 2.5.0. The memory is cleared when the room changes; up to 2.4.0 a room change replayed the last message of the previous room.
 - Messages must survive `JSON.stringify`.
 

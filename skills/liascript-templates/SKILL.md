@@ -128,6 +128,8 @@ Multiple URLs: one per line, indented. Script/tag execution delayed until all lo
 
 **When a file fails to load** (since LiaScript 2.3.1): a loading screen lists the README, every `import:` template and every `script:`/`link:` file with its state, stays until all are done, and warns "Some resources could not be loaded" with a button to proceed. A template that cannot be loaded no longer stops the course: the course starts without its macros, so calls to them show up unexpanded. Up to 2.3.0 a failed template stopped the course with an error. Since 2.3.1 scripts and CSS loaded as blobs (e.g. from raw.githubusercontent.com) are cached by the service worker, so they work offline after the first visit.
 
+**Header scripts can run twice up to LiaScript 2.5.0**: reloading a versioned course from the browser cache ran every `script:` file twice and loaded `link:` styles twice. Keep a template's setup idempotent (`if (!window.myLib) { … }`, register custom elements only if `customElements.get(…)` is empty) as long as courses run on older interpreters. Since 2.6.0 they run once, and leaving a course for the home screen reloads the page, so its scripts and styles are gone there.
+
 ### Inline CSS (not shared when imported)
 ```markdown
 <!--
@@ -362,7 +364,7 @@ In a LiaScript classroom, templates can share state through `window.LIA.classroo
 | `array`/`map`/`text(name)` | one Yjs type everyone edits, room only (experimental) | 2.5.0 |
 
 The rules that break templates most often:
-- **Use a layer for anything that must be remembered.** Pubsub is not stored, and in 2.5.0 the Ably and PubNub backends deliver only the own echo, not other peers' messages.
+- **Use a layer for anything that must be remembered.** Pubsub is not stored, and in 2.5.0 the Ably and PubNub backends deliver only the own echo, not other peers' messages (fixed in 2.6.0).
 - **Visibility follows the mode** like quiz answers: Shared shows all layers, Summary and Details only the own one, the owner sees all. Redraw from the `on((layers, info) => …)` list each time.
 - **Name layers `'<Template>:' + id`.** Names are shared by all templates of a course. `@uid` (`<slide>_<n>`) is the same for every participant, but changes when slides or `@uid` calls before it are added.
 - **Values are frozen JSON copies.** Copy before editing; `push`/`set` return promises that reject with the reason.

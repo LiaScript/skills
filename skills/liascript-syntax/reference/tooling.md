@@ -89,7 +89,7 @@ The agent's MCP tools are `get_state`, `goto`, `outline`, `read_section`, `write
 liaex -i README.md -f <format> -o <output-name>
 ```
 
-- **Formats (`-f`)**: `scorm1.2`, `scorm2004`, `ims`, `web`, `pdf`, `epub`, `docx`, `android`, `linkedData`, `json`, `fullJson`, `presets`. xAPI tracking (`--xapi-*`) and multi-course project websites (`project.yaml`, `--project-*`) are added with their own flags.
+- **Formats (`-f`)**: `scorm1.2`, `scorm2004`, `ims`, `web`, `pdf`, `epub`, `docx`, `h5p`, `android`, `linkedData`, `json`, `fullJson`, `presets`. xAPI tracking (`--xapi-*`) and multi-course project websites (`project.yaml`, `--project-*`) are added with their own flags.
 - **LMS presets**: `liaex -f presets` lists ready-made settings for Moodle 3/4/5, ILIAS, OPAL, OpenOLAT, Open edX, SCORM Cloud and LearnWorlds, e.g. `liaex -i README.md -f presets --moodle4 -o course`.
 - **Export from a repository**: `--git-url` (with `--git-branch`, `--git-subdir`, `--git-file`) instead of `-i`.
 - `liaex serve` opens a browser UI for exporting.

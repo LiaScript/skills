@@ -105,7 +105,7 @@ If the heuristic picks the wrong type for your data, force it explicitly; this w
 
 ### Custom Diagrams with ECharts
 
-For anything the table-driven mechanism can't express, drop to the underlying `lia-chart` web component directly and pass a full [Apache ECharts](https://echarts.apache.org) `option` object in the `option` attribute. The value is parsed as JSON first and otherwise evaluated as a JavaScript object literal, so unquoted keys and even functions work. Optional `renderer="canvas"` switches from the default SVG renderer:
+For anything the table-driven mechanism can't express, drop to the underlying `lia-chart` web component directly and pass a full [Apache ECharts](https://echarts.apache.org) `option` object in the `option` attribute. The value is parsed as JSON first and otherwise evaluated as a JavaScript object literal, so unquoted keys and even functions work. Optional `renderer="canvas"` switches from the default SVG renderer. Since LiaScript 2.6.0 this is ECharts 6 (up to 2.5.0 ECharts 5) with its v5 theme, so charts keep their look; check option names against the ECharts 6 docs:
 
 ```html
 <lia-chart option="{

@@ -2,16 +2,16 @@
 name: liascript-exporter
 description: >
   Generates LiaScript export workflows, GitHub Actions, and project.yaml files for LiaScript repositories.
-  Use when a user wants to: export a LiaScript course to PDF/SCORM/IMS/ePub/DOCX/xAPI/Android/JSON; pick the
+  Use when a user wants to: export a LiaScript course to PDF/SCORM/IMS/ePub/DOCX/xAPI/H5P/Android/JSON; pick the
   right SCORM settings or LMS preset for Moodle 3/4/5, ILIAS, OPAL, OpenOLAT, Open edX, LearnWorlds or SCORM Cloud;
   export straight from a GitHub repository (--git-url) or only a sub-folder of it; create or update a GitHub
   Actions workflow for LiaScript; build a project website (index page) that aggregates multiple courses, with
-  generated PDF/SCORM/ePub/DOCX/xAPI/APK downloads; set up automated deployment to GitHub Pages; add quality
+  generated PDF/SCORM/ePub/DOCX/xAPI/H5P/APK downloads; set up automated deployment to GitHub Pages; add quality
   checks (spell/style) to a LiaScript repo; or asks anything involving the liaex CLI, @liascript/exporter,
   the LiaScript Exporter web app/desktop app, or LiaScript CI/CD. Also triggers on German requests such as
   "Kurs als SCORM für Moodle exportieren", "SCORM-Paket für ILIAS/OPAL erstellen", "LiaScript-Kurs als PDF",
   "Kursübersicht/Projektseite aus mehreren Kursen bauen", "GitHub Action für den LiaScript-Export",
-  "nur einen Unterordner des Repos packen".
+  "nur einen Unterordner des Repos packen", "Quizantworten im SCORM speichern", "als H5P in Moodle".
 license: CC0-1.0
 ---
 
@@ -61,7 +61,7 @@ Use the decision matrix in Section 11 to select format and required flags based 
 - Moodle 3.x → `scorm1.2 --scorm-iframe`
 - Moodle 4.x / OPAL / Open edX / OpenOLAT → `scorm1.2 --scorm-embed`
 - ILIAS / learnworlds.com / scorm.cloud → `scorm2004 --scorm-iframe`
-- State persistence needed → use `scorm2004` (not `scorm1.2`)
+- State persistence needed → add `--scorm-storage suspend` (SCORM 1.2 and 2004, Section 3.1), or use `scorm2004`; plain `scorm1.2` keeps only the slide
 - For a quick one-off export, the built-in presets (`liaex -f presets --<id>`, Section 2.2) are an alternative — but see the caveat there.
 
 ### Step 3: Generate the Artifact
@@ -174,7 +174,7 @@ liaex -i <input-file> -f <format> -o <output-name> [options]
 | | `--git-subdir` | Sub-directory of the clone to use as root |
 | | `--git-file` | Markdown file to export (default: `README.md` or first `.md` found) |
 
-**What gets packed (`-p`):** Packaging formats (SCORM, IMS, web, xAPI, Android) copy a whole folder next to the course. Without `-p` that is the directory of the input file, so `liaex -i course/README.md …` packs only `course/`. Set `-p .` when the course references files outside its own folder (e.g. `../img/`), or `-p some/folder` to restrict packing to one folder. Hidden files are skipped.
+**What gets packed (`-p`):** Packaging formats (SCORM, IMS, web, xAPI, H5P, Android) copy a whole folder next to the course. Without `-p` that is the directory of the input file, so `liaex -i course/README.md …` packs only `course/`. Set `-p .` when the course references files outside its own folder (e.g. `../img/`), or `-p some/folder` to restrict packing to one folder. Hidden files are skipped.
 
 A failed export exits non-zero, so CI steps fail properly.
 
@@ -228,7 +228,7 @@ liaex -f presets --opal --git-url https://github.com/user/repo -o course
 liaex -i README.md --format scorm1.2 --output my-course
 ```
 
-Produces `my-course.zip`. SCORM 1.2 stores only location (not quiz/survey states — use SCORM 2004 for state persistence).
+Produces `my-course.zip`. With the default connector SCORM 1.2 stores only the location, quiz and survey states are lost after a reload — add `--scorm-storage suspend` or use SCORM 2004.
 
 **Key options:**
 | Option | Description |
@@ -239,6 +239,7 @@ Produces `my-course.zip`. SCORM 1.2 stores only location (not quiz/survey states
 | `--scorm-iframe` | Fix for ILIAS, OpenOLAT, learnworlds.com that break startingParameter |
 | `--scorm-embed` | Embeds Markdown into JS code — use for Moodle 4, OPAL, Open edX |
 | `--lia-subfolder` | Places course files in `content/` subfolder (implies `--scorm-embed`) |
+| `--scorm-storage suspend` | Keep the whole learner state and report readable answers (see below); default `default` |
 | `--key` | ResponsiveVoice key for TTS |
 
 **LMS-specific commands:**
@@ -254,6 +255,15 @@ liaex -i course/README.md -f scorm1.2 --scorm-masteryScore 80 --scorm-embed
 
 # scorm.cloud
 liaex -i course/README.md -f scorm2004 --scorm-masteryScore 80 --scorm-iframe
+```
+
+**`--scorm-storage suspend`** (SCORM 1.2 and 2004, exporter 3.5.7, connector part of LiaScript 2.6.0): quizzes, surveys, tasks, the code of code blocks, settings and the last slide are kept compressed in `cmi.suspend_data`, also in SCORM 1.2. Every quiz, survey, task list and code project is reported as one interaction named after its question, with answer, correct answer and result (1.2 as readable text like `Python; HTML`, 2004 with typed interactions). Status: `incomplete` from the start, `completed` once all quizzes and surveys are done, `passed`/`failed` only with a mastery score.
+- In SCORM 1.2 `passed`/`failed`/`completed` end the attempt (Moodle then opens it for review only), so with a mastery score a 1.2 package reports its score only once everything is done.
+- Limits: `cmi.suspend_data` holds 4096 characters in 1.2 (64000 in 2004); if it does not fit, code is dropped first, then tasks, surveys, quizzes (named in the browser console). 1.2 reports at most 255 characters per answer. Code that is edited but never run is not stored. At most 250 elements are reported.
+- Moodle shows 1.2 answers in the activity's *Interactions report* (downloadable for all learners), 2004 answers only under *Track details* per attempt.
+
+```bash
+liaex -i course/README.md -f scorm1.2 --scorm-storage suspend --scorm-masteryScore 80 --scorm-embed
 ```
 
 ---
@@ -430,6 +440,8 @@ Generates a self-contained web package with `tincan.xml` manifest.
 | `--xapi-zip` | Package as zip |
 | `--lia-subfolder` | Place course files in `content/` subfolder |
 
+The package restores the learner's state from the LRS on the next visit (per learner and registration, up to 10000 statements; since LiaScript 2.6.0): last slide (`experienced`), quizzes and surveys (`answered`), task lists and code that was run (`interacted`). Every quiz, survey, task list and code project is a `cmi.interaction` activity named after its question, with options, correct answer and a plain-text answer in `result.extensions["http://liascript.github.io/extensions/answer"]`. If a slide's code blocks changed since the learner started, its code starts afresh.
+
 ---
 
 ### 3.9 Android APK
@@ -496,7 +508,27 @@ liaex -i README.md --format fullJson -o course   # complete parsed course (what 
 
 Writes `course.json` — useful for analyses or custom tooling, not for learners. The format name is case-insensitive.
 
-### 3.12 Project (Index Website)
+### 3.12 H5P
+
+```bash
+liaex -i README.md --format h5p --output course
+```
+
+Produces `course.h5p` for Moodle (H5P activity or content bank), ILIAS, WordPress, Drupal, Lumi and other H5P platforms (exporter 3.5.7). It carries the LiaScript runtime as its own library `H5P.LiaScript`.
+
+| Option | Description |
+|--------|-------------|
+| `--h5p-height` | Height in pixels (default 600); the H5P fullscreen button shows it on the whole screen |
+| `--h5p-mastery` | Percentage of points needed to pass, e.g. `80` (default: completion only) |
+
+- **The first LiaScript package of a platform must be uploaded by an administrator**: installing a library needs `moodle/h5p:updatelibraries` in Moodle, a switched-on right in WordPress/Drupal. After that teachers add courses like any H5P content. h5p.com accepts no own libraries.
+- A platform uses the newest `H5P.LiaScript` it has seen for every LiaScript course, so exporting one course again updates the runtime of all others.
+- Grades: once every quiz is answered and every survey submitted, the course reports `completed` with its points (and passed/failed with `--h5p-mastery`). Answers, tasks, code and the slide are kept in H5P's user data (Moodle: activity setting *Save content state*).
+- Only images, audio, video, PDFs, office documents and fonts are packed; svg images are embedded as data URLs; HTML and JavaScript files are left out with a warning — a course that loads its own scripts from files must load them from a URL.
+
+---
+
+### 3.13 Project (Index Website)
 
 See Section 4 for the full project workflow.
 
@@ -576,7 +608,7 @@ collection:
       - Beginner
 
   # Course that lives in a sub-folder of a larger repository:
-  # pack only that folder into SCORM/IMS/xAPI/APK (see Section 4.5)
+  # pack only that folder into SCORM/IMS/xAPI/H5P/APK (see Section 4.5)
   - url: https://raw.githubusercontent.com/username/monorepo/main/courses/intro/README.md
     path: courses/intro
 
@@ -687,6 +719,7 @@ liaex -i project.yaml --format project --output index --project-search
 | `--project-generate-epub` | Auto-generate ePub for every course |
 | `--project-generate-docx` | Auto-generate DOCX for every course |
 | `--project-generate-xapi` | Auto-generate xAPI package (zip) for every course |
+| `--project-generate-h5p` | Auto-generate H5P package for every course |
 | `--project-generate-android` | Auto-generate Android APK for every course (needs Android SDK/Docker) |
 | `--project-generate-cache` | Skip generation if the file already exists in `./assets/<format>/` |
 | `--project-search` | Enable full-text fuzzy search across all courses |
@@ -701,7 +734,7 @@ Generated downloads are always written relative to the **current working directo
 ./<output>.html
 ./assets/pdf/<hash>.pdf          ./assets/epub/<hash>.epub     ./assets/docx/<hash>.docx
 ./assets/scorm12/<hash>.zip      ./assets/scorm2004/<hash>.zip ./assets/ims/<hash>.zip
-./assets/xapi/<hash>.zip         ./assets/android/<hash>.apk
+./assets/xapi/<hash>.zip         ./assets/android/<hash>.apk   ./assets/h5p/<hash>.h5p
 ```
 
 Consequences:
@@ -709,12 +742,12 @@ Consequences:
 - **`-p` has no effect on this location.** To keep outputs out of the source tree, `cd` into an export directory and pass the YAML by absolute path: `cd "$EXPORT_DIR" && liaex -i "$GITHUB_WORKSPACE/project.yaml" -f project -o index …`. Relative `logo:` paths in the YAML are just copied into the HTML, so copy those image files to the deploy folder too.
 - **Caching** = persist `assets/` between runs (e.g. `actions/cache` on `$EXPORT_DIR/assets`) and add `--project-generate-cache`. A cached file is never refreshed, so content changes in a course are only picked up when the cache key changes — rotate it (e.g. weekly) or drop the cache for fresh downloads.
 - Several YAML files exported from the same directory share one `assets/` folder; identical courses are generated once.
-- SCORM/IMS/xAPI/APK need the full course folder, so the exporter runs `git clone` into **`./tmp/`** and deletes it afterwards (`rm -rf tmp`). Never run a project export in a directory that has its own `tmp/` folder; after a crashed run, delete the leftover `tmp/` or the next clone fails.
-- Cloning only works for `raw.githubusercontent.com/<org>/<repo>/<branch>/<file>` URLs. For other hosts, SCORM/IMS/xAPI/APK are silently not generated for that course, while its card still shows a (broken) download link; PDF/ePub/DOCX still work.
+- SCORM/IMS/xAPI/H5P/APK need the full course folder, so the exporter runs `git clone` into **`./tmp/`** and deletes it afterwards (`rm -rf tmp`). Never run a project export in a directory that has its own `tmp/` folder; after a crashed run, delete the leftover `tmp/` or the next clone fails.
+- Cloning only works for `raw.githubusercontent.com/<org>/<repo>/<branch>/<file>` URLs. For other hosts, SCORM/IMS/xAPI/H5P/APK are silently not generated for that course, while its card still shows a (broken) download link; PDF/ePub/DOCX still work.
 
 ### 4.5 Packing only a sub-folder of a repository
 
-For SCORM/IMS/xAPI/APK, a project export packs the **entire cloned repository** by default — including every other course, slides and large media of a monorepo. Restrict it per course with `path:` (relative to the repository root, like `-p` for single exports):
+For SCORM/IMS/xAPI/H5P/APK, a project export packs the **entire cloned repository** by default — including every other course, slides and large media of a monorepo. Restrict it per course with `path:` (relative to the repository root, like `-p` for single exports):
 
 ```yaml
 collection:
@@ -1041,7 +1074,7 @@ Use directly in a workflow without installing the exporter:
     path: '*.zip'
 ```
 
-Supported `format` values: `scorm1.2`, `scorm2004`, `pdf`, `web`, `ims`, `xapi`, `rdf`, `json`, `project` — for ePub, DOCX or Android install the CLI instead (Section 5.1 / Docker). Inputs use kebab-case (`scorm-mastery-score`, `pdf-print-background`, …); outputs are `output-file`, `file-size`, `format`, `success`.
+Supported `format` values: `scorm1.2`, `scorm2004`, `pdf`, `web`, `ims`, `xapi`, `h5p`, `rdf`, `json`, `project` — for ePub, DOCX or Android install the CLI instead (Section 5.1 / Docker). Inputs use kebab-case (`scorm-mastery-score`, `pdf-print-background`, …); outputs are `output-file`, `file-size`, `format`, `success`.
 
 Full documentation: [action/README.md](https://github.com/liascript/liascript-exporter/blob/HEAD/action/README.md)
 
@@ -1252,7 +1285,7 @@ collection:
 
 12. **Prevent recursive package growth (critical):** never export into the repository source tree when creating multiple formats in one run. Export into an isolated temp directory first, then copy the final artifacts into a clean staging folder for upload. For Docker exports, mount source read-only and outputs on a separate mount.
 
-13. **Pack only what belongs to the course** — `-p <folder>` (single export), `--git-subdir` (git export), `course-path` (Action) or `path:` per course in `project.yaml` (Section 4.5). Without `path:`, project-generated SCORM/IMS/xAPI/APK contain the *whole* repository.
+13. **Pack only what belongs to the course** — `-p <folder>` (single export), `--git-subdir` (git export), `course-path` (Action) or `path:` per course in `project.yaml` (Section 4.5). Without `path:`, project-generated SCORM/IMS/xAPI/H5P/APK contain the *whole* repository.
 
 14. **Project export and `./tmp/`** — the project exporter clones into `./tmp/` and runs `rm -rf tmp` afterwards. Never run it in a folder with a `tmp/` directory you need; remove a leftover `tmp/` after a crashed run.
 
@@ -1276,6 +1309,8 @@ collection:
 | Self-hosted interactive course | `web` | `--web-indexeddb` for persistence |
 | Android app | `android` | `--android-appId` |
 | xAPI / LRS tracking | `xapi` | `--xapi-endpoint` |
+| H5P activity (Moodle, ILIAS, WordPress, Drupal) | `h5p` | `--h5p-mastery` |
+| SCORM that keeps quiz answers | `scorm1.2` / `scorm2004` | `--scorm-storage suspend` |
 | Course catalog website | `project` | `project.yaml` input |
 | Metadata export | `rdf` | `--rdf-format jsonld` |
 | Parsed course data | `json` / `fullJson` | — |
@@ -1284,4 +1319,4 @@ collection:
 
 ---
 
-*Sources: [LiaScript-Exporter GitHub](https://github.com/liascript/liascript-exporter) (verified against source of `@liascript/exporter` 3.4.3--2.1.2, October 2026), [Automating LiaScript Transformations](https://liascript.github.io/blog/automating-liascript-transformations-on-github/), [Quality Checks](https://liascript.github.io/blog/quality-checks-on-liascript-with-github-ensuring-document-excellence/), [Creating Project Websites](https://liascript.github.io/blog/creating-project-websites-with-liascript-exporter/)*
+*Sources: [LiaScript-Exporter GitHub](https://github.com/liascript/liascript-exporter) (verified against source of `@liascript/exporter` 3.4.3--2.1.2, October 2026; `--scorm-storage`, xAPI restore and H5P against 3.5.8--2.6.0, November 2026), [Automating LiaScript Transformations](https://liascript.github.io/blog/automating-liascript-transformations-on-github/), [Quality Checks](https://liascript.github.io/blog/quality-checks-on-liascript-with-github-ensuring-document-excellence/), [Creating Project Websites](https://liascript.github.io/blog/creating-project-websites-with-liascript-exporter/)*

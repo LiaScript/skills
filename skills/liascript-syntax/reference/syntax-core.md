@@ -129,9 +129,9 @@ Links, media, and references (a mix of standard Markdown and LiaScript extension
 ??[embed](https://sketchfab.com/models/xyz)        <!-- generic oEmbed/iframe fallback -->
 ```
 
-**Links to slides** — link to a heading, not to a slide number. `#5` always means the fifth slide and points elsewhere as soon as a slide is added before it. The heading anchor is built from the full heading text: formatting removed, lower case, `-` and runs of spaces become one `-`, punctuation stays. `## 3. Why do leaves fall?` is `#3.-why-do-leaves-fall?`, `## Brüche vergleichen` is `#brüche-vergleichen` (case is ignored, percent-encoding is decoded). Two headings with the same text share one anchor, and the link goes to the **first** of them — e.g. a course title and a chapter title that are equal. An anchor that matches no heading fails silently: a click on it does nothing. Inside the course these links are turned into slide numbers when the slide is rendered, so they always follow the current order. As a deep link from outside (`…/course/?<url>#summary`), a heading anchor works on the first visit, but LiaScript 2.4.0 ignores it when the learner has opened the course before and shows the last visited slide; a slide number works in both cases. Since LiaScript 2.3.1 a `<br>` in a heading counts as a space.
+**Links to slides** — link to a heading, not to a slide number. `#5` always means the fifth slide and points elsewhere as soon as a slide is added before it. The heading anchor is built from the full heading text: formatting removed, lower case, `-` and runs of spaces become one `-`, punctuation stays. `## 3. Why do leaves fall?` is `#3.-why-do-leaves-fall?`, `## Brüche vergleichen` is `#brüche-vergleichen` (case is ignored, percent-encoding is decoded). Two headings with the same text share one anchor, and the link goes to the **first** of them — e.g. a course title and a chapter title that are equal. An anchor that matches no heading fails silently: a click on it does nothing. Inside the course these links are turned into slide numbers when the slide is rendered, so they always follow the current order. As a deep link from outside (`…/course/?<url>#summary`), a heading anchor works on the first visit; a learner who has opened the course before returns to their last visited slide instead. This is intended: the stored progress wins, so a learner who is further along is not sent back. A slide number is followed in both cases. A `<br>` in a heading counts as a space.
 
-**New tab** — every link except `#…` anchors opens in a new tab (external pages, files, other courses). Since LiaScript 2.3.0 these links tell screen readers so; the look is unchanged.
+**New tab** — every link except `#…` anchors opens in a new tab (external pages, files, other courses). These links tell screen readers so, but show no visual marker.
 
 Adjacent media lines (no blank line between them) become a gallery. `?[...](url)` also embeds SoundCloud, Spotify, Deezer, and YouTube Music links as players.
 
@@ -143,10 +143,10 @@ Own video files accept `#t=start,end` (seconds) and the `autoplay`/`muted` attri
 !?[Multimedia](https://www.youtube.com/watch?v=xyz&autoplay=1&mute=1&start=1895&end=1905)
 ```
 
-**Alt text and title of media** — write a real alt text; it is what screen readers announce. Since LiaScript 2.3.0:
-- The alt text names audio, video and embeds (YouTube, Vimeo, `??[…]`) when there is no title; up to 2.2.2 embeds without a title had no name.
-- The `"title"` of images, gallery images, audio, video and `[qr-code]` is only the caption below the media. There is no hover tooltip any more. Iframes still use it as their name. Link titles `[x](url "t")` are unchanged.
-- Images with an alt text can be zoomed with Enter or Space; `![](img.png)` with an empty alt text counts as decorative and is skipped by the keyboard. (Only images without an attribute comment can be zoomed, as before.)
+**Alt text and title of media** — write a real alt text; it is what screen readers announce.
+- The alt text names audio, video and embeds (YouTube, Vimeo, `??[…]`) when there is no title.
+- The `"title"` of images, gallery images, audio, video and `[qr-code]` is only the caption below the media. There is no hover tooltip. Iframes use it as their name. This does not apply to link titles `[x](url "t")`.
+- Images with an alt text can be zoomed with Enter or Space; `![](img.png)` with an empty alt text counts as decorative and is skipped by the keyboard. (Only images without an attribute comment can be zoomed.)
 
 **Floating image + wrapped text** — an image followed *directly* by text, with **no blank line between them**, forms a single paragraph in which the image floats left at up to 50% width and the text flows beside it, like a two-column slide layout:
 
@@ -167,7 +167,7 @@ paragraph below the image instead of floating beside it.
 
 ## Lists, Blockquotes, Tables, Code, HTML
 
-**Lists** — `*`, `+`, `-` for unordered (mixable). Nested lists and continuation paragraphs are indented to line up with the item's text: 2 spaces after `* `, 3 after `1. `. Since LiaScript 1.0 a nested list works with or without a blank line before it; the blank line is still recommended for readability:
+**Lists** — `*`, `+`, `-` for unordered (mixable). Nested lists and continuation paragraphs are indented to line up with the item's text: 2 spaces after `* `, 3 after `1. `. A nested list works with or without a blank line before it; the blank line is still recommended for readability:
 
 ```markdown
 * alpha
@@ -197,7 +197,7 @@ Task/check-lists reuse the list syntax with bracketed checkboxes (list marker `-
 - [X] Done
 ```
 
-Since LiaScript 2.0 a task can carry an **indented block** — more paragraphs, code, images, or a nested task list for sub-goals. Indent the block by 6 spaces so it lines up with the text after `- [ ] ` (the same rule as for quiz options, see `reference/quizzes-surveys.md`'s Options with Markdown Blocks):
+A task can carry an **indented block** — more paragraphs, code, images, or a nested task list for sub-goals. Indent the block by 6 spaces so it lines up with the text after `- [ ] ` (the same rule as for quiz options, see `reference/quizzes-surveys.md`'s Options with Markdown Blocks):
 
 ````markdown
 - [ ] __Chemistry__
@@ -304,7 +304,7 @@ To restyle the *whole* course (colors, fonts, corner radius, dark mode, a corpor
 
 Attach an HTML comment containing HTML attributes (`style`, `class`, `id`, ...) directly before a block, or immediately after an inline element, to style it. LiaScript strips these comments from plain-Markdown rendering, so the source still reads cleanly elsewhere.
 
-"Directly before" is strict: the comment belongs to the block that starts on the next line. A blank line between comment and block detaches it, and the attributes are lost (tested in 2.4.0 for paragraphs, tables, images, lists, code blocks and gap texts; only choice quizzes tolerate it). This matters for every block that takes attributes: images, tables and charts, code blocks, and quizzes (where the block starts at the first option, not at the question — see Quiz Settings in `quizzes-surveys.md`).
+"Directly before" is strict: the comment belongs to the block that starts on the next line. A blank line between comment and block detaches it, and the attributes are lost (tested for paragraphs, tables, images, lists, code blocks and gap texts; only choice quizzes tolerate it). This matters for every block that takes attributes: images, tables and charts, code blocks, and quizzes (where the block starts at the first option, not at the question — see Quiz Settings in `quizzes-surveys.md`).
 
 Block-level (comment goes *before* the block):
 
@@ -381,13 +381,13 @@ $$
 $$
 ```
 
-**Reading formulas aloud** — since LiaScript 2.2.1 screen readers and the narrator read a formula as spoken maths, generated in German or English (other languages fall back to English). Where the generated text is not what you want, put your own after the formula as an attribute comment; it is read instead and also reaches screen readers:
+**Reading formulas aloud** — screen readers and the narrator read a formula as spoken maths, generated in German or English (other languages fall back to English). Where the generated text is not what you want, put your own after the formula as an attribute comment; it is read instead and also reaches screen readers:
 
 ```markdown
 Euler: $e^{i\pi} + 1 = 0$<!-- aria-label="e to the i pi plus one equals zero" -->
 ```
 
-Links in formulas (`\href{url}{text}`, `\url{…}`) stay reachable for screen readers since LiaScript 2.3.0; such a formula is no longer announced as maths, its spoken text is read as hidden text instead.
+Links in formulas (`\href{url}{text}`, `\url{…}`) stay reachable for screen readers; such a formula is not announced as maths, its spoken text is read as hidden text instead.
 
 Chemical equations use the `mhchem` `\ce{...}` command: `$\ce{CO2 + C -> 2 CO}$`.
 

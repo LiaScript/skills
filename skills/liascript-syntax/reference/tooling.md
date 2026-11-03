@@ -4,7 +4,7 @@ The CLI/editor/hosting ecosystem around LiaScript: a local dev server for live-r
 
 ## Running a Course Locally
 
-`@liascript/devserver` (npm package; CLI binary `liascript-devserver`, install with `npm install -g @liascript/devserver`) serves a local folder as a live-reloading LiaScript course. `liascript-devserver --version` prints both the devserver version and the bundled LiaScript interpreter version — check it when a feature (e.g. the 2.0 multi-block quiz options) doesn't render: an older bundled interpreter may not support it yet.
+`@liascript/devserver` (npm package; CLI binary `liascript-devserver`, install with `npm install -g @liascript/devserver`) serves a local folder as a live-reloading LiaScript course. `liascript-devserver --version` prints both the devserver version and the bundled LiaScript interpreter version — check it when a feature doesn't render: an older bundled interpreter may not support it yet.
 
 Flags:
 
@@ -22,17 +22,17 @@ liascript-devserver [-i input] [-n hostname] [-p port] [-l] [-w ext,…] [-o] [-
 | `-n` | `--hostname` | hostname of the server (default: `localhost`) |
 | `-p` | `--port` | port number (default: `3000`) |
 | `-l` | `--live` | live-reload the browser on file change |
-| `-w` | `--watch` | file types that trigger the reload, comma-separated, `*` for all; implies `--live`. Hidden files and `node_modules` never count. Default: `md,html,htm,js,css` plus common image and video types (DevServer ≥ 1.2.17) |
+| `-w` | `--watch` | file types that trigger the reload, comma-separated, `*` for all; implies `--live`. Hidden files and `node_modules` never count. Default: `md,html,htm,js,css` plus common image and video types |
 | `-o` | `--open` | open the course in the default browser |
 | `-t` | `--test` | test online on `https://LiaScript.github.io` |
-|   | `--mcp` | serve as MCP server on stdio for AI agents, started from the agent's MCP config, not by hand (DevServer ≥ 1.2.17, see Agent Bridge below) |
+|   | `--mcp` | serve as MCP server on stdio for AI agents, started from the agent's MCP config, not by hand (see Agent Bridge below) |
 | `-r` | `--responsiveVoice` | enable ResponsiveVoice TTS support, optionally passing your own key; per `--help`, this can slow down reload speed |
 
 Typical usage: run `liascript-devserver -l -o` from a course's project root (the folder containing its `README.md`) to open it in the browser with live reload on save.
 
 ## Agent Bridge (AI agents in the DevServer)
 
-Agent links are an upcoming LiaScript feature. They currently work in DevServer 1.2.17 (bundling LiaScript 2.1.2), which can run as an **MCP server**. An AI agent (Claude Code, Codex, ...) then sees which slide the learner is on and what text they selected. The agent can also navigate the preview, edit sections, and talk to the learner in a chat overlay on top of the course. A course talks to the agent through **agent links**.
+Agent links work in the DevServer, which can run as an **MCP server**. An AI agent (Claude Code, Codex, ...) then sees which slide the learner is on and what text they selected. The agent can also navigate the preview, edit sections, and talk to the learner in a chat overlay on top of the course. A course talks to the agent through **agent links**.
 
 ### Agent links in a course
 
@@ -116,24 +116,24 @@ LiaScript courses are plain Markdown/HTML files interpreted entirely client-side
   https://LiaScript.github.io/course/?<raw-course-url>.md
   ```
 
-  Slides can be deep-linked with a trailing `#<n>`, e.g. `https://liascript.github.io/course/?https://raw.githubusercontent.com/liaScript/docs/master/README.md#5`, or with a heading anchor (`…/README.md#markdown-syntax`, rules in `syntax-core.md`, Links to slides). A heading anchor survives inserted slides, but LiaScript 2.4.0 only follows it on the first visit; for learners who opened the course before, it shows their last visited slide.
+  Slides can be deep-linked with a trailing `#<n>`, e.g. `https://liascript.github.io/course/?https://raw.githubusercontent.com/liaScript/docs/master/README.md#5`, or with a heading anchor (`…/README.md#markdown-syntax`, rules in `syntax-core.md`, Links to slides). A heading anchor survives inserted slides, but it is only followed on the first visit; a learner who opened the course before returns to their last visited slide. This is intended: the stored progress wins.
 
 - **Other sources** — besides plain `https://` raw URLs, the viewer loads:
   - GitLab (including sub-groups and `gitlab.opencode.de`) and Codeberg directly, without a proxy; self-hosted GitLab via `gitlab://host/...` instead of `https://`.
   - Self-hosted Nextcloud shares via `nextcloud://...`.
   - Nostr sources (`npub...`/`nsec...` URIs) and IPFS.
-  - **Course text in the URL**: `https://liascript.github.io/course/?data:text/plain,<url-encoded markdown>` (also `import: data:text…`), for short generated courses. Since LiaScript 2.3.1 such links work offline too.
-  - **From the embedding page** (since LiaScript 2.5.0): inside an iframe, `…/course/?parent:<id>` (or `import: parent:<id>`) asks the embedding page for the course text instead of downloading it, for courses too large for a `data:` URL. LiaScript sends `postMessage({cmd: 'lia-course', param: {uri}}, '*')` to the parent; the parent answers to `iframe.contentWindow` with `{cmd: 'lia-course', param: {uri, ok: true, body: <markdown>}}`, or `ok: false` with the reason in `body`. It fails after 10 s or outside an iframe. Pick the `<id>` per content (e.g. a hash): the stored state of a course is kept per address.
+  - **Course text in the URL**: `https://liascript.github.io/course/?data:text/plain,<url-encoded markdown>` (also `import: data:text…`), for short generated courses. Such links work offline too.
+  - **From the embedding page**: inside an iframe, `…/course/?parent:<id>` (or `import: parent:<id>`) asks the embedding page for the course text instead of downloading it, for courses too large for a `data:` URL. LiaScript sends `postMessage({cmd: 'lia-course', param: {uri}}, '*')` to the parent; the parent answers to `iframe.contentWindow` with `{cmd: 'lia-course', param: {uri, ok: true, body: <markdown>}}`, or `ok: false` with the reason in `body`. It fails after 10 s or outside an iframe. Pick the `<id>` per content (e.g. a hash): the stored state of a course is kept per address.
   - **ZIP archives**: a course (README plus images, scripts, ...) can be hosted as a `.zip` and is extracted on the fly; download links from GitHub, OneDrive, and Dropbox are translated automatically. Courses can also be uploaded as single files or ZIPs on the viewer's start page.
 - **GitHub workflow**: create a (free) GitHub account, commit the course Markdown, and link to it via the raw-URL viewer pattern above. Tagging the repo `liascript`, `liascript-course`, or `liascript-template` makes it discoverable via GitHub's topic pages (`github.com/topics/liascript`, `.../liascript-course`, `.../liascript-template`).
 - **No backend required**: "No further hosting is required, no further compilation step, the JavaScript interpreter of LiaScript does everything else directly within the browser at client-side" — and per the docs, no course or user-progress data is stored server-side.
 - **Offline / PWA**: the interpreter doubles as a reader and installs as a Progressive Web App, storing documents and reading progress locally in the browser for offline use.
-  - **Media for offline use** (since LiaScript 2.3.1, opt-in): "Download media for offline use" in a course's information menu or on its card on the home screen stores the logo, images, audio and video files and the recordings of narrator comments. It collects `http(s)` media from Markdown (`![]()`, `?[]()`, `!?[]()` files, galleries) and from `img`/`video`/`audio`/`source`/`track` in HTML, also HTML that macros and templates produce. Not collected: YouTube, Vimeo and other streams, iframes, CSS `url()`, `srcset`, and media a script creates at runtime. The button is missing in SCORM, xAPI and other LMS packages, which bring their own files. For a course that must work offline, link media as plain files.
-  - Since 2.3.1 the service worker caches only the app itself up front and everything else on first use.
+  - **Media for offline use** (opt-in): "Download media for offline use" in a course's information menu or on its card on the home screen stores the logo, images, audio and video files and the recordings of narrator comments. It collects `http(s)` media from Markdown (`![]()`, `?[]()`, `!?[]()` files, galleries) and from `img`/`video`/`audio`/`source`/`track` in HTML, also HTML that macros and templates produce. Not collected: YouTube, Vimeo and other streams, iframes, CSS `url()`, `srcset`, and media a script creates at runtime. The button is missing in SCORM, xAPI and other LMS packages, which bring their own files. For a course that must work offline, link media as plain files.
+  - The service worker caches only the app itself up front and everything else on first use.
 - **Learner features worth explaining** (nothing to write in the course):
-  - **Loading screen** (since 2.3.1): lists the README, `import:` templates, `script:` and `link:` files with their state and warns if some failed; the course can still be opened. A failed template no longer stops the course, its macros are then missing.
-  - **Hide navigation** (since 2.3.1): in the menu with Textbook/Presentation/Slides, hides the table of contents and header for more space; only a slim column of buttons and the slide arrows stay. Not stored across reloads.
-  - **Kanban board** (since 2.4.0): the home screen can show the stored courses as a list or as a board with own columns; layout and columns are kept only in that browser.
-  - **Accessibility settings** (since 2.3.0): "Do not rely on color alone" in the settings, the system setting "reduce motion", full keyboard operation; the official docs, chapter "Using LiaScript", list the keys.
+  - **Loading screen**: lists the README, `import:` templates, `script:` and `link:` files with their state and warns if some failed; the course can still be opened. A failed template does not stop the course, its macros are then missing.
+  - **Hide navigation**: in the menu with Textbook/Presentation/Slides, hides the table of contents and header for more space; only a slim column of buttons and the slide arrows stay. Not stored across reloads.
+  - **Kanban board**: the home screen can show the stored courses as a list or as a board with own columns; layout and columns are kept only in that browser.
+  - **Accessibility settings**: "Do not rely on color alone" in the settings, the system setting "reduce motion", full keyboard operation; the official docs, chapter "Using LiaScript", list the keys.
 - **Preview cards on other websites** — load `https://liascript.github.io/course/preview-lia.js` and use `<preview-lia src="<raw-course-url>"></preview-lia>`; the card (title, logo, comment from the course header) updates itself client-side. Inside a course, `[preview-lia](<raw-course-url>)` does the same.
 - **LMS embedding**: for importing into an LMS (Moodle, ILIAS, OPAL, etc.), the docs recommend embedding the hosted course via an external-website link or `iframe` — this is the lightweight alternative to a full SCORM/IMS package built with the exporter (see `## Exporting` above).

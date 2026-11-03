@@ -39,7 +39,7 @@ The list of published skills lives in `README.md`; it is not repeated here so it
 
 ## LiaScript versions
 
-The LiaScript skills are checked against the interpreter source. Behaviour that changed between versions is written with the version it depends on, e.g. "after LiaScript 2.1.2 …; up to 2.1.2 …", so a course author knows what works on the interpreter they actually run. Keep the old behaviour as a fallback until most users have the new release, and verify new claims against the source or a test course before writing them down.
+The LiaScript skills are checked against the interpreter source and describe only the current LiaScript release. Do not write version hints ("since 2.x …", "up to 2.1.2 …") or fallbacks for older interpreters: when behaviour changes, replace the old description with the new one. Verify new claims against the source or a test course before writing them down.
 
 ## Updating `README.md`
 

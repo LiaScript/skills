@@ -29,7 +29,7 @@ Radio buttons: `[( )]` not selected, `[(X)]`/`[(x)]` marks the correct option. M
 
 ### Options with Markdown Blocks
 
-Since LiaScript 2.0, an option is no longer limited to one line: like a normal Markdown list item, it can carry an **indented block** — further paragraphs, images, code blocks, lists, even a nested task list or quiz. This works for:
+An option is not limited to one line: like a normal Markdown list item, it can carry an **indented block** — further paragraphs, images, code blocks, lists, even a nested task list or quiz. This works for:
 
 - Multiple-choice and single-choice options (`[[X]]`, `[(X)]`)
 - Hints (`[[?]]`, see Tweaks)
@@ -69,7 +69,7 @@ Separate the option line and its block with a blank line; blank lines between op
 
 Pitfalls:
 
-- **Too little indentation ends the quiz.** After a blank line, text indented less than the marker width is *not* part of the option — it ends the option list and becomes an ordinary paragraph (swallowing any following options into it). This is stricter than before 2.0, so older courses with sloppy indentation may need fixing.
+- **Too little indentation ends the quiz.** After a blank line, text indented less than the marker width is *not* part of the option — it ends the option list and becomes an ordinary paragraph (swallowing any following options into it).
 - **Every option needs a label on the marker line.** Put at least a short label after the marker and attach the block below it. A bare `[[X]]` alone on its line is not a multiple-choice option — it is parsed as a Text-Quiz whose solution is the literal string `X`.
 - The 4-space-indented "code" form works as well: the block then lines up with the text after the marker *including* the 4 leading spaces.
 
@@ -85,7 +85,7 @@ Combines multiple- and multiple single-choice "vector" quizzes into one grid. Th
 
 The column widths in the header and body rows don't have to line up character-for-character — extra spacing is cosmetic only.
 
-Any list marker works for the rows. Up to LiaScript 2.1.2 the **header** row only accepted `-`; a header starting with `+` or `*` did not parse as a matrix. Since 2.2.0 all three markers work, so with an older interpreter use `-` throughout.
+Any list marker (`-`, `+` or `*`) works, for the **header** row as well as for the other rows.
 
 **Header brackets are literal text, not per-column type selectors.** Checkbox-vs-radio is controlled entirely per data row: each row's own *leading* bracket sets the input type for that whole row (`[` = checkboxes, `(` = radio buttons), and every cell within a single data row must use the same bracket style — a row cannot mix `[ ]` and `( )` cells. There is no way to make one column checkboxes and another column radio buttons; the grid is always uniform-per-row. Mixing bracket styles in the header row, expecting it to assign a type per column, does not work — the header always renders as plain text labels, ignored for typing purposes:
 
@@ -99,7 +99,7 @@ This renders exactly the same as a uniform `[[checkbox col] [radio col] [another
 
 ### Text-Quiz
 
-A free-text input compared against a solution string. Does not support a starting dash; indentation is optional. Pressing Enter in the field checks the answer (since 2.1.1).
+A free-text input compared against a solution string. Does not support a starting dash; indentation is optional. Pressing Enter in the field checks the answer.
 
 ```markdown
 What did the fish say when he swam into the wall?
@@ -119,7 +119,7 @@ What is the derivative function of $f(x) = x^6$?
 
 ### Gap-Text Extreme
 
-Embed Text-Quiz (`[[solution]]`) or Selection-Quiz (`[[a|(b)|c]]`) patterns directly inline inside any Markdown block — the input becomes a normal inline element, so it can be wrapped in `**bold**`, `_italic_`, `~strike~`, etc., and its width matches the length of the placeholder text. Since LiaScript 2.3.0 a gap is always wide enough for its solution; up to 2.2.2 gaps could be too narrow for it.
+Embed Text-Quiz (`[[solution]]`) or Selection-Quiz (`[[a|(b)|c]]`) patterns directly inline inside any Markdown block — the input becomes a normal inline element, so it can be wrapped in `**bold**`, `_italic_`, `~strike~`, etc., and its width matches the length of the placeholder text. A gap is always wide enough for its solution.
 
 ```markdown
 __I (learn) [[  have been learning  ]] English for seven years now.__
@@ -135,7 +135,7 @@ __I [[ (have been learning) | ('ve been learning) ]] English for seven years now
 
 ### Drag & Drop
 
-Same as a Selection-Quiz, but written `[->[ ... ]]`: instead of a dropdown, the options are dragged into the blank. Correct options are wrapped in parentheses, and several may be correct (`[->[ (Paris) | (paris) | Rome ]]`). `[->[` is the only arrow form. Since LiaScript 0.17.4.
+Same as a Selection-Quiz, but written `[->[ ... ]]`: instead of a dropdown, the options are dragged into the blank. Correct options are wrapped in parentheses, and several may be correct (`[->[ (Paris) | (paris) | Rome ]]`). `[->[` is the only arrow form.
 
 **Standalone** — a line holding only the blank becomes one large drop zone with the option cards below it. In a script `@input` is the 0-based index of the dropped option in source order, `-1` while empty:
 
@@ -165,9 +165,9 @@ Die [->[Katze]] jagt die [->[Maus]], der [->[(Hund)|Kuh]] bellt.
   ```
 
 - Options can contain inline Markdown and math like Select options.
-- Without a mouse, select a blank first (click, or Enter/Space), then the card. On touch screens dragging starts with press-and-hold (since 2.1.0).
+- Without a mouse, select a blank first (click, or Enter/Space), then the card. On touch screens dragging starts with press-and-hold.
 - `data-show-partial-solution` colors each blank green or red after a check.
-- In a quiz script on a gap text, `@input` holds one entry per drag blank: the index of the dropped word among *that blank's own* options, or `-1` if the blank is empty or holds a word from another blank. For `Die [->[Katze]] jagt die [->[Maus]], der [->[(Hund)|Kuh]] bellt.` solved correctly this is `[0, 0, 0]`. This needs a LiaScript version since 2.2.0; up to 2.1.2 every drag blank reports `-1`, and the state of drag quizzes is not restored after a reload.
+- In a quiz script on a gap text, `@input` holds one entry per drag blank: the index of the dropped word among *that blank's own* options, or `-1` if the blank is empty or holds a word from another blank. For `Die [->[Katze]] jagt die [->[Maus]], der [->[(Hund)|Kuh]] bellt.` solved correctly this is `[0, 0, 0]`.
 
 ### Escaping inside `[[...]]`
 
@@ -191,8 +191,8 @@ Order after the quiz itself: hints → `<script>` → `***` solution block. All 
 
 - **Hints** — any number of `[[?]] hint text` lines (or `- [[?]] hint text` with dashes), revealed one at a time by the "show hint" button. A hint can span several blocks, indented like any other option (6 spaces after `[[?]] `, 8 after `- [[?]] ` — see Options with Markdown Blocks). A blank line between the last answer option and the first hint is tolerated.
 - **Solution** — a block of arbitrary Markdown wrapped between two lines of `***` (3+ asterisks), shown after the quiz is solved or resolved. Any Markdown/media/code is allowed inside. Note `***` has a second, unrelated meaning as the animation/fragment-grouping marker — see `reference/interactivity.md`'s Multi-block animation and `reference/syntax-core.md`'s Horizontal rule note. **There must be zero blank lines between the quiz's last element (the `<script>` block, a `[[?]]` hint, or the answer brackets) and the opening `***`** — a blank line there breaks the parser's ability to recognize the delimiter: the `***` renders as a literal horizontal rule/text instead of being consumed as the solution-block marker, and the "solution" content displays unconditionally instead of being gated behind Check/Show-Solution. A blank line before the *closing* `***` is fine.
-  - **Narrator comments in a solution** (`--{{n}}--` inside the block): since LiaScript 2.2.0 they stay hidden and silent until the quiz is solved or resolved; at that moment only the solution's comments are read aloud. The comment keeps its own step number, the quiz decides when it is shown. Up to 2.1.2 they were listed and read in slides mode right away, revealing the answer. This applies to quizzes at the top level of a slide or inside an animation block, not to quizzes nested in lists, quotes or HTML.
-  - **Scripts in a solution** (`<script>` inside the block) run since 2.2.0 only once the solution becomes visible (also when a stored, already solved state is restored). Up to 2.1.2 they ran on section load, before the solution was rendered, so they could not find its elements.
+  - **Narrator comments in a solution** (`--{{n}}--` inside the block): they stay hidden and silent until the quiz is solved or resolved; at that moment only the solution's comments are read aloud. The comment keeps its own step number, the quiz decides when it is shown. This applies to quizzes at the top level of a slide or inside an animation block, not to quizzes nested in lists, quotes or HTML.
+  - **Scripts in a solution** (`<script>` inside the block) run only once the solution becomes visible (also when a stored, already solved state is restored).
 - **Associated script** — a `<script>` block placed directly after the quiz. Its last statement must evaluate to `true`/`false` to mark the quiz solved/unsolved. `@input` is substituted as raw text before the script runs, so how you quote it changes what you get:
   - **Text-Quiz** (a single `[[solution]]` block): wrap it in backticks/quotes (`` `@input` ``) to force it into a JS string — the user's raw unquoted text isn't valid JS on its own.
   - **Gap-Text** (several `[[...]]` inside one paragraph): leave it **unquoted**. LiaScript already substitutes a JS array literal, with text gaps quoted and selection gaps as indices, e.g. `["dam", 1]`. Wrapping it in backticks turns that array into a single string.
@@ -264,8 +264,8 @@ data-randomize
 | `data-solution-button="off"` | Show/hide the "show solution" button: `on`/`off`, `true`/`false`, `enable`/`disable`. An integer shows it only after that many wrong trials (`0` = immediately, `1` = after the first wrong trial). Default: `on`. |
 | `data-hint-button="2"` | Same values as `data-solution-button`, for the hint button — e.g. reveal hints only after two wrong trials. |
 | `data-show-partial-solution` (short: `data-show-partials`) | For gap texts and matrix quizzes: highlights which gaps (or which matrix rows) are correct and which are wrong, instead of only "all right / wrong". |
-| `data-score="2.5"` | Weight of this quiz in a SCORM export (integer or float, default `1`). Learners don't see it; since 2.0 the classroom's quiz table shows it in a "Score" column. |
-| `data-text-solved="..."`, `data-text-failed="..."`, `data-text-resolved="..."` | Replace the default feedback line for solved, wrong, and resolved (after max trials / show solution). Inline Markdown allowed, so a single emoji works (`data-text-solved="⭐"`); an empty value (`data-text-solved=""`) shows no feedback line at all. Since LiaScript 2.0. |
+| `data-score="2.5"` | Weight of this quiz in a SCORM export (integer or float, default `1`). Learners don't see it; the classroom's quiz table shows it in a "Score" column. |
+| `data-text-solved="..."`, `data-text-failed="..."`, `data-text-resolved="..."` | Replace the default feedback line for solved, wrong, and resolved (after max trials / show solution). Inline Markdown allowed, so a single emoji works (`data-text-solved="⭐"`); an empty value (`data-text-solved=""`) shows no feedback line at all. |
 
 **Where the comment goes** — an attribute comment belongs to the block that follows it. A quiz block starts at its first option line (`- [( )]`, `- [[ ]]`, `[[solution]]`, `[[a|(b)]]`), not at the question. So the order is: question paragraph, blank line, comment, options. For a gap text the quiz block is the paragraph or table holding the gaps, so the comment goes directly above that paragraph.
 
@@ -285,7 +285,7 @@ Right: the question stays a plain paragraph.
 - [(X)] option B
 ```
 
-Write the options directly below the comment. Choice quizzes happen to tolerate a blank line in between (tested in 2.4.0), but a gap text, like every other block, loses the comment after a blank line.
+Write the options directly below the comment. Choice quizzes happen to tolerate a blank line in between, but a gap text, like every other block, loses the comment after a blank line.
 
 **The solution button is on by default.** Without `data-solution-button`, the "show solution" button is visible from the start, also when `data-max-trials` is set. `data-max-trials` only resolves the quiz automatically after the last trial; it does not hide the button. For self-checks, young learners and free-text quizzes switch it off explicitly:
 
@@ -302,7 +302,7 @@ Here the hint button appears after the first wrong trial, and the solution is sh
 
 ### Feedback texts and buttons
 
-The default feedback lines ("Herzlichen Glückwunsch, das war die richtige Antwort", "Die richtige Antwort wurde noch nicht gegeben", ...) come from the course's `language:` localization, so they are fixed per language. Changing `language` or using the translation feature does not change them. Override them per quiz with the `data-text-*` attributes above (verified in LiaScript 2.1).
+The default feedback lines ("Herzlichen Glückwunsch, das war die richtige Antwort", "Die richtige Antwort wurde noch nicht gegeben", ...) come from the course's `language:` localization, so they are fixed per language. Changing `language` or using the translation feature does not change them. Override them per quiz with the `data-text-*` attributes above.
 
 **Course-wide feedback texts:** define the texts once as header macros and use the macros as attribute values. Macros are expanded inside attribute comments, so changing the header changes every quiz:
 
@@ -367,7 +367,7 @@ The [[1]] and the [[2]] and the [[3]].
 </script>
 ```
 
-Return a real array (as above). Up to LiaScript 2.1.2 a result passed as a *string with brackets*, e.g. `send.lia("[true,false]")` or `JSON.stringify(...)`, lost its first and last value, and the quiz counted as solved; since 2.2.0 the brackets are stripped. With an older interpreter send `"true,false"` without brackets.
+Return a real array (as above). A result passed as a *string with brackets*, e.g. `send.lia("[true,false]")` or `JSON.stringify(...)`, also works: the brackets are stripped.
 
 ## Quiz Scripting Patterns
 
@@ -423,13 +423,13 @@ if ("@input(`quiz:37+15`)" == "42") {
 </script>
 ```
 
-**Accessibility** — write the question as an ordinary paragraph directly above the quiz: LiaScript uses it as the quiz's accessible label. If the question needs several blocks (a list, an image, ...), wrap them in one `<div>`; the quiz is then labelled with that element via `aria-labelledby`. A heading directly above does not count. An attribute comment between question and options does not break the link (it belongs to the quiz). Since LiaScript 2.3.0 this works for surveys and task lists too, and also inside animations, lists and quotes; up to 2.2.2 only for quizzes.
+**Accessibility** — write the question as an ordinary paragraph directly above the quiz: LiaScript uses it as the quiz's accessible label. If the question needs several blocks (a list, an image, ...), wrap them in one `<div>`; the quiz is then labelled with that element via `aria-labelledby`. A heading directly above does not count. An attribute comment between question and options does not break the link (it belongs to the quiz). This works for surveys and task lists too, and also inside animations, lists and quotes.
 
-**Clicking the option text** (since LiaScript 2.3.0): the text of a quiz, survey or task option names its checkbox or radio button, but it is no longer a `<label>`. Clicking the text or an image in the option does not tick it any more, only the box itself does. Up to 2.2.2 a click on the text ticked the option.
+**Clicking the option text**: the text of a quiz, survey or task option names its checkbox or radio button, but it is not a `<label>`. Clicking the text or an image in the option does not tick it, only the box itself does.
 
 ## Survey Types
 
-Surveys reuse quiz syntax but without a right answer: brackets contain option identifiers/placeholders instead of a solution, and the UI shows a single "Submit" button (no check or hint buttons, no trials). Since LiaScript 2.2.0 a survey can have a `***` solution block, shown once it is submitted (see Survey Solution Block below). The `@input`/scripting mechanics from quizzes still apply, see Surveys and Scripting below.
+Surveys reuse quiz syntax but without a right answer: brackets contain option identifiers/placeholders instead of a solution, and the UI shows a single "Submit" button (no check or hint buttons, no trials). A survey can have a `***` solution block, shown once it is submitted (see Survey Solution Block below). The `@input`/scripting mechanics from quizzes still apply, see Surveys and Scripting below.
 
 ### Text-Inputs
 
@@ -485,7 +485,7 @@ What are your favorite colors?
 
 ### Survey Vector Blocks
 
-Both vector types also accept list markers (`- [(1)] ...`) and, since LiaScript 2.0, an indented block per option — the same rule as for quizzes (see Options with Markdown Blocks above). The indentation depends on each option's own identifier: `- [(good)] ` is 11 characters wide, so its block is indented by 11 spaces. Options with identifiers of different lengths can be mixed; each block only has to line up with its own marker.
+Both vector types also accept list markers (`- [(1)] ...`) and an indented block per option — the same rule as for quizzes (see Options with Markdown Blocks above). The indentation depends on each option's own identifier: `- [(good)] ` is 11 characters wide, so its block is indented by 11 spaces. Options with identifiers of different lengths can be mixed; each block only has to line up with its own marker.
 
 ```markdown
 How was the pacing of this chapter?
@@ -547,11 +547,11 @@ Which language do you use most?
 
 ### Survey Settings (`data-*` attributes)
 
-Same mechanism as Quiz Settings: an attribute comment directly above the survey. All of these exist since LiaScript 2.1.0, so they need a current interpreter.
+Same mechanism as Quiz Settings: an attribute comment directly above the survey.
 
 | Attribute | Effect |
 |---|---|
-| `data-randomize` | Shuffles vector options, matrix rows, and select/drag-&-drop options. Same behavior as for quizzes. Since 2.2.0 every randomized survey gets its own random order. |
+| `data-randomize` | Shuffles vector options, matrix rows, and select/drag-&-drop options. Same behavior as for quizzes. Every randomized survey gets its own random order. |
 | `data-updates-allowed` (also `data-updates`, `data-update`) | After submitting, the button turns into an "update" button and the answer can be changed and submitted again. Without it a submitted survey is locked. |
 | `data-incompleteness-allowed` (also `data-incompleteness`, `data-incomplete`) | Allows submitting an incomplete answer. Without it, submit only works with a non-empty text, a chosen select/drag option, at least one checked vector option, or an answer in **every** matrix row; otherwise an error message is shown. With it, even an empty survey can be submitted. |
 
@@ -570,7 +570,7 @@ Which topic should we cover next?
 
 ### Survey Solution Block
 
-Since LiaScript 2.2.0 a survey accepts the same `***` solution block as a quiz, with the same rule: no blank line before the opening line. It appears once the survey has been **submitted**, e.g. a thank-you note, the expert's answer to compare with, or a follow-up question. Narrator comments inside it stay hidden and are read aloud only at that moment; scripts inside it run only then. Up to 2.1.2 the block is not tied to the survey and does not wait for the submission.
+A survey accepts the same `***` solution block as a quiz, with the same rule: no blank line before the opening line. It appears once the survey has been **submitted**, e.g. a thank-you note, the expert's answer to compare with, or a follow-up question. Narrator comments inside it stay hidden and are read aloud only at that moment; scripts inside it run only then.
 
 ```markdown
 How do you explain the seasons?
@@ -619,7 +619,7 @@ Please enter some spaces at first:
 
 If you're presenting a course live in the browser, LiaScript can open a "classroom": connected viewers see the same anonymous, aggregated view of quiz and survey results (summary and details views, including quiz scores), plus collaborative code editing and a chat that itself interprets LiaScript syntax. Peer traffic is end-to-end encrypted.
 
-The sync backend is chosen by the user when opening the classroom — the course author does not configure it in the Markdown. Available backends (since LiaScript 2.6.0): Ably, Nostr, GUN, PubNub, WebSocket, PeerJS, SimplePeer, Trystero-MQTT, Trystero-Nostr, Trystero-Torrent, Trystero-IPFS (the Trystero ones need WebRTC), Edrys, and a Local (offline) backend. Up to 2.5.0 the Trystero backends were called MQTT, Torrent and IPFS and P2PT existed; links and saved classrooms with the old names are not recognized by 2.6.0, so share a new classroom link after the update. Since Classrooms 2.0, rooms can be **persistent**: they are kept in a saved-rooms list with a local cache, and the GUN, Nostr, and Ably backends can optionally persist room state beyond the live session. Rooms can be named, password-protected, owned via an owner token, and locked against configuration changes. Without persistence, state only exists while at least one peer is connected.
+The sync backend is chosen by the user when opening the classroom — the course author does not configure it in the Markdown. Available backends: Ably, Nostr, GUN, PubNub, WebSocket, PeerJS, SimplePeer, Trystero-MQTT, Trystero-Nostr, Trystero-Torrent, Trystero-IPFS (the Trystero ones need WebRTC), Edrys, and a Local (offline) backend. Rooms can be **persistent**: they are kept in a saved-rooms list with a local cache, and the GUN, Nostr, and Ably backends can optionally persist room state beyond the live session. Rooms can be named, password-protected, owned via an owner token, and locked against configuration changes. Without persistence, state only exists while at least one peer is connected.
 
 The two Text-Input variants (see above) are aggregated differently in the classroom view: a one-line text input (single underscore group) is shown as a **word cloud**, with comma-separated terms across all submissions counted and sized by frequency — good for single-word/short-phrase answers. A `textarea` (multiple underscore groups) is shown as a list of each submitter's full response, one below another — good for longer free-text answers where you want to read full sentences, not aggregate keywords. Pick the field type with this in mind, not just for its row count.
 

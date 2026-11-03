@@ -121,6 +121,12 @@ instead, from a script (`el.click()` — they sit in closed menus): `#lia-btn-li
 `#lia-mode-textbook/-presentation/-slides`, the "Hide navigation" button in the mode menu,
 `#lia-btn-toc`.
 
+`scripts/preview.py` does all of this. With your own headless Chromium, liascript.github.io
+cannot fetch a course from `localhost` until Private Network Access is off:
+`--disable-features=PrivateNetworkAccessChecks,BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks`
+(otherwise LiaScript shows "Ups, something went wrong"). After a reload LiaScript returns to the
+last visited slide, so switch slides with `location.hash = '#3'` in the running page.
+
 Sections are addressed as `#1`, `#2`, … in the URL. The content of a section scrolls
 inside the slide, so prefer a tall viewport over `fullPage` screenshots.
 

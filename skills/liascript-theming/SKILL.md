@@ -1,24 +1,18 @@
 ---
 name: liascript-theming
 description: >
-  Restyle the look of a LiaScript course — colors, fonts, font sizes, corner radius,
-  borders, shadows, surfaces, light and dark mode — by generating a tested header block
-  (`link:` + `@style … @end` + `@custom … @end`) for the course's README.md. Works from a
-  textual description ("calm, academic, dark blue, rounded"), from a PowerPoint/.potx
-  (extracts theme colors, fonts, sizes, shapes and the colors actually used), from an image,
-  photo, logo or screenshot (palette + mood), or from a PDF / website / corporate design
-  guide. Use when someone wants to change, customize, brand or theme a LiaScript course,
-  match a corporate design (CI/CD), recreate the style of slides or a picture, add a dark
-  mode, or asks about LiaScript's CSS variables, `custom:` macro, `@style` or theme classes.
-  Also triggers on German requests such as "Design des Kurses ändern", "eigenes Theme",
-  "Farben und Schriften anpassen", "wie meine PowerPoint aussehen lassen",
-  "Stil/Stimmung aus dem Bild übernehmen", "Corporate Design für LiaScript",
-  "CSS-Variablen in LiaScript". Ships ready-made designs that can be applied by name
-  in one step: paper-ink, sunset-lake, candy, beehive, chalkboard (Tafel & Heft /
-  Kreidetafel), watercolor (Aquarell), manuscript (Codex / Mittelalter / alte
-  Bibelhandschrift) — e.g. "nimm das Chalkboard-Theme", "apply the manuscript design".
-  For general course syntax see liascript-syntax; for shipping a theme as an importable
-  template see liascript-templates.
+  Use when someone wants to change, customize, brand or theme the look of a
+  LiaScript course — colors, fonts, font sizes, corner radius, borders, shadows,
+  light and dark mode — from a description ("calm, academic, dark blue, rounded"),
+  a PowerPoint/.potx, an image, photo, logo or screenshot, or a PDF, website or
+  corporate design guide (CI/CD), or asks about LiaScript's CSS variables,
+  `custom:`, `@style` or theme classes. Ready-made designs by name: paper-ink,
+  sunset-lake, candy, beehive, chalkboard (Tafel & Heft, Kreidetafel), watercolor
+  (Aquarell), manuscript (Codex, Mittelalter). German triggers: "Design des Kurses
+  ändern", "eigenes Theme", "Farben und Schriften anpassen", "wie meine PowerPoint
+  aussehen lassen", "Stimmung aus dem Bild übernehmen", "Corporate Design für
+  LiaScript", "nimm das Tafel-Design". For course syntax see liascript-syntax; for
+  an importable theme template see liascript-templates.
 license: CC0-1.0
 ---
 
@@ -74,13 +68,14 @@ the dark palette and the contrast checks (steps 3–4).
 | `examples/*.json` + `examples/README.md` | seven finished themes — from text (Paper & Ink, Tafel & Heft, Aquarell, Codex), an image (Sunset Lake) and two PPTX decks (Candy, Beehive) — with design notes and SVG assets | as starting points and for calibration |
 
 Scripts (Python 3 standard library; `image_palette.sh` needs ImageMagick; `--render` needs
-LibreOffice + poppler):
+LibreOffice + poppler; `preview.py` needs chromium):
 
 | Script | Does |
 |---|---|
 | `scripts/build_theme.py theme.json [--inject course.md] [--css out.css] [--check]` | tokens → header block, dark palette, WCAG report, layout/density/motion features, `embed:` assets, idempotent injection |
 | `scripts/pptx_theme.py deck.pptx [--draft theme.json] [--render dir]` | PPTX/POTX → report of theme + actually used colors, fonts, sizes, shapes; draft tokens; slide PNGs |
 | `scripts/image_palette.sh image [n]` | dominant colors with share, lightness, saturation, role hint, mean lightness |
+| `scripts/preview.py course.md outdir [--slides 1,2] [--views textbook,presentation]` | screenshots of every slide in light and dark mode, in the real LiaScript (headless chromium) |
 | `scripts/serve.py course-dir [--port N] [--app dist]` | serve a course with CORS and print the preview URL |
 
 ## Workflow
@@ -101,15 +96,14 @@ LibreOffice + poppler):
    `--css theme.css` also writes a plain stylesheet.
 4. **Fix contrast failures** (FAIL = must fix; warn = judge). A too-light brand color is
    automatically darkened for functional use — keep the original as decoration in `extra_css`.
-5. **Render and look** (strongly recommended). Serve the course with CORS:
-   `python3 scripts/serve.py <course-dir>` → open the printed liascript.github.io URL (or,
-   with a local LiaScript build, `--app <dist>`). Check light + dark, textbook +
-   presentation mode, the settings panel's color swatches and
-   "Hide navigation" in the mode menu. With a scriptable browser
-   (Playwright, Puppeteer, Chrome DevTools) set the reader settings via
-   `localStorage.settings` = `{"theme":"default","light":false,"mode":"Presentation",…}`
-   and reload, or click the buttons (`#lia-btn-light-mode`, `#lia-mode-presentation`) —
-   see `reference/mechanisms.md`. Iterate on `theme.json`, not on the output.
+5. **Render and look** — every time, also for a ready-made design:
+   `python3 scripts/preview.py course.md shots/ --slides 1,2,3 --views textbook,presentation`
+   saves light and dark screenshots of each slide on liascript.github.io (the current
+   release; `--app <dist>` for a local build) in about 15 seconds. Look at every image:
+   fonts loaded, title and text contrast, buttons, tables, quiz, the existing content.
+   For the settings panel's color swatches or "Hide navigation", serve the course with
+   `python3 scripts/serve.py <course-dir>` and open the printed URL in a browser.
+   Iterate on `theme.json`, not on the output.
 6. **Deliver**: the injected header (or block + `theme.json` so the user can rebuild), a
    short description of the design decisions, and any contrast/gap caveats.
 

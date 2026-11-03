@@ -64,6 +64,12 @@ details, .lia-quote, .lia-code__input, .lia-table-responsive, .lia-card {
 :root:is(.lia-theme-default, .lia-theme-custom).lia-variant-dark .lia-navigation--hidden :is(#lia-btn-toc, #lia-btn-prev, #lia-btn-next, #lia-btn-sound, .lia-support-menu__item > button, .lia-support-menu__item > a.lia-btn) {
   color: rgb(var(--color-highlight-dark));
 }
+/* TOC separators use the light palette grey in every mode (glaring in dark mode);
+   follow the theme border instead */
+:root .lia-toc__content a.lia-toc__link--is-lvl-2::after,
+:root .lia-toc__bottom::after {
+  background-color: rgb(var(--color-border));
+}
 /* alternating table rows: LiaScript uses a neutral grey in dark mode;
    survey matrices render the row statements as th */
 :root.lia-variant-dark .lia-table.is-alternating .lia-table__row:nth-child(2n) :is(td, th) {

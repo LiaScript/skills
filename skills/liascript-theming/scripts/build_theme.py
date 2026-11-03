@@ -92,6 +92,10 @@ def derive_dark(light):
     bg = from_hls(h, 0.11, min(s, 0.25))
     text = from_hls(h, 0.91, min(s, 0.15))
     fill = acc
+    # a dark accent vanishes on the dark background: lift it to 3:1 (icons, fills),
+    # which still leaves room for 4.5:1 against the white button labels
+    if contrast(fill, bg) < 3.0:
+        fill = push_contrast(fill, bg, 3.0, +1)
     if contrast(fill, WHITE) < 4.5:
         fill = push_contrast(fill, WHITE, 4.5, -1)
     return {

@@ -1,6 +1,6 @@
 # Export formats and presets
 
-Every format with its options, checked against `@liascript/exporter` 3.5.14. Presets first, then one section per format.
+Every format with its options, checked against `@liascript/exporter` 3.6.2. Presets first, then one section per format.
 
 ### 2.2 Presets (LMS shortcuts)
 
@@ -186,7 +186,7 @@ Title, author, language, description and cover default to the course header (`ti
 | `--epub-title` | Title of the book (default: course title) |
 | `--epub-author` | Semicolon-separated for multiple authors (default: `author:` from header) |
 | `--epub-publisher` | Publisher name |
-| `--epub-cover` | Path or URL to cover image |
+| `--epub-cover` | Path or URL to cover image (default: the course `logo`; a URL that cannot be loaded leaves the book without cover, with a warning) |
 | `--epub-description` | Book description |
 | `--epub-language` | 2-letter language code (default: `en`) |
 | `--epub-version` | EPUB version: `2` or `3` (default: 3) |
@@ -285,6 +285,26 @@ Produces `output.apk` (debug build by default). Uses Capacitor.js. Best done via
 In CI, pass signing secrets via the environment variables, never as literal flags in the workflow file. Play Store publishing steps: [PLAYSTORE_GUIDE.md](https://github.com/LiaScript/LiaScript-Exporter/blob/master/PLAYSTORE_GUIDE.md).
 
 > `--android-splash` / `--android-splashDuration` from older docs are no longer read by the exporter.
+
+---
+
+### 3.9b Desktop app (macOS, Windows, Linux)
+
+Wraps the offline web export into a [Neutralinojs](https://neutralino.js.org/) app that uses the system webview (no bundled browser). Builds on any system in seconds, offline, without Xcode, Wine or Docker:
+
+```bash
+liaex -i README.md -f desktop --desktop-appId io.github.example.course -o out/kurs
+# → out/kurs-win-x64.exe   out/kurs-mac-universal.zip   out/kurs-linux-x64.zip
+```
+
+| Option | Meaning |
+|---|---|
+| `--desktop-appId` | **required**, reverse-domain id |
+| `--desktop-appName` | app name (default: course title) |
+| `--desktop-icon` | PNG, 1024×1024 (default: LiaScript logo) |
+| `--desktop-platform` | subset of `mac,win,linux` (default: all three) |
+
+The `.exe` carries the course inside; the mac zip holds one universal `.app`, the Linux zip a folder with the binary and `resources.neu`. The apps are unsigned: macOS needs right-click → Open (or `xattr -cr App.app`), Windows SmartScreen → More info → Run anyway; Linux needs `libwebkit2gtk-4.1`. There is no `--project-generate-desktop`.
 
 ---
 

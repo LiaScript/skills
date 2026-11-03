@@ -1,0 +1,19 @@
+/* Campus: dark blue and gold, classic serif headings.
+   Load after the base theme:  link: [theme.css, themes/campus.css] */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Source+Sans+3:wght@400;600&display=swap');
+
+:root {
+  --accent: #003366; --accent-dark: #001f3f;
+  --hero-from: rgba(0, 51, 102, .94); --hero-to: rgba(201, 162, 39, .60);
+  --paper: #f4f6f9; --card: #ffffff; --ink: #0d1b2a; --muted: #4a5a6a;
+  --radius: 6px;
+  --font-head: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Sans 3', system-ui, sans-serif;
+  --gold: #c9a227;
+}
+.card-img-top { border-bottom: 3px solid var(--gold); }
+.btn-secondary { box-shadow: inset 0 -3px 0 var(--gold); }
+#chipsContainer .badge { color: var(--accent); box-shadow: inset 0 -2px 0 var(--gold); }
+.col-12 > .card > .card-header::after { content: ""; display: block; width: 3rem; height: 3px;
+  margin-top: .4rem; background: var(--gold); }
+footer { border-top: 4px solid var(--gold); }

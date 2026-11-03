@@ -1,0 +1,43 @@
+# GitLab CI: several project pages (one per design) with all downloads,
+# published with GitLab Pages at https://<namespace>.gitlab.io/<project>/.
+# Save as .gitlab-ci.yml in the repository root, next to the YAML files,
+# theme.css, themes/ and translate-de.sed.
+# The courses may come from GitHub (raw.githubusercontent.com/…) and from
+# GitLab (https://gitlab.com/<group>/<repo>/-/raw/<branch>/<file>).
+
+pages:
+  image: node:22-bookworm
+  variables:
+    PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
+    # node images have no Chrome (GitHub's runners do): use Debian's chromium
+    PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+    PUPPETEER_SKIP_DOWNLOAD: "true"
+  cache:
+    # generated downloads, kept between pipelines. A cached file is never
+    # rebuilt: for fresh downloads raise the number in the key, or press
+    # "Clear runner caches" under Build > Pipelines.
+    # (cache:key:files would take at most two files.)
+    key: liaex-assets-v1
+    paths: [public/assets]
+  before_script:
+    # chromium for PDF and DOCX; it brings its libraries along
+    - apt-get update
+    - apt-get install -y --no-install-recommends chromium fonts-liberation ca-certificates git
+    - npm install -g @liascript/exporter
+    - liaex --version
+  script:
+    - |
+      for page in index campus night schule; do
+        liaex -i "$page.yaml" -f project -o "public/$page" \
+          --project-search \
+          --project-generate-scorm12 --project-generate-scorm2004 \
+          --project-generate-ims --project-generate-xapi --project-generate-h5p \
+          --project-generate-pdf --project-generate-epub --project-generate-docx \
+          --pdf-timeout 60000 \
+          --project-generate-cache
+      done
+    - for f in public/*.html; do sed -i -f translate-de.sed "$f"; done
+  artifacts:
+    paths: [public]
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

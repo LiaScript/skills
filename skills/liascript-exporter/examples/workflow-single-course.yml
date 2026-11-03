@@ -15,18 +15,18 @@ permissions:
 
 jobs:
   export:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       EXPORT_DIR: /tmp/lia-exports-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: project
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
 

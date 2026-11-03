@@ -1,0 +1,21 @@
+/* Schule: bright, rounded, comic-like cards with hard shadows.
+   Load after the base theme:  link: [theme.css, themes/school.css] */
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Nunito:wght@400;700&display=swap');
+
+:root {
+  --accent: #e8590c; --accent-dark: #c2410c;
+  --hero-from: rgba(232, 89, 12, .88); --hero-to: rgba(250, 176, 5, .78);
+  --paper: #fff8e7; --card: #ffffff; --ink: #3b2f2f; --muted: #6b5b5b;
+  --radius: 22px;
+  --font-head: 'Baloo 2', 'Comic Sans MS', cursive;
+  --font-body: 'Nunito', system-ui, sans-serif;
+}
+.card { border: 3px solid var(--ink) !important; box-shadow: 6px 6px 0 var(--ink) !important; }
+.card:hover { transform: rotate(-1deg) translateY(-3px); box-shadow: 9px 9px 0 var(--ink) !important; }
+.col-12 > .card { border: 0 !important; box-shadow: none !important; }
+.card-img-top { border-bottom: 3px solid var(--ink); }
+.btn-secondary { border: 2px solid var(--ink); font-weight: 700; }
+.card .badge.bg-light { border: 2px solid var(--ink); }
+main > .container-fluid h1 { text-shadow: 3px 3px 0 rgba(0, 0, 0, .25); }
+footer { background: var(--accent-dark); color: #fff !important; }
+footer a { color: #fff3bf; }

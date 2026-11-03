@@ -1,4 +1,4 @@
-# GitHub Actions, GitHub Pages and PDF in CI
+# GitHub Actions, GitHub Pages, GitLab CI and PDF in CI
 
 ## 5. GitHub Actions Workflows
 
@@ -19,17 +19,17 @@ permissions:
 
 jobs:
   generate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       EXPORT_DIR: /tmp/lia-exports-${{ github.run_id }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: project
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
 
@@ -84,13 +84,13 @@ permissions:
 
 jobs:
   run_exporter:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Install LiaScript Exporter
         run: npm install -g @liascript/exporter
 
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Generate project website
         run: liaex -i project.yaml --format project --output index
@@ -135,7 +135,7 @@ permissions:
 
 jobs:
   run_exporter:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # Fixed path outside the repo: liaex writes ./assets/<format>/ into its CWD
       SITE_DIR: /tmp/lia-site
@@ -144,7 +144,7 @@ jobs:
         run: npm install -g @liascript/exporter
 
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Prepare site directory and cache week
         id: week
@@ -153,7 +153,7 @@ jobs:
           echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
 
       - name: Restore generated downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/lia-site/assets
           # Cached files are never refreshed by liaex; rotating the key weekly
@@ -237,19 +237,19 @@ on:
 
 jobs:
   cspell-spellcheck:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install cspell
         run: npm install -g cspell
       - name: Run spell check
         run: npx cspell --locale en-US --show-suggestions "**/*.md"
 
   write-good:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Install write-good
@@ -258,10 +258,10 @@ jobs:
         run: npx write-good *.md
 
   alex:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Install alex
@@ -270,13 +270,13 @@ jobs:
         run: npx alex *.md
 
   proselint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
       - name: Install proselint
@@ -304,7 +304,7 @@ Use directly in a workflow without installing the exporter:
     # course-path: 'courses/intro'   # folder to pack, like -p (default: folder of input-file)
 
 - name: Upload SCORM
-  uses: actions/upload-artifact@v4
+  uses: actions/upload-artifact@v7
   with:
     name: scorm-package
     path: '*.zip'
@@ -370,7 +370,7 @@ Puppeteer (headless Chrome) requires two things on GitHub Actions runners:
   run: liaex -i README.md --format pdf --output output --pdf-timeout 60000
 ```
 
-**2. Chromium system libraries (Ubuntu 24 / `ubuntu-latest`):**
+**2. Chromium system libraries (`runs-on: ubuntu-24.04`):**
 ```yaml
 - name: Install Chromium system dependencies
   run: |
@@ -382,4 +382,20 @@ Puppeteer (headless Chrome) requires two things on GitHub Actions runners:
       fonts-liberation ca-certificates wget
 ```
 
-> ⚠️ **Ubuntu 24 uses `libasound2t64`**, not `libasound2`. The old package name causes `apt-get` to fail on `ubuntu-latest` runners.
+> ⚠️ **Ubuntu 24 uses `libasound2t64`**, not `libasound2`; the old name makes `apt-get` fail. Pin `runs-on: ubuntu-24.04`: `ubuntu-latest` moves to Ubuntu 26 from October 2026, where this list is untested. All workflows here use the Node-24 action versions (`checkout@v7`, `setup-node@v7`, `cache@v6`, `upload-artifact@v7`); the `@v4` ones run on the deprecated Node 20.
+
+---
+
+## 10. GitLab CI and GitLab Pages
+
+GitLab Pages publishes the `public/` folder that a job named **`pages`** leaves as artifact; the site appears at `https://<namespace>.gitlab.io/<project>/` (Deploy → Pages shows the exact address — in a sub-group `https://<group>.gitlab.io/<subgroup>/<project>/`, or a unique `*.gitlab.io` domain if that is switched on — and the visibility). No branch, no extra deploy step.
+
+`examples/project-site/gitlab-ci.yml` is the multi-page project from `deploy-several-pages.yml` as a `.gitlab-ci.yml`. Its job script was run in the `node:22-bookworm` image with four pages and five courses from GitHub and gitlab.com: 35 downloads (SCORM 1.2/2004, IMS, xAPI, H5P, PDF, DOCX), all links working; about 13 minutes for the first page, 15–20 s for each further page from the cache. What differs from GitHub Actions:
+
+- **The `node:*` images have no Chrome** (GitHub's runners do), so PDF and DOCX fail with Puppeteer's "Could not find Chrome". Install Debian's `chromium` (it brings its libraries; no `libasound2t64` list needed) and set `PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium`, `PUPPETEER_SKIP_DOWNLOAD: "true"` (skips Puppeteer's own Chrome download during `npm install`) and, as on GitHub, `PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"`.
+- **`git` must be in the image** for the clones behind SCORM/IMS/xAPI/H5P (`node:22-bookworm` has it; install it in slim images).
+- **Write the output to `public/`** inside the checkout (`-o public/index`) — the clones for the packages are fresh copies of the course repositories, not the CI checkout, so nothing is packed twice. Never commit `public/`.
+- **Cache `public/assets`** with `--project-generate-cache` under a fixed key (`key: liaex-assets-v1`). For fresh downloads after course changes raise the number or press **Clear runner caches** (Build → Pipelines). `cache:key:files` accepts at most two files, so it cannot list several page YAMLs.
+- `rules: - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH` builds only the default branch.
+
+Courses hosted on GitLab go into `project.yaml` as `https://gitlab.com/<group>/<repo>/-/raw/<branch>/<file>` (see `reference/project.md` §4.4); a single course from GitLab: `liaex --git-url https://gitlab.com/<group>/<repo>/-/blob/<branch>/<file> -f …`.

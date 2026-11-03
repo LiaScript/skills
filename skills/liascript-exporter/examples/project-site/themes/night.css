@@ -1,0 +1,23 @@
+/* Night: a dark page with light text and a bright accent.
+   Load after the base theme:  link: [theme.css, themes/night.css] */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&family=Inter:wght@400;600&display=swap');
+
+:root {
+  --accent: #7dd3fc; --accent-dark: #38bdf8;
+  --hero-from: rgba(15, 23, 42, .90); --hero-to: rgba(76, 29, 149, .75);
+  --paper: #0f172a; --card: #1e293b; --ink: #e2e8f0; --muted: #94a3b8;
+  --radius: 16px;
+  --font-head: 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+body, .album.bg-light { color: var(--ink); }
+.card { box-shadow: 0 0 0 1px #334155, 0 8px 24px rgba(0, 0, 0, .35) !important; }
+.card .badge.bg-light { background: color-mix(in srgb, var(--accent) 18%, var(--card)) !important;
+  color: var(--accent) !important; }
+.btn-secondary, .btn-secondary:hover, .btn-secondary:focus { color: #0f172a; }
+.dropdown-menu { background: #1e293b; box-shadow: 0 0 0 1px #334155, 0 8px 24px rgba(0, 0, 0, .5); }
+.dropdown-item { color: var(--ink); }
+.dropdown-item:hover, .dropdown-item:focus { background: #334155; color: #fff; }
+.col-12 > .card > .card-header { color: var(--ink); }
+#categorySelect { background-color: #1e293b; color: var(--ink); }
+footer { background: #020617; }

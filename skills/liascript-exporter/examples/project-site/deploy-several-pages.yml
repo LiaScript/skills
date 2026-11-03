@@ -1,0 +1,88 @@
+# Several project pages (here: one per design) that share one set of downloads,
+# deployed to GitHub Pages. Tested on GitHub Actions with @liascript/exporter
+# 3.5.14: 4 pages, 4 courses x 7 formats (SCORM 1.2/2004, IMS, xAPI, H5P, PDF,
+# DOCX) — about 10 minutes for the first run, about 2 with the cache.
+# Repository: index.yaml, campus.yaml, … (each with `link: [theme.css, …]`),
+# theme.css, themes/, translate-de.sed. Settings → Pages: branch gh-pages.
+
+name: Deploy project pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * 1'        # weekly: pick up changes in the courses
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04     # the apt package list below is tested there
+    env:
+      # liaex writes assets/<format>/ next to the page: keep that out of the repo
+      SITE_DIR: /tmp/lia-site
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install LiaScript Exporter
+        run: npm install -g @liascript/exporter
+
+      - name: Install Chromium libraries (PDF, ePub, DOCX)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgbm-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libpango-1.0-0 libcairo2 libasound2t64 libnss3 libnspr4 \
+            fonts-liberation ca-certificates
+
+      - name: Prepare site directory and cache week
+        id: week
+        run: |
+          mkdir -p "$SITE_DIR"
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore generated downloads
+        uses: actions/cache@v6
+        with:
+          path: /tmp/lia-site/assets
+          # cached files are never rebuilt; a new key every week refreshes them
+          key: lia-assets-${{ hashFiles('*.yaml') }}-${{ steps.week.outputs.week }}
+
+      - name: Generate pages with downloads
+        env:
+          PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
+        run: |
+          # the pages share assets/: the first one builds the packages, the others reuse them
+          for page in index campus night schule; do
+            liaex -i "$page.yaml" -f project -o "$SITE_DIR/$page" \
+              --project-search \
+              --project-generate-scorm12 --project-generate-scorm2004 \
+              --project-generate-ims --project-generate-xapi --project-generate-h5p \
+              --project-generate-pdf --project-generate-epub --project-generate-docx \
+              --pdf-timeout 60000 \
+              --project-generate-cache
+          done
+
+      - name: Collect files to publish
+        run: |
+          mkdir -p public
+          # pages, assets/ and the stylesheets copied from `link:`
+          cp -r "$SITE_DIR"/. public/
+          # German page texts (the exporter writes English ones)
+          for f in public/*.html; do sed -i -f translate-de.sed "$f"; done
+          ls -R public | head -60
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public
+          force_orphan: true

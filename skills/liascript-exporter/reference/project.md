@@ -4,7 +4,7 @@ A course catalog page built from a `project.yaml`, with per-course downloads.
 
 ## 4. Project Website (`project.yaml`)
 
-**Every `url` must be reachable over `http(s)`.** The exporter hands each URL to LiaScript, which downloads it; a local path (`url: courses/intro/README.md`) aborts the **whole** project export with "Export failed: it stopped without writing any output". Use `raw.githubusercontent.com` URLs (needed for SCORM/IMS/xAPI/H5P/APK anyway) — so the courses must be pushed before the project page can be built.
+**Every `url` must be reachable over `http(s)`.** The exporter hands each URL to LiaScript, which downloads it; a local path (`url: courses/intro/README.md`) aborts the **whole** project export with "Export failed: it stopped without writing any output". Use raw file URLs from GitHub (`raw.githubusercontent.com/…`) or GitLab (`…/-/raw/<branch>/<file>`) — needed for SCORM/IMS/xAPI/H5P/APK anyway — so the courses must be pushed before the project page can be built.
 
 A project website is a single `index.html` that aggregates multiple LiaScript courses into a searchable, filterable catalog.
 
@@ -66,6 +66,9 @@ collection:
     tags:
       - Tutorial
       - Beginner
+
+  # Course on GitLab (gitlab.com or self-hosted): use the -/raw/ link
+  - url: https://gitlab.com/group/repo/-/raw/main/README.md
 
   # Course that lives in a sub-folder of a larger repository:
   # pack only that folder into SCORM/IMS/xAPI/H5P/APK (see §4.5)
@@ -186,6 +189,8 @@ liaex -i project.yaml --format project --output index --project-search
 All format-specific flags (`--pdf-*`, `--scorm-*`, `--epub-*`, …) can be passed alongside and apply to every course; per-course `arguments:` override them.
 
 
+LMS options apply to every package of the project: `--project-generate-scorm12 --scorm-embed` gives Moodle-4-ready SCORM downloads for all courses (per course: `arguments:`).
+
 ### 4.4 Where generated files go (and how caching works)
 
 Generated downloads are written to `assets/` **next to the output file** (`-o`), named by a hash of the course URL, and linked from the page as relative paths:
@@ -204,7 +209,7 @@ Consequences:
 - Several YAML files exported from the same directory share one `assets/` folder; identical courses are generated once.
 - SCORM/IMS/xAPI/H5P/APK need the full course folder: for every such course the exporter clones its repository into a fresh system temp directory and removes it afterwards. This happens on every run, **also when all packages are cached** — the cache saves the packaging, not the clone, so a cached run still takes a few seconds per course (more on a slow network).
 - The clone is the folder that gets packed, so **the branch must not contain exports**: generated `assets/`, ZIP/H5P/PDF files or the project page committed there end up in every package, which then grows with each run. Deploy the site to `gh-pages`, keep exports out of `main` (`.gitignore`), and restrict packing with `path:`.
-- Cloning only works for `raw.githubusercontent.com/<org>/<repo>/<branch>/<file>` URLs. For other hosts SCORM/IMS/xAPI/H5P/APK are skipped with the warning "only generated for courses on raw.githubusercontent.com" and the card has no entry for them; PDF/ePub/DOCX still work.
+- Cloning works for `raw.githubusercontent.com/<org>/<repo>/<branch>/<file>` and for GitLab links `https://<host>/<group>/<repo>/-/raw/<branch>/<file>` (gitlab.com and self-hosted, sub-groups and sub-folders included; `-/blob/` links are read too, but prefer `-/raw/`: LiaScript opens those from the card in every case, a `-/blob/` link on gitlab.com only without sub-groups). The repository must be public — the clone runs without credentials. Write the link with `https://`: LiaScript's `gitlab://host/…` form works for `--git-url` and in the browser, but in `project.yaml` it aborts the export ("stopped without writing any output"). A branch name containing `/` is misread as branch plus folder. For other hosts SCORM/IMS/xAPI/H5P/APK are skipped with the warning "only generated for courses on raw.githubusercontent.com or GitLab" and the card has no entry for them; PDF/ePub/DOCX still work.
 
 ### 4.5 Packing only a sub-folder of a repository
 
@@ -247,6 +252,17 @@ A local file in `link:` is copied to the same relative place next to the output 
 
 A tested theme to copy and adapt: `examples/project-site/theme.css` — change the CSS variables at its top (accent, header gradient, page and card colors, fonts, radius); the rest follows. It covers the header (gradient over the `logo` image), rounded cards with hover, tag chips, the download button and menu, groups, the search button and the footer.
 
+Ready-made variants, each a small file loaded **after** `theme.css` that changes its variables and adds a few rules (`link: [theme.css, themes/campus.css]`):
+
+| File | Look |
+|---|---|
+| `theme.css` alone | academic: petrol header gradient, cream page, Fraunces serif titles |
+| `themes/campus.css` | university: dark blue and gold, Playfair Display, gold lines under images, group titles and footer |
+| `themes/night.css` | dark page, slate cards, light-blue accent, Space Grotesk — dark text on the bright buttons |
+| `themes/school.css` | school: orange/yellow header, comic cards with black border and hard shadow, Baloo 2 + Nunito |
+
+For a quick color change, override only the variables in `style:`: `:root { --accent: #003366; --accent-dark: #001f3f; }`. The navbar color is set in `navbar.background`, not by the theme.
+
 The stable hooks, if writing CSS from scratch:
 
 | Element | Selector |
@@ -280,6 +296,21 @@ Look at both screenshots before deploying. Add the `--project-generate-*` flags 
 ### 4.8 What to deploy
 
 The whole output folder (`index.html`, `assets/`, the stylesheets copied from `link:`) and the **other files `project.yaml` references by a relative path** — a local `logo`, images in `title`/`comment`/`html:`. Keeping those in one folder (e.g. `site/` → `logo: site/header.jpg`) makes that a single copy. `examples/project-site/deploy-project.yml` does this.
+
+### 4.9 Several pages with one set of downloads
+
+Several YAML files (e.g. one page per design, per faculty or per language) can share one `assets/` folder: build them in a loop into the same output directory with `--project-generate-cache`. The first page builds the packages, the others reuse them (each course is still cloned once per page).
+
+```bash
+for page in index campus night schule; do
+  liaex -i "$page.yaml" -f project -o "$SITE_DIR/$page" --project-search \
+    --project-generate-scorm12 --project-generate-scorm2004 --project-generate-ims \
+    --project-generate-xapi --project-generate-h5p --project-generate-pdf \
+    --project-generate-docx --project-generate-cache
+done
+```
+
+`examples/project-site/deploy-several-pages.yml` is this as a complete GitHub workflow, tested on GitHub Actions: four pages in four designs, 28 working downloads; about 10 minutes for the first run, about 2 minutes with the cache (the build step 21 s). Link the pages to each other through `navbar.links` (`url: campus.html`).
 
 ## 9. Minimal `project.yaml` Template
 

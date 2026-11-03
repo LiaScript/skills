@@ -20,14 +20,14 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       # liaex writes assets/<format>/ into its working directory: keep that out of the repo
       SITE_DIR: /tmp/lia-site
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
@@ -50,7 +50,7 @@ jobs:
           echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
 
       - name: Restore generated downloads
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: /tmp/lia-site/assets
           # cached files are never rebuilt; a new key every week refreshes them

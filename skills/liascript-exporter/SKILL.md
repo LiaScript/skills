@@ -257,7 +257,7 @@ liaex -i course/README.md -f scorm1.2 --scorm-masteryScore 80 --scorm-embed
 liaex -i course/README.md -f scorm2004 --scorm-masteryScore 80 --scorm-iframe
 ```
 
-**`--scorm-storage suspend`** (SCORM 1.2 and 2004, exporter 3.5.7, connector part of LiaScript 2.6.0): quizzes, surveys, tasks, the code of code blocks, settings and the last slide are kept compressed in `cmi.suspend_data`, also in SCORM 1.2. Every quiz, survey, task list and code project is reported as one interaction named after its question, with answer, correct answer and result (1.2 as readable text like `Python; HTML`, 2004 with typed interactions). Status: `incomplete` from the start, `completed` once all quizzes and surveys are done, `passed`/`failed` only with a mastery score.
+**`--scorm-storage suspend`** (SCORM 1.2 and 2004): quizzes, surveys, tasks, the code of code blocks, settings and the last slide are kept compressed in `cmi.suspend_data`, also in SCORM 1.2. Every quiz, survey, task list and code project is reported as one interaction named after its question, with answer, correct answer and result (1.2 as readable text like `Python; HTML`, 2004 with typed interactions). Status: `incomplete` from the start, `completed` once all quizzes and surveys are done, `passed`/`failed` only with a mastery score.
 - In SCORM 1.2 `passed`/`failed`/`completed` end the attempt (Moodle then opens it for review only), so with a mastery score a 1.2 package reports its score only once everything is done.
 - Limits: `cmi.suspend_data` holds 4096 characters in 1.2 (64000 in 2004); if it does not fit, code is dropped first, then tasks, surveys, quizzes (named in the browser console). 1.2 reports at most 255 characters per answer. Code that is edited but never run is not stored. At most 250 elements are reported.
 - Moodle shows 1.2 answers in the activity's *Interactions report* (downloadable for all learners), 2004 answers only under *Track details* per attempt.
@@ -440,7 +440,7 @@ Generates a self-contained web package with `tincan.xml` manifest.
 | `--xapi-zip` | Package as zip |
 | `--lia-subfolder` | Place course files in `content/` subfolder |
 
-The package restores the learner's state from the LRS on the next visit (per learner and registration, up to 10000 statements; since LiaScript 2.6.0): last slide (`experienced`), quizzes and surveys (`answered`), task lists and code that was run (`interacted`). Every quiz, survey, task list and code project is a `cmi.interaction` activity named after its question, with options, correct answer and a plain-text answer in `result.extensions["http://liascript.github.io/extensions/answer"]`. If a slide's code blocks changed since the learner started, its code starts afresh.
+The package restores the learner's state from the LRS on the next visit (per learner and registration, up to 10000 statements): last slide (`experienced`), quizzes and surveys (`answered`), task lists and code that was run (`interacted`). Every quiz, survey, task list and code project is a `cmi.interaction` activity named after its question, with options, correct answer and a plain-text answer in `result.extensions["http://liascript.github.io/extensions/answer"]`. If a slide's code blocks changed since the learner started, its code starts afresh.
 
 ---
 

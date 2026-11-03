@@ -2,7 +2,7 @@
 
 Snippets for the "signature" layer of a theme. Put them into `theme.json → extra_css`
 (one JSON string, `\n` between rules); `build_theme.py` appends them last, so they win at
-equal specificity. Everything marked **✓** was rendered and checked with LiaScript 2.x in
+equal specificity. Everything marked **✓** was rendered and checked with LiaScript in
 light and dark mode (textbook; presentation/slides where relevant). Use theme variables
 (`rgb(var(--color-highlight))`, `rgba(var(--color-text), .1)`) for anything that must follow
 dark mode; literal hex for decoration that should look the same in both — then check it
@@ -208,12 +208,12 @@ a lingering transform would change the containing block of fixed/sticky children
 **✓ Button lift** — `.lia-btn:not(.lia-btn--transparent):hover { transform: translateY(-2px); box-shadow: 0 .4rem 1rem rgba(var(--color-highlight), .35); }` with a 0.15s transition.
 
 Always keep motion short (< 0.7s), never loop it on content, and wrap it in the
-reduced-motion media query. Since LiaScript 2.3.0 the interpreter also cuts every
+reduced-motion media query. The interpreter also cuts every
 animation and transition to 0.01ms (`!important`, all elements) and turns off smooth
-scrolling under `prefers-reduced-motion: reduce`; the guard above stays as a second layer
-for older versions. Authors can still use animate.css classes per element
+scrolling under `prefers-reduced-motion: reduce`; the guard above stays as a second layer.
+Authors can still use animate.css classes per element
 (`<!-- class="animated rollIn" -->`, see liascript-syntax); they set their own `animation`,
-which is cut to near zero for these readers as well (2.3.0+).
+which is cut to near zero for these readers as well.
 
 ## Principles
 

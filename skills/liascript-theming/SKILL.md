@@ -51,8 +51,8 @@ LiaScript renders every course with the same stylesheet; its look is driven by a
 of CSS variables plus a lot of compiled values (fonts, radii, spacing) that only direct
 CSS reaches. This skill turns *any* design source into one header block that restyles
 the whole course, keeps LiaScript's own color themes and dark mode working, and has been
-verified by rendering (LiaScript 2.x, local build and liascript.github.io; checked against
-the interpreter source up to 2.4.0).
+verified by rendering (local build and liascript.github.io; checked against the
+interpreter source).
 
 The pipeline is: **source → design tokens (`theme.json`) → `build_theme.py` → header block
 → render & check.** You do the design judgement (step 2); the script does the fiddly CSS,
@@ -104,7 +104,7 @@ LibreOffice + poppler):
 5. **Render and look** (strongly recommended). Serve the course with CORS:
    `python3 scripts/serve.py <course-dir>` → open the printed liascript.github.io URL (or,
    with a local LiaScript build, `--app <dist>`). Check light + dark, textbook +
-   presentation mode, the settings panel's color swatches and (since LiaScript 2.3.1)
+   presentation mode, the settings panel's color swatches and
    "Hide navigation" in the mode menu. With a scriptable browser
    (Playwright, Puppeteer, Chrome DevTools) set the reader settings via
    `localStorage.settings` = `{"theme":"default","light":false,"mode":"Presentation",…}`
@@ -139,14 +139,14 @@ link:     https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=
 Rules that are easy to get wrong (all verified):
 
 - LiaScript colors are **RGB triples without `rgb()`**: `--color-highlight: 184,72,26;` —
-  except `--color-accent` (2.3.0+), a full color: `--color-accent: rgb(184,72,26);`.
+  except `--color-accent`, a full color: `--color-accent: rgb(184,72,26);`.
 - `custom:` alone is *not* a theme: it only applies when the reader picks the extra color
   swatch (labelled "Default" — a known bug) in the settings. The design itself belongs in
   `@style`; `@custom` just offers a variant (here: accent-colored sidebar).
 - Accent colors are scoped to `.lia-theme-default`/`.lia-theme-custom` on purpose, so
   readers can still choose LiaScript's turquoise/blue/red/yellow themes.
-- LiaScript lightens accents in dark mode by multiplying RGB (×1.8–4.8). Since 2.3.0
-  most of it goes through one variable, `--color-accent` (links, active TOC entry, form
+- LiaScript lightens accents in dark mode by multiplying RGB (×1.8–4.8). Most of it
+  goes through one variable, `--color-accent` (links, active TOC entry, form
   borders), which the block sets to the theme's `accent_text`; the adapter replaces the
   remaining multiplications — never rely on the multiplication.
 - **Every section title is `<hN class="h1">`** (whatever its level), and `.h1` outranks

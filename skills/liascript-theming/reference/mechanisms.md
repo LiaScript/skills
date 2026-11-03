@@ -1,7 +1,7 @@
 # Styling mechanisms in LiaScript
 
-Everything here was verified by rendering with the LiaScript 2.x interpreter (local build and
-liascript.github.io, 2026-09; 2.3/2.4 changes checked against the source and liascript.github.io, 2026-10). Source references point into the LiaScript repo
+Everything here was verified by rendering with the LiaScript interpreter (local build and
+liascript.github.io) and checked against its source (2026-10). Source references point into the LiaScript repo
 (`github.com/LiaScript/LiaScript`).
 
 ## The header keys that affect the look
@@ -81,7 +81,7 @@ Source: `Lia/Script.elm` (`customTheme = Dict.get "custom" definition.macro`),
 ## Root classes and reader settings
 
 `<html>` gets three classes, plus a fourth when the reader turns on "do not rely on color
-alone" (since LiaScript 2.3.0), replaced wholesale on every settings change
+alone", replaced wholesale on every settings change
 (`connectors/Base/settings.ts`):
 
 ```
@@ -89,24 +89,23 @@ lia-theme-{default|turquoise|blue|red|yellow|custom}  lia-variant-{light|dark}  
 ```
 
 `lia-decals` adds patterns to charts and marks quiz states by border style (correct solid
-2px, wrong dashed 2px, a dashed outline around checked wrong boxes). Since 2.3.0 `<html>`
+2px, wrong dashed 2px, a dashed outline around checked wrong boxes). `<html>`
 also carries the attribute `data-mouse-focus` after a mouse click (the focus ring of
 `.lia-input` then stays hidden) — an attribute, because the class list is overwritten.
 
 Mode and panel state are classes on `.lia-canvas`, not on `<html>`:
 `lia-mode--textbook | lia-mode--presentation | lia-mode--slides`,
 `lia-toc--visible | lia-toc--hidden`, `lia-support--visible | lia-support--hidden`, and
-since 2.3.1 `lia-navigation--visible | lia-navigation--hidden` ("Hide navigation" in the
+`lia-navigation--visible | lia-navigation--hidden` ("Hide navigation" in the
 mode menu; not stored, every load starts visible). With hidden navigation the header is a
 narrow column top right and the TOC, prev/next and sound buttons float over the content;
 `build_theme.py` scopes `layout.header: accent` with
-`:where(.lia-canvas:not(.lia-navigation--hidden))`, which also matches older versions
-that have no such class.
+`:where(.lia-canvas:not(.lia-navigation--hidden))`.
 
 Reader settings live in `localStorage.settings` (JSON). Relevant keys for previews:
 `theme` (`"default"`, `"custom"`, `"red"` …), `light` (bool), `mode`
 (`"Textbook" | "Presentation" | "Slides"`), `font_size` (1–3), `editor` (Ace theme name),
-`decals` (bool, 2.3.0+). Set them, then reload, to screenshot every combination:
+`decals` (bool). Set them, then reload, to screenshot every combination:
 
 ```js
 // Playwright: page is on the course
@@ -135,7 +134,7 @@ inside the slide, so prefer a tall viewport over `fullPage` screenshots.
 | `@style` `:root.lia-variant-dark { … }` | 0,2,0, later | LiaScript's dark values |
 | `@style` `:root:is(.lia-theme-default,.lia-theme-custom).lia-variant-dark` | 0,3,0 | everything above |
 | LiaScript `.h1, .h2, .h3 { font-family }` (every section title carries `.h1`) | 0,1,0 | a bare `h1 { }` / `h3 { }` → target `.h1` |
-| LiaScript `:root.lia-variant-dark { --color-accent: rgb(from …) }` (2.3.0+) | 0,2,0 | a plain `:root {}`; loses to the generated 0,3,0 block |
+| LiaScript `:root.lia-variant-dark { --color-accent: rgb(from …) }` | 0,2,0 | a plain `:root {}`; loses to the generated 0,3,0 block |
 | LiaScript `html.lia-variant-dark .lia-btn--outline { color: rgb(from …) }` (and the other multiplied rules) | 0,2,1 | plain `.lia-btn--outline` rules in dark mode |
 
 ## Dark mode quirks
@@ -144,7 +143,7 @@ LiaScript never changes `--color-highlight` in dark mode. Instead it computes a 
 color with relative color syntax, e.g.
 `rgb(from rgb(var(--color-highlight)) calc(r * 2.5) calc(g * 2.5) calc(b * 2.5))`.
 
-Since LiaScript 2.3.0 most of it is one variable on `:root.lia-variant-dark`:
+Most of it is one variable on `:root.lia-variant-dark`:
 `--color-accent` = highlight ×2.5 (inside `@supports`; older browsers keep the plain
 highlight). It colors links (also on hover), inline code text, the active TOC entry and its
 bar, the borders of checkboxes, radios, selects, dropdowns and quiz inputs, TTS buttons and
@@ -155,12 +154,12 @@ LiaScript's 0,2,0) and, for notes and TTS bar, to `accent_text` checked against
 `surface_strong` (≥ 3:1). In light mode it is the accent, or `accent_text` when the accent
 is below 4.5:1 on the background.
 
-Still multiplied in 2.4.0 (and all of these up to 2.2.2):
+Still multiplied:
 
 ```
 html.lia-variant-dark .lia-btn--outline           (×2.2 border, ×2.5 text)
-html.lia-variant-dark .lia-code--inline           (×2.2 border; text ×2.5 up to 2.2.2, now --color-accent)
-html.lia-variant-dark .lia-link                   (×2.2 border; text ×2.5 up to 2.2.2, now --color-accent)
+html.lia-variant-dark .lia-code--inline           (×2.2 border; text is --color-accent)
+html.lia-variant-dark .lia-link                   (×2.2 border; text is --color-accent)
 html.lia-variant-dark summary, summary:after      (×2.5 / ×2.2)
 html.lia-variant-dark .lia-label                  (×1.8)  – quiz option labels
 html.lia-variant-dark .lia-support-menu__item     (×1.8)  – header icons
@@ -169,26 +168,26 @@ html.lia-variant-dark .lia-list--*> li::marker    (×2.5 of highlight-dark)
 html.lia-variant-dark .lia-quote__text            (×4.8 of highlight-dark)
 ```
 
-plus `filter: brightness(1.8) contrast(1.1)` on `.lia-btn--transparent` (and on
-`.lia-input` up to 2.2.2). Multiplying RGB turns most hand-picked accents into pastel or
+plus `filter: brightness(1.8) contrast(1.1)` on `.lia-btn--transparent`.
+Multiplying RGB turns most hand-picked accents into pastel or
 yellow (orange `214,88,33` ×2.5 → `255,220,82`). `templates/adapter.css` overrides all of
 these for the course theme with `--color-highlight-dark` (the "accent as text" color),
 scoped to `.lia-theme-default/.lia-theme-custom` so the built-in themes keep their
-behavior. The adapter rules that only matter up to 2.2.2 are marked in its comments.
+behavior.
 
 Other dark-mode surfaces use palette variables directly: notes/TTS bar
 `--lia-anthracite`, settings submenu `--lia-grey-dark`, alternating table rows
-`rgba(var(--lia-grey), .15)` (`.3` up to 2.2.2). The generated block redefines `--lia-grey-dark` and
+`rgba(var(--lia-grey), .15)`. The generated block redefines `--lia-grey-dark` and
 `--lia-anthracite` inside `:root.lia-variant-dark` (and `--lia-grey-lighter/-light` in
 light mode) so these surfaces take the theme's tint.
 
-Quiz states (since 2.3.0) use `--color-success` / `--color-failure` (light 63,122,42 /
+Quiz states use `--color-success` / `--color-failure` (light 63,122,42 /
 191,44,26; dark 140,201,111 / 255,135,120). `build_theme.py` keeps them and emits a
 darker (light) or lighter (dark) value only where they fall below 4.5:1 on the theme's
 background.
 
 LiaScript forces `animation-duration` and `transition-duration` to `0.01ms !important` on
-every element under `prefers-reduced-motion: reduce` since 2.3.0 (and turns off smooth
+every element under `prefers-reduced-motion: reduce` (and turns off smooth
 scrolling); the skill's own `no-preference` guard stays as a second layer.
 
 ## Previewing a local course

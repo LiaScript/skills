@@ -1,30 +1,20 @@
 # Classroom API for templates (`LIA.classroom`)
 
-Checked against the LiaScript 2.5.0 source (`src/typescript/liascript/service/Sync.ts`, `sync/Base/db.ts`). The user documentation is the "Classroom API" section of the LiaScript docs course.
+Checked against the LiaScript source (`src/typescript/liascript/service/Sync.ts`, `sync/Base/db.ts`). The user documentation is the "Classroom API" section of the LiaScript docs course.
 
 A LiaScript classroom synchronizes quizzes, surveys, code and the chat between all participants. `LIA.classroom` lets templates use the same connection for their own collaborative widgets: drawing together, markers on a map, votes, small games. The object always exists, also without a classroom, so a template works the same in a single browser and in a room.
 
-| Part | Use it for | Stored | Since |
-|---|---|---|---|
-| `connected`, `on('connect' / 'disconnect')` | is there a classroom | — | 0.14.0 |
-| `me`, `owner`, `mode`, `peers()`, `on('peers')` | who is in it, how it is configured | — | 2.5.0 |
-| `publish()`, `subscribe()`, `unsubscribe()` | short messages: reactions, signals, cursor pings | not stored, a late subscriber only gets the last message of a topic | 0.14.0, sender since 2.5.0 |
-| `layer(name)` | an own state per participant: strokes, votes, markers | locally in the browser and in the classroom | 2.5.0 |
-| `array(name)`, `map(name)`, `text(name)` | one state everyone changes (experimental) | only in the classroom | 2.5.0 |
+| Part | Use it for | Stored |
+|---|---|---|
+| `connected`, `on('connect' / 'disconnect')` | is there a classroom | — |
+| `me`, `owner`, `mode`, `peers()`, `on('peers')` | who is in it, how it is configured | — |
+| `publish()`, `subscribe()`, `unsubscribe()` | short messages: reactions, signals, cursor pings | not stored, a late subscriber only gets the last message of a topic |
+| `layer(name)` | an own state per participant: strokes, votes, markers | locally in the browser and in the classroom |
+| `array(name)`, `map(name)`, `text(name)` | one state everyone changes (experimental) | only in the classroom |
 
 Pick `layer` whenever something has to be remembered. Pick pubsub only for things that may get lost.
 
-## Compatibility checks
-
-```js
-const C = window.LIA && window.LIA.classroom
-if (C && C.layer) { /* 2.5.0 or newer */ }
-else if (C) { /* 0.14.0 – 2.4.0: only connected, on, publish, subscribe */ }
-```
-
-Up to 2.4.0 `on()` returns nothing, so guard the remover: `const off = C.on(…); if (typeof off === 'function') off()`. Show a short note in the widget when `layer` is missing, rather than failing silently (the CollaborativeDrawing template writes "This LiaScript version does not support LIA.classroom.layer.").
-
-## Who is in the room (since 2.5.0)
+## Who is in the room
 
 ```js
 LIA.classroom.connected   // true once the room is synced
@@ -53,13 +43,13 @@ LIA.classroom.unsubscribe(id)
 
 - **Always call `LIA.classroom.publish(…)` through the object.** LiaScript replaces the function on connect and back on disconnect. A reference taken earlier (`const pub = LIA.classroom.publish`) keeps the stub that only logs "not connected".
 - Without a classroom `publish` drops the message with a console warning.
-- `from` (since 2.5.0) is the sender as a person object. The sender's browser claims it, nobody verifies it. Messages from LiaScript before 2.5.0 arrive without `from`.
+- `from` is the sender as a person object. The sender's browser claims it, nobody verifies it.
 - **Own messages:** whether your own message comes back to your own `subscribe` depends on the backend. Edrys, Nostr, the Trystero backends (MQTT, Nostr, Torrent, IPFS), Ably and PubNub echo it, GUN, PeerJS, SimplePeer and WebSocket do not. Update the own view directly after publishing and skip messages with `from && from.me`.
-- In 2.5.0 the Ably and PubNub backends do not deliver messages from other peers to `subscribe`, only the own echo; fixed in 2.6.0. The Local backend has no pubsub at all. Layers work on all backends; use them when the widget must work everywhere.
-- A new subscriber gets the last message of the topic again, after 100 ms (late slides, revisits). That also holds for `0`, `false` and `""` since 2.5.0. The memory is cleared when the room changes; up to 2.4.0 a room change replayed the last message of the previous room.
+- The Local backend has no pubsub at all. Layers work on all backends; use them when the widget must work everywhere.
+- A new subscriber gets the last message of the topic again, after 100 ms (late slides, revisits). That also holds for `0`, `false` and `""`. The memory is cleared when the room changes.
 - Messages must survive `JSON.stringify`.
 
-## Layers (since 2.5.0)
+## Layers
 
 Every participant writes into an own layer. It is stored locally, also without a classroom, synchronized when joining one, and stays with the participant after leaving, including what was done in the room.
 
@@ -104,7 +94,7 @@ In Summary and Details the values are encrypted with the peer's key, which only 
 - **Set `persistent: true`** in the header of a template that renders into the DOM (canvas, SVG). Otherwise the element is rebuilt when the slide is revisited, and the `on` callback writes into elements that no longer exist. Remove the callback with the returned function when a widget is torn down.
 - A layer can be used from `@onload` before the course database is open; loading waits for it.
 
-## Shared Yjs types (since 2.5.0, experimental)
+## Shared Yjs types (experimental)
 
 ```js
 LIA.classroom.on('connect', () => {
@@ -135,14 +125,9 @@ persistent: true
 <div id="votes_@0" aria-live="polite"></div>
 <script run-once>
 ;(function () {
-  const C = window.LIA && window.LIA.classroom
   const box = document.getElementById('vote_@0')
   const out = document.getElementById('votes_@0')
-  if (!C || !C.layer) {
-    out.textContent = 'This LiaScript version cannot store votes.'
-    return
-  }
-  const layer = C.layer('vote:@0')
+  const layer = LIA.classroom.layer('vote:@0')
 
   for (const choice of ['😀', '😐', '😟']) {
     const b = document.createElement('button')

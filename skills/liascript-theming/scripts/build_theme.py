@@ -116,7 +116,7 @@ def dark_palette(theme, light):
         out["accent_text"] = push_contrast(out["accent"], out["background"], 5.5, +1)
     return out
 
-# Quiz state colors of LiaScript >= 2.3.0 (--color-success / --color-failure,
+# Quiz state colors of LiaScript (--color-success / --color-failure,
 # _elements.page.scss and the dark-colors mixin of _tools.color.scss).
 STATE_DEFAULTS = {
     False: {"success": (63, 122, 42), "failure": (191, 44, 26)},
@@ -124,7 +124,7 @@ STATE_DEFAULTS = {
 }
 
 def add_derived(p, dark_mode, given):
-    """Colors LiaScript >= 2.3.0 reads besides the highlight:
+    """Colors LiaScript reads besides the highlight:
     - link: --color-accent, the accent as text or border on the background
       (links, active TOC entry, checkbox/radio/select/dropdown/quiz-input borders).
       Light: the accent if it reaches 4.5:1, else accent_text. Dark: accent_text.
@@ -172,8 +172,7 @@ def report(light, dark):
         chk(mode, "success / background (quiz)", p["success"], p["background"], 4.5)
         chk(mode, "failure / background (quiz)", p["failure"], p["background"], 4.5)
     if contrast(light["accent"], light["background"]) < 4.5:
-        rows.append("  note: accent/background < 4.5 in light mode: links use accent_text instead "
-                    "(LiaScript >= 2.3.0; older versions show the weaker accent)")
+        rows.append("  note: accent/background < 4.5 in light mode: links use accent_text instead")
     return ok, "\n".join(rows)
 
 # ---------------------------------------------------------------- output
@@ -224,7 +223,7 @@ def css_block(theme, light, dark):
     def variant(p, dark_mode):
         pal = ["  --lia-grey-dark: " + triple(p["surface"]) + ";", "  --lia-anthracite: " + triple(p["surface_strong"]) + ";"] if dark_mode \
             else ["  --lia-grey-lighter: " + triple(p["surface"]) + ";", "  --lia-grey-light: " + triple(p["surface_strong"]) + ";"]
-        # quiz states (LiaScript >= 2.3.0), only where LiaScript's own fail on this background
+        # quiz states, only where LiaScript's own fail on this background
         states = [f"  --color-{k}: {triple(p[k])};" for k in ("success", "failure")
                   if p[k] != STATE_DEFAULTS[dark_mode][k]]
         return "\n".join([
@@ -251,7 +250,7 @@ def css_block(theme, light, dark):
         ":root.lia-variant-dark {", variant(dark, True), "}",
         "/* accent: only the course theme (default) and the custom radio,",
         "   so readers can still pick LiaScript's built-in color themes;",
-        "   --color-accent (LiaScript >= 2.3.0) = accent as text and border: links, active",
+        "   --color-accent = accent as text and border: links, active",
         "   TOC entry, form borders; LiaScript would brighten it x2.5 in dark mode */",
         ":root:is(.lia-theme-default, .lia-theme-custom) {",
         f"  --color-highlight: {triple(light['accent'])};",
@@ -301,7 +300,7 @@ def feature_blocks(theme):
     if lay.get("content_width"):
         out.append(f".lia-canvas.lia-mode--textbook .lia-slide__content {{ max-width: {lay['content_width']}; margin-inline: auto; }}")
     if lay.get("header") == "accent":
-        # N: not in LiaScript's hidden navigation mode (>= 2.3.1), where the header is a
+        # N: not in LiaScript's hidden navigation mode, where the header is a
         # narrow column over the content and the TOC button floats on the page
         n = ":where(.lia-canvas:not(.lia-navigation--hidden))"
         out += [

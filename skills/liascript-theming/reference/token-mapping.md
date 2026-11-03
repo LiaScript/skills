@@ -80,7 +80,7 @@ Order of the generated CSS: tokens → palettes → adapter → layout/density/m
 |---|---|
 | `density: compact` | line height 1.4, paragraphs 0.6rem apart, table cells 0.6rem, quotes 1.4rem padding, blocks 1.4rem |
 | `density: airy` | line height 1.7, paragraphs 1.6rem, list items 0.6rem, table cells 1.4rem, quotes 3.2/4rem, blocks 3.2rem |
-| `layout.header: accent` | header spans full width in `accent`; icons, TOC toggle, progress bar white; open mobile menu and settings submenu use the accent (dark: `accent_text`) — checked desktop/mobile, open/closed, light/dark. Not applied with hidden navigation (LiaScript 2.3.1+), where the header is a small column over the content — checked light/dark |
+| `layout.header: accent` | header spans full width in `accent`; icons, TOC toggle, progress bar white; open mobile menu and settings submenu use the accent (dark: `accent_text`) — checked desktop/mobile, open/closed, light/dark. Not applied with hidden navigation, where the header is a small column over the content — checked light/dark |
 | `layout.content_width` | narrower centered column; only textbook mode (presentation/slides keep LiaScript's widths) |
 | `shape.border_width` | 2px tested; radio/checkbox borders only while unchecked (checked state uses its own thick border) |
 | `motion` | `.lia-slide__content` is re-created on every section change and effect fragments are inserted when shown, so the entry animations replay each time; nothing animates under `prefers-reduced-motion: reduce` (tested with emulation) |
@@ -92,10 +92,10 @@ Order of the generated CSS: tokens → palettes → adapter → layout/density/m
 | `background` | `--color-background` | page, header, TOC (default theme), cards, tables, outline buttons |
 | `text` | `--color-text` | body text, TOC links, headings (unless `heading_color`) |
 | `border` | `--color-border` | header rule, TOC dividers, table grid, details, hr |
-| `accent` | `--color-highlight` (+ `--color-highlight-menu` in default theme) | buttons (white label!), pagination, header icons, checked checkbox fill, quiz icons, code block frame, progress, focus of inputs, quote background (15 %), TOC background in any non-default theme; up to 2.2.2 also links, active TOC entry and form borders |
-| `accent_text` | `--color-highlight-dark`; dark: also `--color-accent` | link hover, list markers, inline code, quote text, `summary`; **in dark mode also** links, active TOC entry, borders of checkbox/radio/select/dropdown/quiz input, TTS buttons (via `--color-accent`, 2.3.0+), header icons, quiz labels, outline buttons (via adapter) |
-| accent or `accent_text` | light `--color-accent` (2.3.0+) | links, active TOC entry and bar, form borders: the accent if it has 4.5:1 on the background, else `accent_text` |
-| `success`, `failure` | `--color-success`, `--color-failure` (2.3.0+), only when changed | quiz states: input/checkbox/radio/dropdown borders and fills, drop zones, `.text-success`/`.text-error` |
+| `accent` | `--color-highlight` (+ `--color-highlight-menu` in default theme) | buttons (white label!), pagination, header icons, checked checkbox fill, quiz icons, code block frame, progress, focus of inputs, quote background (15 %), TOC background in any non-default theme |
+| `accent_text` | `--color-highlight-dark`; dark: also `--color-accent` | link hover, list markers, inline code, quote text, `summary`; **in dark mode also** links, active TOC entry, borders of checkbox/radio/select/dropdown/quiz input, TTS buttons (via `--color-accent`), header icons, quiz labels, outline buttons (via adapter) |
+| accent or `accent_text` | light `--color-accent` | links, active TOC entry and bar, form borders: the accent if it has 4.5:1 on the background, else `accent_text` |
+| `success`, `failure` | `--color-success`, `--color-failure`, only when changed | quiz states: input/checkbox/radio/dropdown borders and fills, drop zones, `.text-success`/`.text-error` |
 | `surface` | light: `--lia-grey-lighter` · dark: `--lia-grey-dark` | alternating table rows; dark: settings submenu |
 | `surface_strong` | light: `--lia-grey-light` · dark: `--lia-anthracite` | notes, TTS/voice bar, script refresh button, TOC separators, disabled buttons |
 | fonts | `--theme-font-*` → `--global-font-*` + explicit selectors | see `templates/adapter.css` |
@@ -120,9 +120,9 @@ Scoping in the generated CSS:
 | accent / background | 3.0 warn | UI parts: icons, checked checkbox fill, focus, code frame |
 | dark `--color-accent` on notes / surface_strong | 3.0 warn | active-note bar, TTS button borders; the script lifts `accent_text` until it passes |
 | success, failure / background | 4.5 **hard** | quiz state text and borders; LiaScript's defaults are moved until they pass, or set `success`/`failure` |
-| accent / background (light) | 4.5 note | below it, links use `accent_text` (2.3.0+; older versions show the accent) |
+| accent / background (light) | 4.5 note | below it, links use `accent_text` |
 
-LiaScript itself targets WCAG AA in all built-in themes (2.3.0+); the generated theme
+LiaScript itself targets WCAG AA in all built-in themes; the generated theme
 should not fall behind.
 
 If the light `accent` gives less than 4.5:1 with white, the script darkens it until it

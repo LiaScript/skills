@@ -1,6 +1,6 @@
 # Export formats and presets
 
-Every format with its options, checked against `@liascript/exporter` 3.5.12. Presets first, then one section per format.
+Every format with its options, checked against `@liascript/exporter` 3.5.14. Presets first, then one section per format.
 
 ### 2.2 Presets (LMS shortcuts)
 
@@ -264,7 +264,7 @@ liaex -f android \
   --output output
 ```
 
-Produces `output.apk` (debug build by default). Uses Capacitor.js. Best done via Docker (see the decision table in `SKILL.md`). Not available in the web app.
+Produces `output.apk` (debug build by default). Uses Capacitor.js. Best done via Docker (see "Install" in `SKILL.md`). Not available in the web app.
 
 | Option | Description |
 |--------|-------------|

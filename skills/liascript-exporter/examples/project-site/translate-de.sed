@@ -1,7 +1,6 @@
-# German texts, stylesheet in <head> and capitalized filter labels for the
-# page of `liaex -f project` (the exporter writes fixed English texts).
+# German texts and capitalized filter labels for the page of
+# `liaex -f project` (the exporter writes fixed English texts).
 # Usage after the build:  sed -i -f translate-de.sed index.html   (GNU sed)
-s|</head>|<link rel="stylesheet" href="theme.css"></head>|
 s/<html>/<html lang="de">/
 s/All categories/Alle Themen/
 s/Download \.\.\./Herunterladen/g

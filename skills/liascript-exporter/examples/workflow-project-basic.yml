@@ -43,7 +43,7 @@ jobs:
           cp index.html gh-pages-deploy/
           # Use if/fi: a failing `[ … ] && cp` as last line would fail the step
           if [ -f logo.jpg ]; then cp logo.jpg gh-pages-deploy/; fi
-          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # design linked from footer
+          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # stylesheet from link: in project.yaml
           if [ -d site ]; then cp -r site gh-pages-deploy/; fi
           if [ -f logo.png ]; then cp logo.png gh-pages-deploy/; fi
           # Copy any assets/ directory if it exists

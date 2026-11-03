@@ -18,7 +18,7 @@ license: CC0-1.0
 
 # LiaScript Exporter
 
-`liaex` turns a LiaScript course (a Markdown file) into LMS packages and documents, and builds project websites that present many courses on one page with downloads. Everything below is checked against `@liascript/exporter` 3.5.12 by running it.
+`liaex` turns a LiaScript course (a Markdown file) into LMS packages and documents, and builds project websites that present many courses on one page with downloads. Everything below is checked against `@liascript/exporter` 3.5.14 by running it.
 
 ## Navigation — read the file that matches the task
 
@@ -39,7 +39,7 @@ Ask first what the user needs if it is unclear: one course for one LMS, document
 npm install -g @liascript/exporter      # CLI: liaex (also liascript-exporter); liaex --version
 ```
 
-The version reads `<exporter>--<LiaScript>`, e.g. `3.5.12--2.6.1`. PDF, ePub and DOCX use Puppeteer: to use an installed Chromium instead of Puppeteer's download, set `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium`.
+The version reads `<exporter>--<LiaScript>`, e.g. `3.5.14--2.6.1`. PDF, ePub and DOCX use Puppeteer: to use an installed Chromium instead of Puppeteer's download, set `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium`.
 
 Alternatives: the **web app** <https://liascript.github.io/LiaScript-Exporter/> (in the browser, nothing uploaded; Markdown, a `.zip` of the course folder or a public GitHub repo; no Android; very large PDFs may run out of memory) — recommend it to users who just want one file; the **desktop app** from the GitHub releases; `liaex serve [--port 8080] [--no-browser]` for the same UI locally; Docker `liascript/exporter` (needed for Android):
 
@@ -85,25 +85,24 @@ Presets (`--moodle3|4|5`, `--ilias`, `--opal`, `--openolat`, `--openedx`, `--lea
 
 ## Project website in brief
 
-1. `project.yaml` with `title`, `comment`, `logo` (header image), `navbar`, `tags`, a `footer` that loads `theme.css`, and a `collection` of **`raw.githubusercontent.com`** course URLs (groups: a `collection` inside the `collection`). Copy `examples/project-site/` and adapt.
-2. Design: the page is fixed Bootstrap; restyle it with the stylesheet linked in `footer` — change the variables at the top of `examples/project-site/theme.css` (colors, fonts, radius). Selectors: `reference/project.md` §4.6.
+1. `project.yaml` with `title`, `comment`, `logo` (header image), `navbar`, `link`/`style` for the design, and a `collection` of **`raw.githubusercontent.com`** course URLs (groups: a `collection` inside the `collection`). Copy `examples/project-site/` and adapt.
+2. Design: the page is fixed Bootstrap; restyle it with `link: theme.css` (copied next to the page) and/or inline `style:` — both go into `<head>` after Bootstrap. Start from `examples/project-site/theme.css` and change its variables (colors, fonts, radius), e.g. in `style:`. Selectors: `reference/project.md` §4.6.
 3. Look at it before deploying: `liaex -i project.yaml -f project -o index --project-search`, then a desktop and a phone screenshot with headless Chromium (`reference/project.md` §4.7).
-4. Final build with downloads: add `--project-generate-scorm12 --project-generate-xapi --project-generate-pdf` (also `-scorm2004`, `-ims`, `-h5p`, `-epub`, `-docx`, `-android`) and `--project-generate-cache`. Run it in an export directory outside the repository; deploy `index.html`, `assets/` and every file the YAML references relatively (`theme.css`, images) — `examples/project-site/deploy-project.yml`.
+4. Final build with downloads: add `--project-generate-scorm12 --project-generate-xapi --project-generate-pdf` (also `-scorm2004`, `-ims`, `-h5p`, `-epub`, `-docx`, `-android`) and `--project-generate-cache`. Run it with `-o` pointing outside the repository; publish that output folder (page, `assets/`, the copied stylesheets) plus images the YAML references relatively — `examples/project-site/deploy-project.yml`.
 
 ## Gotchas
 
 1. **Project URLs must be `http(s)`.** A local path in `project.yaml` aborts the whole project export ("Export failed: it stopped without writing any output"). Courses must be pushed first.
 2. **Project downloads of SCORM/IMS/xAPI/H5P/APK need `raw.githubusercontent.com` URLs** (the exporter clones the repository); other hosts get only PDF/ePub/DOCX, with a warning. Never use GitHub HTML page URLs.
-3. **No `--scorm-embed` in a project export**: it writes `true` instead of the course into the packages, which then show nothing in the LMS. Project SCORM without it loads the course as `lia-course.md`; check one package in Moodle 4/5, or export embedded packages per course (`liaex -i … -f scorm1.2 --scorm-embed` works).
-4. **A project's downloads go to `assets/<format>/` next to the output file** (`-o "$SITE_DIR/index"` → `$SITE_DIR/assets/`), named by a hash of the course URL; `-p` does not change that. The folder must exist (`mkdir -p`), otherwise liaex crashes with `ENOENT` after loading all courses. Deploy `assets/` next to `index.html`.
-5. **The project page has no style option**: link a stylesheet from `footer` (raw HTML). A course without `logo` gets no card image — set `logo:` per course in `project.yaml`. Its texts ("All categories", "Download …", search) are English — `examples/project-site/translate-de.sed` translates them.
-6. **Tags**: only per-course `tags:` (replacing the header tags) feed the filter; top-level and group `tags:` are ignored; the filter shows them in lower case.
-7. **`--project-generate-cache` never refreshes a file** — rotate the CI cache key (e.g. weekly). It saves packaging, not the repository clone, which runs every time.
-8. **Never export into the repository source tree** when building several formats or a project in CI: later packages would contain the earlier ones (ZIP in ZIP, growing every run). Export into `/tmp/…` or `$RUNNER_TEMP`, then copy the final files to a staging folder; Docker: mount the source read-only and the output separately.
-9. **A folder that gets packed must be clean.** Never commit exports (`assets/`, `*.zip`, `*.h5p`, `*.pdf`, the project page) to the branch the courses are cloned from — deploy them to `gh-pages`; a project export clones that branch and would pack them again. When cloning repositories yourself to export several courses, clone each into its own new empty directory, write the output outside all clones, and delete the clone afterwards; never reuse a working copy that holds earlier exports.
-10. **Pack only what belongs to the course**: `-p <folder>`, `--git-subdir`, `course-path` (Action) or `path:` per course in `project.yaml`. Without `path:`, project packages contain the whole repository.
-11. **PDF in GitHub Actions** needs `PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"` and the Chromium libraries — `libasound2t64`, not `libasound2`, on `ubuntu-latest` (`reference/workflows.md` §8). Raise `--pdf-timeout` (60000) for large courses.
-12. **`peaceiris/actions-gh-pages` with `force_orphan: true`**, otherwise the `gh-pages` history grows with every binary.
-13. **`[ -f x ] && cp …` as the last line of a `run:` block fails the step** when the file is missing; use `if [ -f x ]; then cp …; fi`.
-14. **Per-course overrides** in `project.yaml`: `arguments:` with long flag names without `--` (`- project-generate-pdf: false`).
-15. **Web exports need HTTP** (`npx serve`, `python3 -m http.server`); the project page itself opens from `file://`.
+3. **A project's downloads go to `assets/<format>/` next to the output file** (`-o "$SITE_DIR/index"` → `$SITE_DIR/assets/`), named by a hash of the course URL; `-p` does not change that. The folder is created if missing. Deploy `assets/` next to `index.html`.
+4. **Design only through `link:`/`style:`** (or raw HTML in `title`, `comment`, `footer`, `html:` entries); many values are Bootstrap utilities or inline styles. A course without `logo` gets no card image — set `logo:` per course in `project.yaml`. Its texts ("All categories", "Download …", search) are English — `examples/project-site/translate-de.sed` translates them.
+5. **Tags**: only per-course `tags:` (replacing the header tags) feed the filter; top-level and group `tags:` are ignored; the filter shows them in lower case.
+6. **`--project-generate-cache` never refreshes a file** — rotate the CI cache key (e.g. weekly). It saves packaging, not the repository clone, which runs every time.
+7. **Never export into the repository source tree** when building several formats or a project in CI: later packages would contain the earlier ones (ZIP in ZIP, growing every run). Export into `/tmp/…` or `$RUNNER_TEMP`, then copy the final files to a staging folder; Docker: mount the source read-only and the output separately.
+8. **A folder that gets packed must be clean.** Never commit exports (`assets/`, `*.zip`, `*.h5p`, `*.pdf`, the project page) to the branch the courses are cloned from — deploy them to `gh-pages`; a project export clones that branch and would pack them again. When cloning repositories yourself to export several courses, clone each into its own new empty directory, write the output outside all clones, and delete the clone afterwards; never reuse a working copy that holds earlier exports.
+9. **Pack only what belongs to the course**: `-p <folder>`, `--git-subdir`, `course-path` (Action) or `path:` per course in `project.yaml`. Without `path:`, project packages contain the whole repository.
+10. **PDF in GitHub Actions** needs `PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"` and the Chromium libraries — `libasound2t64`, not `libasound2`, on `ubuntu-latest` (`reference/workflows.md` §8). Raise `--pdf-timeout` (60000) for large courses.
+11. **`peaceiris/actions-gh-pages` with `force_orphan: true`**, otherwise the `gh-pages` history grows with every binary.
+12. **`[ -f x ] && cp …` as the last line of a `run:` block fails the step** when the file is missing; use `if [ -f x ]; then cp …; fi`.
+13. **Per-course overrides** in `project.yaml`: `arguments:` with long flag names without `--` (`- project-generate-pdf: false`).
+14. **Web exports need HTTP** (`npx serve`, `python3 -m http.server`); the project page itself opens from `file://`.

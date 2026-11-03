@@ -112,7 +112,7 @@ jobs:
 
           # Shared images/CSS from the repository referenced by the project pages
           if [ -d assets ]; then cp -r assets/. gh-pages-deploy/assets/; fi
-          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # design linked from footer
+          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # stylesheet from link: in project.yaml
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

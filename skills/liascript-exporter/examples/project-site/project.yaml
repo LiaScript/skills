@@ -1,8 +1,8 @@
 # Overview page with own design, tag filter, search and downloads.
 # Build:  liaex -i project.yaml -f project -o index --project-search \
 #           --project-generate-scorm12 --project-generate-xapi --project-generate-pdf
-# Deploy index.html, assets/ and everything this file references relatively
-# (theme.css, logo) — see deploy-project.yml.
+# Publish the output folder (index.html, assets/, the copied theme.css) and
+# images this file references relatively — see deploy-project.yml.
 
 title: LiaScript Templates
 comment: Interaktive Erweiterungen für LiaScript-Kurse – zum Ausprobieren, Herunterladen und Einbinden ins LMS.
@@ -19,9 +19,13 @@ navbar:
     - label: GitHub
       url: https://github.com/LiaTemplates
 
-# footer is raw HTML: the stylesheet link restyles the whole page
+# design: stylesheets and CSS in <head> after Bootstrap; theme.css is copied next to the page
+link: theme.css
+style: |
+  /* change the theme's variables here, e.g. university colors: */
+  /* :root { --accent: #003366; --accent-dark: #001f3f; --hero-from: rgba(0,51,102,.93); --hero-to: rgba(201,162,39,.55); } */
+
 footer: >
-  <link rel="stylesheet" href="theme.css">
   Made with <a href="https://liascript.github.io">LiaScript</a> · Inhalte unter CC BY 4.0
 
 collection:

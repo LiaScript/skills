@@ -38,7 +38,7 @@ navbar:
   links:
     - label: Home
       url: "#"
-    - label: the decision table in `SKILL.md`
+    - label: Section 1
       url: "#section-1"
 
 # Footer — supports HTML
@@ -185,7 +185,6 @@ liaex -i project.yaml --format project --output index --project-search
 
 All format-specific flags (`--pdf-*`, `--scorm-*`, `--epub-*`, …) can be passed alongside and apply to every course; per-course `arguments:` override them.
 
-**Except `--scorm-embed`:** in a project export it writes the literal `true` into the package's `course.js` instead of the course, so the SCORM package shows no course. Generate project SCORM without it — such packages load the course as `lia-course.md`, which Moodle serves (it refuses `README.md`); upload one to your Moodle 4/5 to check. If an LMS needs embedded packages, export those courses one by one (`liaex -i … -f scorm1.2 --scorm-embed`) and link them from an `html:` entry.
 
 ### 4.4 Where generated files go (and how caching works)
 
@@ -232,15 +231,19 @@ The Markdown file must lie inside `path`. Equivalent options elsewhere:
 
 ### 4.6 Design of the overview page
 
-The page is a fixed Bootstrap 5.0.2 layout; `project.yaml` has no theme or CSS key. What can be styled without CSS: `title`/`comment` (raw HTML), `logo` (header background image), `navbar` (`background`, `theme`), per-course `logo`, `tags`, groups (`collection` inside `collection`, `grid: true` for smaller cards).
+The page is a fixed Bootstrap 5.0.2 layout. Without CSS you can set `title`/`comment` (raw HTML), `logo` (header background image), `navbar` (`background`, `theme`), per-course `logo`, `tags`, groups (`collection` inside `collection`, `grid: true` for smaller cards) and `footer` (raw HTML).
 
-**For a real design, load a stylesheet from the `footer`** — `footer` is inserted as raw HTML, and a `<link>` or `<style>` there applies to the whole page:
+**For a real design use `link:` and `style:`** — like in a LiaScript header. Both go into `<head>` right after Bootstrap, so plain rules override it:
 
 ```yaml
-footer: >
-  <link rel="stylesheet" href="theme.css">
-  Made with <a href="https://liascript.github.io">LiaScript</a>
+link:                       # one URL or a list
+  - https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap
+  - theme.css               # relative to project.yaml: copied next to the page
+style: |                    # inline CSS, after the links
+  :root { --accent: #003366; --accent-dark: #001f3f; }
 ```
+
+A local file in `link:` is copied to the same relative place next to the output (`-o`), so publishing the output folder is enough. A path that leads out of the folder of `project.yaml` (`../x.css`) is linked but not copied (warning). Images or fonts that the stylesheet loads by a relative `url()` are **not** copied — use absolute URLs there, or copy them yourself.
 
 A tested theme to copy and adapt: `examples/project-site/theme.css` — change the CSS variables at its top (accent, header gradient, page and card colors, fonts, radius); the rest follows. It covers the header (gradient over the `logo` image), rounded cards with hover, tag chips, the download button and menu, groups, the search button and the footer.
 
@@ -256,17 +259,16 @@ The stable hooks, if writing CSS from scratch:
 | Search button (`--project-search` without navbar) | `#searchFab` |
 | Footer | `footer` (has `.text-muted`) |
 
-**Optional post-processing** of the generated `index.html` in the deploy step: the page texts are fixed English ("All categories", "Download ...", "xAPI Package", the search texts, "↑ Top"), `<html>` has no `lang`, the filter shows tags in lower case, and a stylesheet linked from the footer loads late. `examples/project-site/translate-de.sed` fixes all of that for German (`sed -i -f translate-de.sed index.html`, GNU sed; tested); copy it for another language and change the right-hand sides.
+**Optional post-processing** of the generated `index.html` in the deploy step: the page texts are fixed English ("All categories", "Download ...", "xAPI Package", the search texts, "↑ Top"), `<html>` has no `lang`, the filter shows tags in lower case, `examples/project-site/translate-de.sed` fixes all of that for German (`sed -i -f translate-de.sed index.html`, GNU sed; tested); copy it for another language and change the right-hand sides.
 
-Many values are inline styles or Bootstrap utilities: override with `!important` where needed (header text color, `.album` background, card shadow). A course without `logo` in its header gets **no** image — give it `logo:` in `project.yaml`, or style image-less cards (`.card:not(:has(.card-img-top))`). Fonts: `@import` Google Fonts at the top of the stylesheet.
+Some values are inline styles or Bootstrap utilities and need `!important` (header text color, `.album` background, card shadow, the search button color). A course without `logo` in its header gets **no** image — give it `logo:` in `project.yaml`, or style image-less cards (`.card:not(:has(.card-img-top))`). Fonts: `@import` Google Fonts at the top of the stylesheet.
 
 ### 4.7 Preview locally
 
 The page opens directly from disk (no server needed; Bootstrap and fonts come from CDNs):
 
 ```bash
-mkdir -p _build && cp theme.css _build/        # git-ignored; -o into a missing folder crashes liaex (ENOENT)
-liaex -i project.yaml -f project -o _build/index --project-search      # fast: no downloads
+liaex -i project.yaml -f project -o _build/index --project-search      # _build/ git-ignored; fast: no downloads
 chromium --headless=new --hide-scrollbars --window-size=1280,1800 \
   --virtual-time-budget=8000 --screenshot=_build/page.png "file://$PWD/_build/index.html"
 chromium --headless=new --hide-scrollbars --window-size=390,1500 \
@@ -277,7 +279,7 @@ Look at both screenshots before deploying. Add the `--project-generate-*` flags 
 
 ### 4.8 What to deploy
 
-`index.html`, `assets/`, and **every file `project.yaml` references by a relative path** — `theme.css`, a local `logo`, own images. Keeping them in one folder (e.g. `site/` → `logo: site/header.jpg`, `href="site/theme.css"`) makes the deploy step a single copy. `examples/project-site/deploy-project.yml` does this.
+The whole output folder (`index.html`, `assets/`, the stylesheets copied from `link:`) and the **other files `project.yaml` references by a relative path** — a local `logo`, images in `title`/`comment`/`html:`. Keeping those in one folder (e.g. `site/` → `logo: site/header.jpg`) makes that a single copy. `examples/project-site/deploy-project.yml` does this.
 
 ## 9. Minimal `project.yaml` Template
 

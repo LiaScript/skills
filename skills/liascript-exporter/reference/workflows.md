@@ -100,7 +100,7 @@ jobs:
           mkdir -p gh-pages-deploy
           mv index.html gh-pages-deploy/
           if [ -f logo.jpg ]; then cp logo.jpg gh-pages-deploy/; fi
-          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # design linked from footer
+          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # stylesheet from link: in project.yaml
           if [ -d site ]; then cp -r site gh-pages-deploy/; fi
 
       - name: Deploy to GitHub Pages
@@ -180,7 +180,7 @@ jobs:
           cp -r "$SITE_DIR/assets" gh-pages-deploy/
           # Images referenced by project.yaml
           if [ -f logo.jpg ]; then cp logo.jpg gh-pages-deploy/; fi
-          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # design linked from footer
+          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # stylesheet from link: in project.yaml
           if [ -d site ]; then cp -r site gh-pages-deploy/; fi
           if [ -d assets ]; then cp -r assets/. gh-pages-deploy/assets/; fi
 

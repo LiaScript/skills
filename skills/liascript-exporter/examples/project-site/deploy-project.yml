@@ -1,7 +1,7 @@
 # Build the project overview page with downloads and deploy it to GitHub Pages.
 # Repository layout:
-#   project.yaml          (footer loads theme.css, see examples/project-site)
-#   theme.css             (page design)
+#   project.yaml          (link: theme.css, see examples/project-site)
+#   theme.css             (page design, copied next to the page by liaex)
 #   site/                 (optional: own images referenced from project.yaml)
 #   .github/workflows/deploy-project.yml   ← this file
 # Settings → Pages: deploy from branch gh-pages.
@@ -71,13 +71,12 @@ jobs:
       - name: Collect files to publish
         run: |
           mkdir -p public
-          cp "$SITE_DIR/index.html" public/
-          cp -r "$SITE_DIR/assets" public/
-          # everything project.yaml references by a relative path
-          cp theme.css public/
+          # index.html, assets/ and the stylesheets copied from `link:`
+          cp -r "$SITE_DIR"/. public/
+          # images project.yaml references by a relative path
+          if [ -d site ]; then cp -r site public/; fi
           # optional: German page texts (the exporter writes English ones)
           if [ -f translate-de.sed ]; then sed -i -f translate-de.sed public/index.html; fi
-          if [ -d site ]; then cp -r site public/; fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

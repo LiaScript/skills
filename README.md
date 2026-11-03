@@ -28,9 +28,9 @@ Generates a valid `metadata.yml` for publishing Open Educational Resources on [O
 
 ## reference-checker
 
-Systematically verifies scientific literature references using web search. Outputs a structured three-tier report (✅ correct / ⚠️ warning / 🚨 critical error) with a mandatory summary table. Explicitly flags potentially hallucinated AI-generated citations. Output language matches the user's input language.
+Systematically verifies scientific literature references: `lookup.py` (Python standard library) checks a whole list or BibTeX file against Crossref and OpenAlex — DOI records, best matches, retractions and corrections — and web search covers the rest. Outputs a structured three-tier report (✅ correct / ⚠️ warning / 🚨 critical error) with a mandatory summary table and, for BibTeX input, corrected entries. Explicitly flags retracted papers, DOIs that belong to a different work and potentially hallucinated AI-generated citations. Output language matches the user's input language.
 
-**Activates when:** a user asks to check, verify, or validate bibliographic entries, citations, or references — including single entries.
+**Activates when:** a user asks to check, verify, or validate bibliographic entries, citations, references, DOIs or a `.bib` file — including single entries.
 
 ---
 

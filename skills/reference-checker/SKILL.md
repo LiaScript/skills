@@ -3,7 +3,8 @@ name: reference-checker
 description: >
   Verifies scientific literature references for accuracy and produces a structured report.
   Always use when the user wants to check, verify, or validate bibliographic entries, citations,
-  or references — including individual ones. Always outputs a complete reference verification report
+  references, DOIs or a BibTeX (.bib) file — including individual ones, and including whether a
+  cited paper was retracted or a reference may be AI-generated. Always outputs a complete reference verification report
   with per-entry ratings (three-tier: ✅ correct / ⚠️ warning / 🚨 critical error) and a summary table.
   Also use for: 'check my references', 'verify citations', 'are my sources correct?',
   'Stimmen die Angaben?', 'Sind die Quellen korrekt?', 'Bitte Referenzen checken',
@@ -22,8 +23,29 @@ This skill systematically verifies scientific literature references using web se
 ### 1. Extract References
 Extract and number all references to be checked from the user's input.
 
-### 2. Web Search per Reference
-Perform **separate web searches** for each reference. Search strategy:
+### 2. Look Up the Records
+First run the lookup script on all references at once (from the skill folder; Python standard
+library, needs internet):
+
+```bash
+python3 scripts/lookup.py refs.bib          # BibTeX file
+python3 scripts/lookup.py refs.txt          # one reference per line or paragraph
+python3 scripts/lookup.py --doi 10.1038/nature14539
+```
+
+For every entry it prints the Crossref record behind a given DOI (with a **title match** score),
+the best Crossref and OpenAlex matches for the full reference, print vs. online year, volume,
+issue, pages / article number, and **retractions, corrections and expressions of concern**
+(Crossref `updated-by` from Retraction Watch, OpenAlex `is_retracted`). Read it as evidence:
+- a DOI whose record has a title match below about 0.6 belongs to a different work;
+- a real journal + volume + page/article number that the records assign to a different paper is
+  the classic pattern of a fabricated reference;
+- Crossref also lists later copies (`posted-content`, reprints, book chapters) — compare with the
+  version of record; conference papers (e.g. NeurIPS) often have no DOI and appear in OpenAlex.
+
+### 3. Web Search Where the Records Are Not Enough
+Search the web for every entry without a convincing record (books, theses, reports, patents,
+proceedings without DOI) and to confirm anything doubtful. Search strategy:
 - Primary: Title + journal + year
 - Secondary: Authors + title (if no results)
 - Tertiary: Search DOI directly (if provided)
@@ -40,7 +62,7 @@ Verify the following:
 - **DOI:** Retrieve and validate
 - **URL:** Retrieve direct URL to the publication
 
-### 3. Output Language
+### 4. Output Language
 Always respond **in the same language as the user's request** (English, German, or other).
 
 ---
@@ -65,6 +87,8 @@ Severe errors that compromise the integrity of the reference. Typical 🚨 cases
 - **Wrong authors:** Completely different author group
 - **Wrong page numbers/article numbers:** Significant deviation from actual details
 - **Wrong first author**
+- **Retracted:** the record has a retraction (`updated-by` type `retraction`, or `is_retracted`). Always 🚨, also when every detail is correct; if the text discusses the paper *as* a retracted study, say how to cite it (mark it as retracted, add the retraction notice).
+- **DOI belongs to a different work:** the given DOI resolves to another paper. Give the correct DOI.
 
 ---
 
@@ -128,6 +152,8 @@ DOI: ... URL: ...
 | [3] | 🚨 | [Kurzbeschreibung] |
 ```
 
+If the input was a BibTeX file, add a section with the corrected entries ready to paste (and which keys to remove).
+
 If multiple references have 🚨 status, append a **notice block** at the end of the table:
 
 ```
@@ -153,12 +179,14 @@ If multiple references have 🚨 status, append a **notice block** at the end of
 | Wrong pages/article no. | 🚨 | Significant deviation |
 | Not verifiable | 🚨 | No match; hallucination suspected |
 | Wrong first author | 🚨 | First author does not match |
+| Retracted | 🚨 | Retraction notice in Crossref / OpenAlex (corrections and expressions of concern: mention, ⚠️) |
+| Wrong DOI | 🚨 | DOI resolves to a different work |
 
 ---
 
 ## Rules
 
-1. **Always search** — never assess a reference from memory, even for well-known classics.
+1. **Always look up** — run `scripts/lookup.py`, then search the web where needed; never assess a reference from memory, even for well-known classics.
 2. **Always include DOI and URL** — even for ✅ references.
 3. **Never skip a reference** — every entry appears in the report.
 4. **Summary table is mandatory** — it closes every report.

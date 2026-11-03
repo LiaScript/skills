@@ -52,9 +52,9 @@ Complete LiaScript authoring reference: full markdown syntax (meta-header, docum
 
 ## liascript-templates
 
-Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, template hooks (narrator avatars), collaborative templates on the classroom API (`LIA.classroom`: own layers per participant, publish/subscribe, peers, shared Yjs types, since LiaScript 2.5.0), and the established conventions from the LiaTemplates ecosystem.
+Expert guidance for building LiaScript templates — standard `README.md` courses whose header comment defines reusable macros via `import:`. Covers single-line and block macro syntax, integrating external JavaScript libraries, handling async execution, template hooks (narrator avatars), collaborative templates on the classroom API (`LIA.classroom`: own layers per participant, publish/subscribe, peers, shared Yjs types, since LiaScript 2.5.0), and the established conventions from the LiaTemplates ecosystem. Includes a catalog of ~75 existing templates (GitHub topic `liascript-template`), so the agent recommends or extends one before building a new one.
 
-**Activates when:** a user wants to build, modify, or debug a LiaScript template; create reusable macros; or integrate a JavaScript library into a LiaScript course; or build something participants share in a classroom (drawing together, votes, markers) — also in German ("gemeinsam zeichnen im Klassenraum", "kollaboratives Template").
+**Activates when:** a user wants to build, modify, or debug a LiaScript template; create reusable macros; or integrate a JavaScript library into a LiaScript course; asks whether a template for something already exists; or build something participants share in a classroom (drawing together, votes, markers) — also in German ("gibt es schon ein Template für …", "gemeinsam zeichnen im Klassenraum", "kollaboratives Template").
 
 ---
 

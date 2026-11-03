@@ -9,9 +9,11 @@ description: >
   (`LIA.narrator`), or collaborative templates that share state in a LiaScript
   classroom via `LIA.classroom` (layers per participant, publish/subscribe,
   peers, shared Yjs types) such as drawing together, votes, markers on a map or
-  small multiplayer games. German triggers: "Template für LiaScript bauen",
-  "Makro-Template", "gemeinsam zeichnen im Klassenraum", "Abstimmung/Daten im
-  Classroom teilen", "kollaboratives Template". For course syntax see
+  small multiplayer games; also whether a template for a library or topic
+  already exists. German triggers: "Template für LiaScript bauen",
+  "Makro-Template", "gibt es schon ein Template für …", "gemeinsam zeichnen im
+  Klassenraum", "Abstimmung/Daten im Classroom teilen", "kollaboratives
+  Template". For course syntax see
   liascript-syntax.
 license: CC0-1.0
 ---
@@ -24,6 +26,7 @@ A template is a normal LiaScript course (`README.md`) whose **header comment** d
 
 | File | Read when... |
 |---|---|
+| `reference/catalog.md` | **Before building a new template**: ~75 existing templates by subject, and how to search for newer ones. Recommend or extend an existing one instead of rebuilding it |
 | `reference/patterns.md` | Wrapping a library or building a widget: 13 copy-ready patterns (index below) and the event bus in detail |
 | `reference/npm-project.md` | The library is only on npm, or must be bundled with its dependencies |
 | `reference/classroom.md` | **Before writing any collaborative template**: full `LIA.classroom` API, visibility per mode, backends, complete example |
@@ -32,7 +35,7 @@ A template is a normal LiaScript course (`README.md`) whose **header comment** d
 
 ## Top pitfalls
 
-1. **Template versions stay below `1.0.0`** (`0.x.y`), a LiaTemplates convention. LiaScript stores no local state (quizzes, classroom layers) for courses below `1.0.0`, so the template's own demo starts empty after a reload. Test persistence in a separate course with `version: 1.0.0` that imports the template.
+1. **Template versions stay below `1.0.0`** (`0.x.y`), a LiaTemplates convention: LiaScript always reloads a course below `1.0.0` instead of using its cached copy, so every importing course gets the latest fix. Never bump a template to `1.0.0`. LiaScript also stores no local state (quizzes, classroom layers) for courses below `1.0.0`, so the template's own demo starts empty after a reload. Test persistence in a separate course with `version: 1.0.0` that imports the template.
 2. **Never render a fixed `id` from a macro.** A second call on the same slide finds the first element. A public shortcut passes `@uid` to an internal macro: `@Plot.draw: @Plot.draw_(@uid)`, then `id="plot_@0"`.
 3. **Async scripts end with `"LIA: wait"`** and call `send.lia("LIA: stop")` when done. Without it the run counts as finished at once and errors in the promise are lost.
 4. **Insert user text into JS strings with `@'input` / `@'0`.** Plain `` `@input` `` breaks on a backtick, quote, backslash or `${`.
@@ -226,3 +229,19 @@ script: https://cdn.example.com/library.min.js
 ````
 
 Every macro gets its own slide with a live example; the last slide shows all definitions.
+
+## Publishing on GitHub
+
+Do this whenever you create a template repository, so the template can be found (and lands in `reference/catalog.md` searches):
+
+```bash
+gh repo edit OWNER/REPO \
+  --description "LiaScript template for <library>: <what the macros do>" \
+  --homepage "https://liascript.github.io/course/?https://raw.githubusercontent.com/OWNER/REPO/master/README.md" \
+  --add-topic liascript-template --add-topic liascript
+git tag 0.0.1 && git push origin 0.0.1   # the tag equals the header `version:`
+```
+
+- The `--homepage` link opens the template's README as a runnable course. Use the repository's real default branch (`master` or `main`) in it and in the `import:` URLs.
+- The README shows both import lines, the pinned tag and the branch (pattern 10), and starts with a sentence on what the template does.
+- For each release, raise the header `version:` (still `0.x.y`) and push a tag with the same number.

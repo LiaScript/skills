@@ -14,7 +14,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 | [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes & surveys, narrated presentations, charts, agent links, and a tested example course |
 | [liascript-templates](skills/liascript-templates/) | Develop LiaScript templates — reusable macros, JS library integration, async patterns, and collaborative classroom widgets |
 | [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
-| [liascript-asciiart](skills/liascript-asciiart/) | Draw ASCII-art / box-drawing / emoji diagrams for LiaScript ```` ```ascii ```` blocks, with grid checker, renderer and tested templates |
+| [liascript-asciiart](skills/liascript-asciiart/) | Draw ASCII-art / box-drawing / emoji diagrams for LiaScript ```` ```ascii ```` blocks, with grid checker, renderer, LiaScript preview and tested templates |
 
 ---
 
@@ -68,7 +68,7 @@ Turns any design source into one tested header block (`link:` + `@style` + `@cus
 
 ## liascript-asciiart
 
-Draws, reviews and debugs diagrams in LiaScript's ```` ```ascii ```` / ```` ```art ```` blocks, which elm-svgbob renders to SVG. Explains the 8 × 16 px cell grid and which ASCII characters become strokes, corners, arrowheads and dots depending on their neighbours, when to use ASCII lines vs. Unicode box drawing vs. emoji vs. `"…"` verbatim Markdown (math, links, quiz gaps, images), the `<!-- style / class / stroke -->` parameters and `@style` for colors and width, and a table of common traps (`src/`, `...`, `->` in labels, emoji widths). Includes a catalogue of verified templates (flowcharts, architecture, sequence, state machines, data structures, circuits, timing, git graphs, UI mockups, tables, charts), `check.py` (cell count per row, wide-character and tab warnings) and `render.py` (renders the blocks to a PNG with LiaScript's settings, light/dark; needs `elm` and `chromium`).
+Draws, reviews and debugs diagrams in LiaScript's ```` ```ascii ```` / ```` ```art ```` blocks, which elm-svgbob renders to SVG. Explains the 8 × 16 px cell grid and which ASCII characters become strokes, corners, arrowheads and dots depending on their neighbours, when to use ASCII lines vs. Unicode box drawing vs. emoji vs. `"…"` verbatim Markdown (math, links, quiz gaps, images), the `<!-- style / class / stroke -->` parameters and `@style` for colors and width, and a table of common traps (`src/`, `...`, `->` in labels, emoji widths). Includes a catalogue of verified templates (flowcharts, architecture, sequence, state machines, data structures, circuits, timing, git graphs, UI mockups, tables, charts), `check.py` (cell count per row, wide-character and tab warnings) `render.py` (renders the blocks to a PNG with LiaScript's settings, light/dark; needs `elm` and `chromium`) and `preview.py` (screenshots a drawing in the real LiaScript, so `"…"` math, links and quizzes can be checked; needs `liascript-devserver` and `chromium`).
 
 **Activates when:** a user wants to draw, edit, review or fix an ASCII-art, box-drawing or emoji diagram in a LiaScript course — also in German ("ASCII-Art", "Flussdiagramm", "Skizze in LiaScript", "Rahmenzeichen"). Not for Mermaid, PlantUML or ASCII art that stays an unrendered code block.
 

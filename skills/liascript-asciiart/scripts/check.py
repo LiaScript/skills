@@ -82,7 +82,7 @@ def check(ascii, n):
 
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         sys.exit(__doc__)
     for n, b in enumerate(extract_blocks(Path(sys.argv[1]).read_text()), 1):
         check(b["ascii"], n)

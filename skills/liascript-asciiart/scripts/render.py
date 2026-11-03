@@ -20,8 +20,8 @@ any such fence is rendered as one plain drawing.
 @style ... @end blocks of the course header are applied to the page, so
 class-based styling (`<!-- class="x" -->` + `svg.x text {...}`) shows up.
 
-Uses the svgbob source in $SVGBOB_SRC (default: ~/Workspace/Projects/Elm/elm-svgbob/src),
-or the published package if that directory does not exist. Needs elm and chromium.
+Uses the svgbob source in $SVGBOB_SRC (its src/ folder) if set, otherwise the
+published package 5.0.8, the version LiaScript ships. Needs elm and chromium.
 """
 
 import hashlib
@@ -38,7 +38,6 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent / "render"
 CACHE = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "elm-svgbob-render"
-DEFAULT_SRC = Path.home() / "Workspace/Projects/Elm/elm-svgbob/src"
 
 FENCE = re.compile(r"^(`{3,})(.*)$")
 COMMENT = re.compile(r"<!--(.*?)-->", re.S)
@@ -117,8 +116,6 @@ def build(src):
     if src:
         conf["source-directories"] = [".", str(src)]
     else:
-        print("warning: $SVGBOB_SRC not found, using the published package 5.0.8 - "
-              "newer features may be missing", file=sys.stderr)
         conf["source-directories"] = ["."]
         conf["dependencies"]["direct"]["andre-dietrich/elm-svgbob"] = "5.0.8"
     conf["elm-version"] = subprocess.run(["elm", "--version"], capture_output=True,
@@ -162,8 +159,8 @@ def main(argv):
     infile, outfile = Path(args[0]), Path(args[1]).resolve()
     dark = "--dark" in opts
 
-    src = Path(os.environ.get("SVGBOB_SRC", DEFAULT_SRC)).expanduser()
-    js = build(src if src.is_dir() else None)
+    src = Path(os.environ["SVGBOB_SRC"]).expanduser() if os.environ.get("SVGBOB_SRC") else None
+    js = build(src if src and src.is_dir() else None)
 
     md = infile.read_text()
     blocks = extract_blocks(md)

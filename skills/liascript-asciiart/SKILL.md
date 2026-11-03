@@ -44,12 +44,17 @@ version LiaScript ships.
    `src/` folder) if set, otherwise the published package. Paths are relative
    to this skill's directory. Needs `elm` and `chromium` on PATH (Pillow
    optional, for cropping).
-   `@style` from the course header is applied. Verbatim parts show as yellow
-   placeholders; for their real look use the LiaScript preview
-   (`liascript-devserver`). Thin 1 px rules can vanish in small renders: add
+   `@style` from the course header is applied. Verbatim parts show only as
+   yellow placeholders. Thin 1 px rules can vanish in small renders: add
    `--no-params --scale 2` to zoom past a `max-width` (this also drops
    `stroke`/`class`/`fill`; check colors in a normal render).
-5. Fix what looks wrong and repeat 3–4. Even careful drawings have off-by-one
+5. **If the drawing contains `"…"` verbatim** (math, links, quizzes, images),
+   look at it in the real LiaScript as well:
+   `python3 scripts/preview.py FILE.md OUT.png [--slide N] [--nth K]`
+   It serves the file with `liascript-devserver`, waits until LiaScript and its
+   fonts are loaded and saves the drawing with its caption. Check that every
+   label sits next to what it names. Needs `liascript-devserver` and `chromium`.
+6. Fix what looks wrong and repeat 3–5. Even careful drawings have off-by-one
    borders and letters turned into shapes; only the render shows them.
 
 ## Which means for what
@@ -89,6 +94,7 @@ version LiaScript ships.
 | Mistake | Effect | Fix |
 |---|---|---|
 | Not rendering before delivering | broken borders, stray arrows ship | steps 3–4 |
+| Judging `"…"` math from the yellow placeholders | labels far from their arrows | step 5, `preview.py` |
 | Emoji/CJK counted as 1 cell | right border jumps | one space less per wide char, `check.py` |
 | `⚙ ❤ ⚠ ☁` without U+FE0F, flags | glyph overlaps next cell | `⚙️`, or a space after |
 | Node `A` above `|`, `Volvo`, `foo->` | arrowhead / circle in the label | rename, Unicode, or a space |
@@ -103,8 +109,9 @@ version LiaScript ships.
 
 ## Reference files
 
-- `reference/ascii.md` – every shape character, its neighbour rules, text traps.
-- `reference/unicode.md` – widths, box drawing limits, safe symbols, emoji.
-- `reference/liascript.md` – fence, caption, parameter table, `@style`, verbatim.
-- `reference/patterns.md` – catalogue of technical drawing types with ratings
-  and verified templates.
+| File | Read when… |
+|---|---|
+| `reference/patterns.md` | Starting a drawing: open the table at the top, then only the section for your diagram type |
+| `reference/ascii.md` | Drawing with ASCII lines, or a label turned into a shape: every shape character, neighbour rules, text traps |
+| `reference/unicode.md` | Using box drawing, blocks, symbols, emoji or CJK, or a right border does not line up |
+| `reference/liascript.md` | Setting width, colors, caption or `@style`, or putting `"…"` Markdown, math or quizzes into the drawing |

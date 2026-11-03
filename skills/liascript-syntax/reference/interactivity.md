@@ -1,6 +1,6 @@
 # Interactivity
 
-LiaScript content becomes interactive through five layers that combine freely: **effects** (animation/narration/playback timing), **executable code blocks** (editable code with an Execute button and a terminal), the **`send`/JS API** every script gets, **macros** (text-substitution shortcuts, usually imported from a template course), and **JS-Components** (raw `<script>` tags embedded directly in the Markdown body). This file covers all five for *using* them in a course. For *building* a reusable macro/template package for the LiaTemplates ecosystem, see the separate `liascript-templates` skill — it documents the 12 implementation patterns and the full `send` object from the author's side; this file only covers calling what already exists.
+LiaScript content becomes interactive through five layers that combine freely: **effects** (animation/narration/playback timing), **executable code blocks** (editable code with an Execute button and a terminal), the **`send`/JS API** every script gets, **macros** (text-substitution shortcuts, usually imported from a template course), and **JS-Components** (raw `<script>` tags embedded directly in the Markdown body). This file covers all five for *using* them in a course. For *building* a reusable macro/template package for the LiaTemplates ecosystem, see the separate `liascript-templates` skill — it documents the implementation patterns and the full `send` object from the author's side; this file only covers calling what already exists.
 
 ## Effects
 

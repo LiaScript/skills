@@ -10,7 +10,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 |-------|-------------|
 | [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for OER on GitHub, GitLab or Codeberg |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
-| [liascript-exporter](skills/liascript-exporter/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
+| [liascript-exporter](skills/liascript-exporter/) | Export LiaScript courses (SCORM, xAPI, PDF, …), GitHub Actions, and designed `project.yaml` catalog pages with downloads |
 | [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes & surveys, narrated presentations, charts, agent links, and a tested example course |
 | [liascript-templates](skills/liascript-templates/) | Develop LiaScript templates — reusable macros, JS library integration, async patterns, and collaborative classroom widgets |
 | [liascript-theming](skills/liascript-theming/) | Restyle a LiaScript course (colors, fonts, shapes, dark mode) from a description, PowerPoint, image, PDF or website — or apply one of seven bundled designs by name |
@@ -36,9 +36,9 @@ Systematically verifies scientific literature references: `lookup.py` (Python st
 
 ## liascript-exporter
 
-Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` catalog files for LiaScript repositories. Covers all export formats (PDF, SCORM 1.2/2004, IMS, ePub, DOCX, xAPI, H5P, Android, web, JSON), LMS presets, exporting straight from a Git repository or only a sub-folder of it, the web/desktop app, automated deployment to GitHub Pages, multi-project site patterns with cached downloads, and quality check pipelines. Includes ready-made examples for common scenarios.
+Generates `liaex` CLI commands, GitHub Actions workflows, and `project.yaml` catalog files for LiaScript repositories. Covers all export formats (PDF, SCORM 1.2/2004, IMS, ePub, DOCX, xAPI, H5P, Android, web, JSON), LMS presets, exporting straight from a Git repository or only a sub-folder of it, the web/desktop app, automated deployment to GitHub Pages, multi-project site patterns with cached downloads, and quality check pipelines. For project websites it includes a tested example with its own design (`examples/project-site/`: `project.yaml`, a `theme.css` adapted through a few variables, and a deploy workflow), the selectors to restyle the page, a local preview with headless Chromium, and the limits found by running the exporter (http-only course URLs, packages only for GitHub-hosted courses, no `--scorm-embed` in projects).
 
-**Activates when:** a user wants to export a LiaScript course to any format or for a specific LMS (Moodle, ILIAS, OPAL, …); create or update a GitHub Actions workflow; build a project website that aggregates multiple courses; set up automated deployment to GitHub Pages; or asks anything involving the `liaex` CLI, `@liascript/exporter`, or LiaScript CI/CD.
+**Activates when:** a user wants to export a LiaScript course to any format or for a specific LMS (Moodle, ILIAS, OPAL, …); create or update a GitHub Actions workflow; build or design a project website that aggregates multiple courses with downloads; set up automated deployment to GitHub Pages; or asks anything involving the `liaex` CLI, `@liascript/exporter`, or LiaScript CI/CD.
 
 ---
 

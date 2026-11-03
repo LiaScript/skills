@@ -1,0 +1,88 @@
+# Build the project overview page with downloads and deploy it to GitHub Pages.
+# Repository layout:
+#   project.yaml          (footer loads theme.css, see examples/project-site)
+#   theme.css             (page design)
+#   site/                 (optional: own images referenced from project.yaml)
+#   .github/workflows/deploy-project.yml   ← this file
+# Settings → Pages: deploy from branch gh-pages.
+
+name: Deploy project website
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 3 * * 1'        # weekly: pick up changes in the courses
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # liaex writes assets/<format>/ into its working directory: keep that out of the repo
+      SITE_DIR: /tmp/lia-site
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install LiaScript Exporter
+        run: npm install -g @liascript/exporter
+
+      - name: Install Chromium libraries (PDF)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgbm-dev libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libpango-1.0-0 libcairo2 libasound2t64 libnss3 libnspr4 \
+            fonts-liberation ca-certificates
+
+      - name: Prepare site directory and cache week
+        id: week
+        run: |
+          mkdir -p "$SITE_DIR"
+          echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore generated downloads
+        uses: actions/cache@v4
+        with:
+          path: /tmp/lia-site/assets
+          # cached files are never rebuilt; a new key every week refreshes them
+          key: lia-assets-${{ hashFiles('project.yaml') }}-${{ steps.week.outputs.week }}
+
+      - name: Generate website with downloads
+        working-directory: /tmp/lia-site
+        env:
+          PUPPETEER_ARGS: "--no-sandbox --disable-setuid-sandbox"
+        run: |
+          liaex -i "$GITHUB_WORKSPACE/project.yaml" -f project -o index \
+            --project-search \
+            --project-generate-scorm12 \
+            --project-generate-xapi \
+            --project-generate-pdf --pdf-timeout 60000 \
+            --project-generate-cache
+
+      - name: Collect files to publish
+        run: |
+          mkdir -p public
+          cp "$SITE_DIR/index.html" public/
+          cp -r "$SITE_DIR/assets" public/
+          # everything project.yaml references by a relative path
+          cp theme.css public/
+          # optional: German page texts (the exporter writes English ones)
+          if [ -f translate-de.sed ]; then sed -i -f translate-de.sed public/index.html; fi
+          if [ -d site ]; then cp -r site public/; fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: public
+          force_orphan: true

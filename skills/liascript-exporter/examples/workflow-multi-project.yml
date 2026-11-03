@@ -29,9 +29,9 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      # liaex --format project writes ./assets/<format>/ (generated downloads) and
-      # ./tmp/ (repo clones) into its working directory, so all exports run inside
-      # this directory outside the repository. A fixed path allows caching.
+      # liaex --format project writes ./assets/<format>/ (generated downloads)
+      # into its working directory, so all exports run inside this directory
+      # outside the repository. A fixed path allows caching.
       SITE_DIR: /tmp/lia-site
 
     steps:
@@ -112,6 +112,7 @@ jobs:
 
           # Shared images/CSS from the repository referenced by the project pages
           if [ -d assets ]; then cp -r assets/. gh-pages-deploy/assets/; fi
+          if [ -f theme.css ]; then cp theme.css gh-pages-deploy/; fi   # design linked from footer
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

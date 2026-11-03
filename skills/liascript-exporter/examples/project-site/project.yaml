@@ -1,0 +1,42 @@
+# Overview page with own design, tag filter, search and downloads.
+# Build:  liaex -i project.yaml -f project -o index --project-search \
+#           --project-generate-scorm12 --project-generate-xapi --project-generate-pdf
+# Deploy index.html, assets/ and everything this file references relatively
+# (theme.css, logo) — see deploy-project.yml.
+
+title: LiaScript Templates
+comment: Interaktive Erweiterungen für LiaScript-Kurse – zum Ausprobieren, Herunterladen und Einbinden ins LMS.
+logo: https://live.staticflickr.com/7327/11125348744_2a75b75427_b.jpg   # header background
+icon: https://liascript.github.io/favicon.ico
+
+navbar:
+  brand: LiaTemplates
+  background: "#1f2933"
+  theme: dark
+  links:
+    - label: LiaScript
+      url: https://liascript.github.io
+    - label: GitHub
+      url: https://github.com/LiaTemplates
+
+# footer is raw HTML: the stylesheet link restyles the whole page
+footer: >
+  <link rel="stylesheet" href="theme.css">
+  Made with <a href="https://liascript.github.io">LiaScript</a> · Inhalte unter CC BY 4.0
+
+collection:
+  - url: https://raw.githubusercontent.com/LiaTemplates/ABCjs/main/README.md
+    tags: [Musik]
+  - url: https://raw.githubusercontent.com/LiaTemplates/Algebrite/master/README.md
+    tags: [Mathematik]
+
+  - title: Zusammenarbeit & Grafik
+    comment: Templates für gemeinsames Arbeiten und Geometrie
+    grid: true
+    collection:
+      - url: https://raw.githubusercontent.com/LiaTemplates/JSXGraph/main/README.md
+        tags: [Mathematik, Grafik]
+      - url: https://raw.githubusercontent.com/LiaTemplates/CollaborativeDrawing/main/README.md
+        tags: [Klassenraum]
+        # no logo in its header: the card gets no image (theme.css adds a color bar);
+        # set `logo: https://…` here to give it one

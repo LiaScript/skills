@@ -1,4 +1,5 @@
-# Minimal OERSI metadata example (required fields only)
+# Minimal OERSI metadata: the two hard requirements plus the fields every
+# record should have. URIs: ../reference/vocabularies.md
 '@context': https://schema.org/
 creativeWorkStatus: Published
 type: LearningResource
@@ -6,17 +7,15 @@ type: LearningResource
 name: "Introduction to Databases"
 description: >-
   A concise introduction to relational databases and SQL for beginners.
-license: "https://creativecommons.org/licenses/by/4.0/deed.en"
-inLanguage:
-  - en
-learningResourceType:
-  - "https://w3id.org/kim/hcrt/course"
-educationalLevel:
-  - "https://w3id.org/kim/educationalLevel/level_A"
-about:
-  - "https://w3id.org/kim/hochschulfaechersystematik/n079"
+id: "https://example.org/materials/databases-intro"
+license: "https://creativecommons.org/licenses/by/4.0/"
 creator:
   - givenName: "Jane"
     familyName: "Doe"
     type: Person
-url: "https://example.org/materials/databases-intro"
+inLanguage:
+  - en
+about:
+  - "https://w3id.org/kim/hochschulfaechersystematik/n079"   # Informatik
+learningResourceType:
+  - "https://w3id.org/kim/hcrt/course"

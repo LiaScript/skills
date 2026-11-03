@@ -8,7 +8,7 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 
 | Skill | Description |
 |-------|-------------|
-| [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for GitHub-hosted OER |
+| [oersi-metadata](skills/oersi-metadata/) | Generate OERSI-compatible `metadata.yml` for OER on GitHub, GitLab or Codeberg |
 | [reference-checker](skills/reference-checker/) | Verify scientific literature references and detect hallucinated citations |
 | [liascript-exporter](skills/liascript-exporter/) | Generate LiaScript export workflows, GitHub Actions, and `project.yaml` catalog pages |
 | [liascript-syntax](skills/liascript-syntax/) | Complete LiaScript authoring reference — markdown syntax, quizzes & surveys, narrated presentations, charts, agent links, and a tested example course |
@@ -20,9 +20,9 @@ A collection of [Agent Skills](https://agentskills.io) for working with LiaScrip
 
 ## oersi-metadata
 
-Generates a valid `metadata.yml` for publishing Open Educational Resources on [OERSI](https://oersi.org). Collects required fields, uses correct Schema.org / LRMI / KIM vocabulary (SKOS URIs for subjects, HCRT URIs for resource types), and explains how to configure the GitHub repository for automatic indexing.
+Generates a valid `metadata.yml` for publishing Open Educational Resources on [OERSI](https://oersi.org) from GitHub, GitLab or Codeberg. Knows what OERSI's importer actually requires and reads (checked against its code), which licenses it accepts, and the verified KIM vocabularies (Hochschulfächersystematik, HCRT, educational level) in `reference/vocabularies.md`; covers several resources per repository (`hasPart`, `!include`) and explains the repository topic and re-import.
 
-**Activates when:** a user wants to publish OER on OERSI, create or update a `metadata.yml`, or asks about the `open-educational-resources` GitHub topic.
+**Activates when:** a user wants to publish OER on OERSI, create, update or check a `metadata.yml`, asks about AMB / KIM metadata or the `open-educational-resources` topic — also in German ("Kurs auf OERSI veröffentlichen", "warum taucht mein Kurs nicht in OERSI auf").
 
 ---
 

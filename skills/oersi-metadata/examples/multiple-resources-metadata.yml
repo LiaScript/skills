@@ -1,5 +1,9 @@
-# Example: Multiple OER resources in one repository using !include
-- !include resource1.yml
-- !include resource2.yml
-
-# Each referenced file (resource1.yml, resource2.yml) should contain a valid OERSI metadata record as shown in the other examples.
+# Several independent OER in one repository: metadata.yml in the repo root
+# lists one file per resource. Paths are relative to the repository root.
+# Every included file is a complete record with creativeWorkStatus: Published.
+#
+# GitHub: list every file explicitly. A wildcard (!include */metadata.yml)
+# makes the whole file fail there, and nothing gets listed.
+# GitLab only: !include courses/*.yml picks up new files automatically.
+- !include statistics/metadata.yml
+- !include history/metadata.yml

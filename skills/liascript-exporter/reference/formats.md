@@ -1,6 +1,6 @@
 # Export formats and presets
 
-Every format with its options, checked against `@liascript/exporter` 3.6.2. Presets first, then one section per format.
+Every format with its options, checked against `@liascript/exporter` 3.6.3. Presets first, then one section per format.
 
 ### 2.2 Presets (LMS shortcuts)
 

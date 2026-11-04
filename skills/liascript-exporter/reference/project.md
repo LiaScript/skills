@@ -310,7 +310,7 @@ for page in index campus night schule; do
 done
 ```
 
-`examples/project-site/deploy-several-pages.yml` is this as a complete GitHub workflow, tested on GitHub Actions: four pages in four designs, 28 working downloads; about 10 minutes for the first run, about 2 minutes with the cache (the build step 21 s). Link the pages to each other through `navbar.links` (`url: campus.html`).
+`examples/project-site/deploy-several-pages.yml` is this as a complete GitHub workflow, tested on GitHub Actions with 3.6.3: four pages in four designs, five courses (one from gitlab.com) in eight formats including ePub, 136 working download links; 10 to 20 minutes without cache, about 2 minutes with the cache. Link the pages to each other through `navbar.links` (`url: campus.html`).
 
 ## 9. Minimal `project.yaml` Template
 

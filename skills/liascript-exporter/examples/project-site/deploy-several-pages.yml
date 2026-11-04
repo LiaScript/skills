@@ -1,8 +1,8 @@
 # Several project pages (here: one per design) that share one set of downloads,
-# deployed to GitHub Pages. Tested on GitHub Actions with @liascript/exporter
-# 3.6.3: 4 pages, 5 courses (one from gitlab.com) x 8 formats (SCORM 1.2/2004,
-# IMS, xAPI, H5P, PDF, ePub, DOCX), 136 working download links — 10 to 20
-# minutes for a build without cache, about 2 with the cache.
+# deployed to GitHub Pages. Tested on GitHub Actions: 4 pages, 5 courses (one
+# from gitlab.com) x 8 formats (SCORM 1.2/2004, IMS, xAPI, H5P, PDF, ePub,
+# DOCX), 136 working download links — 10 to 20 minutes for a build without
+# cache, about 2 with the cache.
 # Repository: index.yaml, campus.yaml, … (each with `link: [theme.css, …]`),
 # theme.css, themes/, translate-de.sed. Settings → Pages: branch gh-pages.
 

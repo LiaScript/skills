@@ -1,7 +1,7 @@
 /* Theme for the overview page of `liaex -f project`.
    Loaded from project.yaml:  link: theme.css   (copied next to the page)
    Change the variables below, or override them in `style:` of project.yaml.
-   Tested with @liascript/exporter 3.6.3 (Bootstrap 5.0.2 page). */
+   The page is built with Bootstrap 5.0.2. */
 
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;600&display=swap');
 

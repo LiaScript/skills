@@ -1,6 +1,6 @@
 # Export formats and presets
 
-Every format with its options, checked against `@liascript/exporter` 3.6.3. Presets first, then one section per format.
+Every format with its options, checked by running the exporter. Presets first, then one section per format.
 
 ### 2.2 Presets (LMS shortcuts)
 
@@ -344,7 +344,7 @@ Writes `course.json` — useful for analyses or custom tooling, not for learners
 liaex -i README.md --format h5p --output course
 ```
 
-Produces `course.h5p` for Moodle (H5P activity or content bank), ILIAS, WordPress, Drupal, Lumi and other H5P platforms (exporter 3.5.7). It carries the LiaScript runtime as its own library `H5P.LiaScript`.
+Produces `course.h5p` for Moodle (H5P activity or content bank), ILIAS, WordPress, Drupal, Lumi and other H5P platforms. It carries the LiaScript runtime as its own library `H5P.LiaScript`.
 
 | Option | Description |
 |--------|-------------|

@@ -20,7 +20,7 @@ license: CC0-1.0
 
 # LiaScript Exporter
 
-`liaex` turns a LiaScript course (a Markdown file) into LMS packages and documents, and builds project websites that present many courses on one page with downloads. Everything below is checked against `@liascript/exporter` 3.6.3 by running it.
+`liaex` turns a LiaScript course (a Markdown file) into LMS packages and documents, and builds project websites that present many courses on one page with downloads. Everything below was checked by running the exporter.
 
 ## Navigation — read the file that matches the task
 
@@ -41,7 +41,7 @@ Ask first what the user needs if it is unclear: one course for one LMS, document
 npm install -g @liascript/exporter      # CLI: liaex (also liascript-exporter); liaex --version
 ```
 
-The version reads `<exporter>--<LiaScript>`, e.g. `3.6.3--2.6.1`. PDF, ePub and DOCX use Puppeteer: to use an installed Chromium instead of Puppeteer's download, set `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium`.
+`liaex --version` prints `<exporter>--<LiaScript>`: the exporter's version and the LiaScript version it bundles. PDF, ePub and DOCX use Puppeteer: to use an installed Chromium instead of Puppeteer's download, set `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium`.
 
 Alternatives: the **web app** <https://liascript.github.io/LiaScript-Exporter/> (in the browser, nothing uploaded; Markdown, a `.zip` of the course folder or a public GitHub or GitLab repo; no Android; very large PDFs may run out of memory) — recommend it to users who just want one file; the **desktop app** from the GitHub releases; `liaex serve [--port 8080] [--no-browser]` for the same UI locally; Docker `liascript/exporter` (needed for Android):
 
